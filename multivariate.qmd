@@ -1,0 +1,506 @@
+---
+title: "Sparse linear multi-task regression with correlation-based information sharing"
+author: "Armin Rauschenberger"
+format:
+  pdf:
+    include-in-header:
+      text: |
+        \usepackage{amsmath,amssymb}
+        \let\boldsymbol\symbf
+editor: source
+---
+
+**Here we implement a simple approach to sparse multi-task regression that can select different features for different targets. It allows for multiple numerical targets and many numerical or binary features. Sharing information between targets and between features, it potentially improves the selection and predictive performance. The proposed approach allows for features that are available for model training but not for model testing (i.e., privileged information).**
+
+# Background
+
+The Python library `scikit-learn` and the R package `glmnet` implement penalised multivariate Gaussian regression (Python library `scikit-learn`: functions `MultiTaskLassoCV` and `MultiTaskElasticNetCV`; R package `glmnet`: function `cv.glmnet` with argument `family="mgaussian"`, *Simon et al., 2013*). While these implementations do not select features under ridge ($\ell_2$) penalisation, they select the same features for all targets under lasso ($\ell_1$) or elastic net ($\ell_2 + \ell_1$) penalisation.
+
+However, models that select different features for different targets might select fewer features and provide better predictions. Some approaches to sparse multi-task regression allow for differential feature selection: sparse partial least squares (*Chung & Keleş, 2010*, R package `spls`), dirty model (*Jalali et al., 2013*, Python library `MuTaR`), multi-level lasso (*Lozano & Swirszcz, 2012*, idem), and (reweighted) multi-task Wasserstein (*Janati et al., 2019*, idem).
+
+We previously proposed ideas to share information between correlated targets (*Rauschenberger et al., 2025*) and among correlated primary or auxiliary features (*Rauschenberger et al., 2026*), and combine them here to improve penalised multivariate linear regression. While primary features may be selected by the model, auxiliary features may only provide privileged information (*Vapnik & Izmailov, 2015*). Following our previous work, we use a two-step procedure: In the first step, we fit an initial elastic net regression of each target on all features. We then share information on the initial estimates depending the correlation between targets and between features. In the second step, we fit a sign-aware adaptive lasso regression of each target on its primary features.
+
+Sharing information between targets and between features on the feature-target effects - but selecting different features for different targets - we aim to improve the selection and predictive performance. We implement our approach for centralised settings (where data are accessible from a single site) and for federated settings (where data are distributed over multiple sites).
+
+# Method
+
+Data are available for $n$ samples, $p$ features, and $q$ targets, indexed by $i$ in $\{1,\ldots,n\}$, $j$ in $\{1,\ldots,p\}$, and $k$ in $\{1,\ldots,q\}$, respectively. We assume that there are many more features than samples ($p \gg n$). Let $y_{ik}$ denote the $k^{\smash{\text{th}}}$ target for the $i^{\smash{\text{th}}}$ sample, and let $x_{ij}^{\smash{(k)}}$ denote the $j^{\smash{\text{th}}}$ feature for the $i^{\smash{\text{th}}}$ sample and the $k^{\smash{\text{th}}}$ target. We define the $n \times q$ target matrix $\boldsymbol{Y}$ and either the $n \times p$ feature matrix $\boldsymbol{X}$ (i.e., common feature matrix for all tasks) or the $n \times p$ feature matrices $\boldsymbol{X}^{\smash{(k)}}$ (i.e., separate feature matrix for each task). If there is a common feature matrix for all tasks, we set $x_{ij}^{\smash{(k)}}=x_{ij}$ and $\boldsymbol{X}^{\smash{(k)}}=\boldsymbol{X}$. The binary variable $z_{jk}$ indicates whether the $j^{\smash{\text{th}}}$ feature may be used for modelling the $k^{\smash{\text{th}}}$ outcome ($\mathbb{I}[z_{jk}=1]$) or not ($\mathbb{I}[z_{jk}=0]$). If a feature may only be used for model training but not for model testing ($\sum_{k=1}^q\mathbb{I}[z_{jk}=1]=0$), it is an auxiliary feature that might provide privileged information.
+
+We relate the targets to the features through a linear regression model: 
+$$
+y_{ik} = \beta_{0k} + \sum_{j=1}^p \beta_{jk} x_{ij}^{(k)} + \epsilon_{ik}~,
+$$
+where $\beta_{0k}$ is the unknown intercept for the $k^{\smash{\mathrm{th}}}$ target, $\beta_{jk}$ is the unknown effect of the $j^{\smash{\mathrm{th}}}$ feature on the $k^{\smash{\mathrm{th}}}$ target, and $\epsilon_{ik}$ is an error term, with $\epsilon_{ik} \sim \mathcal{N}(0,\sigma_k^2)$, for all $i$, $j$, and $k$. Our aim is to estimate the unknown intercepts ($\beta_{0k}$) and the unknown slopes ($\beta_{1k},\ldots,\beta_{pk}$), for each $k$.
+
+We estimate an initial regression under elastic net penalisation. This involves penalising the Gaussian likelihood with the penalty term
+$$
+\rho_{\text{init}}(\boldsymbol{\beta}_{\cdot k}) = \lambda_k^{\text{(init)}} \sum_{j=1}^p \left( \alpha |\beta_{jk}| + (1-\alpha) \frac{\beta_{jk}^2}{2} \right)~,
+$$
+where $\lambda_k^{\smash{\text{(init)}}}$ is the regularisation parameter ($\lambda_k^{\smash{\text{(init)}}} \geq 0$), and $\alpha$ is the elastic net mixing hyperparameter ($0 \leq \alpha \leq 1$, $\alpha=1$: lasso, $\alpha=0$: ridge). We retain the initial estimates of the feature-target effects $\hat{\beta}_{jk}^{(\text{init})}$.
+
+Let $\rho_{kk'}^{\smash{(y)}}$ denote the Spearman correlation between two targets indexed by $k$ and $k'$ ($\rho_{kk}^{\smash{(y)}}=1$ and $-1 \leq \rho_{kk'}^{\smash{(y)}} \leq 1$), and let $\rho_{jj'}^{\smash{(k)}}$ denote the Spearman correlation between two features in the $k^{\smash{\text{th}}}$ task indexed by $j$ and $j'$ ($\rho_{jj}^{\smash{(k)}}=1$ and $-1 \leq \rho_{jj'}^{\smash{(k)}} \leq 1$). In the case of a common feature matrix, we set $\rho_{jj'}^{\smash{(k)}}=\rho_{jj'}$. We use the initial coefficients and the correlation structure to construct prior weights for positive and negative effects of each feature $j$ on each target $k$:
+$$
+w_{jk}^{(\pm)} = \mathbb{I}[z_{jk}=1] \sum\limits_{j'=1}^p \sum\limits_{k'=1}^q \max\left(0, \pm \rho_{jj'}^{(k)} \rho_{kk'}^{(y)} \hat{\beta}_{j'k'}^{(\text{init})}\right)~,
+$$
+where $w_{jk}^{\smash{(+)}}$ is the prior weight for a positive effect and $w_{jk}^{\smash{(-)}}$ is the prior weight for a negative effect ($w_{jk}^{\smash{(+)}} \geq 0$ and $w_{jk}^{\smash{(-)}} \geq 0$). If a feature may not be used for modelling a target ($z_{jk}=0$), it obtains prior weights equal to zero ($w_{jk}^{\smash{(+)}}=w_{jk}^{\smash{(-)}}=0$) and is thereby excluded from the final model. These prior weights share information on the initial estimates of the feature-target effects ($\hat{\beta}_{j'k'}^{\smash{(\text{init})}}$), between correlated features ($\rho_{jj'}^{\smash{(k)}} \neq 0$) and between correlated targets ($\rho_{kk'}^{\smash{(y)}} \neq 0$).
+
+For each target, we use these prior weights in a sign-aware adaptive lasso regression on all features. This involves penalising the Gaussian likelihood with the penalty term
+$$
+\rho_{\text{final}}(\boldsymbol{\beta}_{\cdot k}) = \lambda_k^{(\text{final})} \sum_{j=1}^p \frac{|\beta_{jk}|}{\mathbb{I}[\beta_{jk}>0] w_{jk}^{(+)} + \mathbb{I}[\beta_{jk}<0] w_{jk}^{(-)} + \epsilon}~,
+$$
+where $\lambda_k^{(\text{final})}$ is the regularisation parameter ($\lambda_k^{(\text{final})} \geq 0$), $|\beta_{jk}| / w_{jk}^{(+)}$ and $|\beta_{jk}| / w_{jk}^{(-)}$ penalise a positive or negative coefficient, respectively, and $\epsilon$ is a small positive constant to prevent division by zero.
+
+<!--
+$$
+\left(
+\begin{array}{ccc}
+y_{11} & \cdots & y_{1q} \\
+\vdots &  & \vdots \\
+y_{n1} & \cdots & y_{nq} \\
+\end{array}
+\right)
+=
+\left(
+\begin{array}{ccc}
+x_{11} & \cdots & x_{1p} \\
+\vdots &  & \vdots \\
+x_{n1} & \cdots & x_{np} \\
+\end{array}
+\right)
+\times
+\left(
+\begin{array}{ccc}
+\beta_{11} & \cdots & \beta_{1q} \\
+\vdots &  & \vdots \\
+\beta_{p1} & \cdots & \beta_{pq} \\
+\end{array}
+\right)
++
+\left(
+\begin{array}{ccc}
+\epsilon_{11} & \cdots & \epsilon_{1q} \\
+\vdots &  & \vdots \\
+\epsilon_{n1} & \cdots & \epsilon_{nq} \\
+\end{array}
+\right)~,
+where $\epsilon_{ik}$ is the error term for the $i^{\mathrm{th}}$ sample and the $k^{\mathrm{th}}$ outcome.
+$$
+-->
+
+# Implementation
+
+## Centralised version
+
+Using the same API as the function `MultiTaskLassoCV` from the Python library `scikit-learn`, I am currently writing the functions `SingleTaskLassoCV` (standard lasso without sharing information) and `CoopLassoCV` (proposed approach with sharing information). Implementation of competing methods: The Python library [`MuTaR`](https://hichamjanati.github.io/mutar/) requires custom cross-validation for the dirty model and the multi-level lasso, and breaks down in the case of (re-weighted) multi-task Wasserstein.
+
+## Federated version
+
+I assume that each site has the same features and the same targets and that the samples come from the same population. This means that we might want to fit a common multi-task model for all sites together. (This is not about modelling different targets at different sites or about obtaining different models for different sites.)
+
+This is how I see a federated implementation:
+
+- split samples into 10 folds in each site, iteratively use 9 folds for training and 1 fold for testing
+
+- standardisation: calculate means and variances of features locally, combine summary statistics centrally, standardise features locally
+
+- correlation: calculate correlations locally, combine correlation centrally (probably trickier for rank correlation than for linear correlation)
+
+- run federated elastic net on all features (initial regression)
+
+- weights: calculate weights centrally, re-scale features locally
+
+- run federated adaptive lasso on primary features (requires a non-negativity constraint on the original and inverted features)
+
+- for different values of the regularisation parameter, make out-of-sample predictions using the common model locally, combine mean-squared error centrally
+
+- after the last iteration, select optimal regularisation parameter centrally, and refit the model on all folds using the same procedure as above
+
+# Results
+
+## Simulation
+
+In an initial simulation with some shared effects for all targets and some specific effects for each target, `CoopLassoCV` selects less features than `MultiTaskLassoCV`  and obtains a competitive predictive performance (worse if only common effects, better if also separate effects).
+
+## Application
+
+Sparse multi-task regression is relevant for modelling multiple clinician-assessed or patient-reported outcomes (e.g., outcomes measuring treatment response) based one or more data modalities (e.g., metabolomics or immune profiling).
+
+\small
+
+# \small References
+
+Chung, Dongjun and Keleş, Sunduz (2010). "Sparse partial least squares classification for high dimensional data". *Statistical Applications in Genetics and Molecular Biology* 9(1). [doi: 10.2202/1544-6115.1492](https://doi.org/10.2202/1544-6115.1492)
+
+Jalali, Ali and Ravikumar, Pradeep and Sanghavi, Sujay (2013). "A Dirty Model for Multiple Sparse Regression". *IEEE Transactions on Information Theory* 59(12):7947-7968. [doi: 10.1109/TIT.2013.2280272](https://doi.org/10.1109/TIT.2013.2280272). 
+
+Janati, Hicham and Cuturi, Marco and Gramfort, Alexandre (2019). "Wasserstein regularization for sparse multi-task regression".
+*Proceedings of the Twenty-Second International Conference on Artificial Intelligence and Statistics, PMLR* 89:1407-1416. [PMLR/v89/janati19a](https://proceedings.mlr.press/v89/janati19a).
+
+Lozano, Aurélie C. and Swirszcz, Grzegorz (2012). "Multi-level lasso for sparse multi-task regression." *Proceedings of the 29th International Coference on International Conference on Machine Learning (ICML'12)*. 595-602. [ICML/2012/papers/207](https://icml.cc/2012/papers/207.pdf).
+
+Rauschenberger, Armin and Nazarov, Petr V. and Glaab, Enrico (2025). "Estimating sparse regression models in multi-task learning and transfer learning through adaptive penalisation". *Bioinformatics*. [doi: 10.1093/bioinformatics/btaf406](https://doi.org/10.1093/bioinformatics/btaf406).
+
+Rauschenberger, Armin (2026). "Sparse modelling with grouped and correlated features allowing for privileged information". *In preparation*.
+
+Simon, Noah and Friedman Jerome H. and Hastie, Trevor (2013). "A blockwise descent algorithm for group-penalized multiresponse and multinomial regression". *Preprint*. [doi: 10.48550/arXiv.1311.6529](https://doi.org/10.48550/arXiv.1311.6529).
+
+Vapnik, Vladimir and Izmailov, Rauf (2015). "Learning using privileged information: similarity control and knowledge transfer". *Journal of Machine Learning Research* 16(1):2023-2049. [JMLR/papers/v16/vapnik15b](https://www.jmlr.org/papers/v16/vapnik15b.html).
+
+<!--
+[`scikit-learn`](https://scikit-learn.org)
+
+[`glmnet`](https://cran.r-project.org/package=glmnet)
+
+[`spls`](https://cran.r-project.org/package=spls)
+
+[`MuTaR`](https://hichamjanati.github.io/mutar/)
+
+[`mtv`](https://github.com/hichamjanati/mtw)
+
+https://hichamjanati.github.io/mutar/index.html
+-->
+
+
+<!--
+- Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
+
+- Write code for elastic net (rather than only lasso).
+
+- Allow for tuning extra hyperparameters (e.g., exponent for initial coefficients).
+- For other distributional families, it might be easier to implement this approach without sign constraints. Before this, compare performance in linear case with and without constraints.
+-->
+
+<!--
+# install packages from PyPI
+python -m pip install -U numpy
+
+# install mutar from GitHub:
+git clone https://github.com/hichamjanati/mutar
+cd mutar
+python setup.py develop
+-->
+
+```{python,eval=FALSE}
+#| echo: false
+#| eval: false
+
+import numpy as np
+from sklearn.base import BaseEstimator, RegressorMixin
+from scipy.stats import spearmanr, multivariate_normal, ttest_rel
+from scipy.interpolate import interp1d, CubicSpline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import lasso_path, LassoCV, ElasticNet, ElasticNetCV, MultiTaskLasso, MultiTaskLassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import KFold
+from sklearn.utils.validation import check_X_y, check_is_fitted, _check_sample_weight, check_array
+from itertools import product
+import random
+from mutar import GroupLasso, DirtyModel, MultiLevelLasso, MTW, ReMTW
+
+#--- simulate data ---
+
+def simulate(rho=0.90,prob_com=0.05,prob_sep=0.05,common=True):
+    # parameters
+    n0 = 100
+    n1 = 10000
+    n = n0 + n1
+    p = 200
+    q = 10
+    fold = np.array([0]*n0+[1]*n1)
+    # features
+    mean = np.zeros(p)
+    idx = np.arange(p)
+    row_idx, col_idx = np.meshgrid(idx, idx)
+    sigma = rho ** np.abs(col_idx - row_idx)
+    if common is True:
+        x = multivariate_normal.rvs(mean=mean, cov=sigma, size=n)
+    else:
+        x = []
+        for k in range(q):
+            x.append(multivariate_normal.rvs(mean=mean, cov=sigma, size=n))
+    # effects
+    beta_com = np.random.binomial(n=1, p=prob_com, size=p) * np.abs(np.random.normal(size=p)) # np.abs?
+    beta_sep = np.random.binomial(n=1, p=prob_sep, size=p * q).reshape(p, q)*np.abs(np.random.normal(size=p * q)).reshape(p, q) # np.abs?
+    beta = beta_com[:, np.newaxis] + beta_sep
+    # targets
+    if common is True:
+        eta = x @ beta
+    else:
+        eta = np.full((n,q),np.nan)
+        for k in range(q):
+            eta[:,k] = x[k] @ beta[:,k]
+    noise_sd = 0.5 * np.std(eta, axis=0)
+    y = eta + np.random.normal(size=eta.shape, scale=noise_sd)
+    # returning multiple feature matrices is not implemented!
+    x_train, y_train = x[fold==0], y[fold==0]
+    x_test, y_test = x[fold==1], y[fold==1]
+    return x_train, y_train, x_test, y_test, beta
+
+#--- single-task lasso regressions ---
+
+class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
+    def __init__(self,cv=10,n_alphas=100):
+        self.cv = cv
+        self.n_alphas = n_alphas
+    def fit(self,X,y):
+        if X.ndim==2:
+            X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
+        #X, y = check_X_y(X, y, multi_output=True, y_numeric=True)
+        self.n, self.p, self.q = X.shape
+        self.n, self.q = y.shape
+        self.model = []
+        self.coef_ = np.full((self.q,self.p), np.nan)
+        for i in range(self.q):
+            model = LassoCV(n_alphas=self.n_alphas,cv=self.cv)
+            model.fit(X[:,:,i],y[:,i])
+            self.model.append(model)
+            self.coef_[i,:] = model.coef_
+        return self
+    def predict(self,X):
+        if X.ndim==2:
+            X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p, self.q))
+        #X = check_array(X,input_name='X')
+        check_is_fitted(self,attributes=['coef_'])
+        y_hat = np.full((X.shape[0],self.q), np.nan)
+        for i in range(self.q):
+            y_hat[:, i] = self.model[i].predict(X[:,:,i])
+        return y_hat
+
+#--- multi-task lasso regression ---  
+
+def CoopLasso(X,y,Z,n_alphas=100,alphas=None,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
+    n, p, q = X.shape
+    n, q = y.shape
+    coef = np.full((p, q), np.nan)
+    mu_y = np.mean(y,axis=0)
+    y = y - mu_y
+    #cor = spearmanr(X,y).statistic
+    #cor = np.nan_to_num(cor,nan=0)
+    #cor_x = cor[0:p,0:p]
+    #cor_y = cor[p:(p+q),p:(p+q)]
+    cor_y = spearmanr(y).statistic
+    cor_x = []
+    for j in range(q):
+        cor_x.append(spearmanr(X[:,:,j]).statistic)
+    if l1_ratio is None:
+        #coef = cor[0:p,p:(p+q)]
+        coef = None
+    else:
+        if alpha_init is None:
+            #enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
+            #enet.fit(X,y)
+            #coef = enet.coef_.T
+            #alpha_init = enet.alpha_
+            alpha_init = np.full(q,np.nan)
+            for j in range(q):
+                enet = ElasticNetCV(l1_ratio=l1_ratio)
+                enet.fit(X[:,:,j],y[:,j])
+                coef[:,j] = enet.coef_
+                alpha_init[j] = enet.alpha_
+        else:
+            #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
+            #enet.fit(X,y)
+            #coef = enet.coef_.T
+            for j in range(q):
+                  enet = ElasticNet(alpha=alpha_init[j],l1_ratio=l1_ratio)
+                  enet.fit(X[:,:,j],y[:,j])
+                  coef[:,j] = enet.coef_
+    #xx = np.hstack([X, -X])
+    weights = []
+    models = []
+    for i in range(q):
+        xx = np.hstack([X[:,:,i],-X[:,:,i]])
+        temp = coef * (np.sign(cor_y[:, i]) * (np.abs(cor_y[:, i])**exp_y))
+        w_pos = np.full(p,np.nan)
+        w_neg = np.full(p,np.nan)
+        w_abs = np.full(p,np.nan)
+        for j in range(p):
+            cont = temp * (np.sign(cor_x[i][:, j]) * (np.abs(cor_x[i][:, j])**exp_x))[:, np.newaxis]
+            w_pos[j] = np.sum(np.maximum(cont, 0))
+            w_neg[j] = np.sum(np.maximum(-cont, 0))
+            w_abs[j] = np.sum(np.abs(cont))
+        exclude = Z[i,:]==0
+        w_pos[exclude] = 0
+        w_neg[exclude] = 0
+        weight = np.append(w_pos+1e-09,w_neg+1e-09)
+        #weight = (w_abs + 1e-9)
+        xx_scale = xx * weight
+        if alphas is None:
+            model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=n_alphas,alphas=None,positive=True)
+        else:
+            model = lasso_path(X=xx_scale,y=y[:,i],alphas=alphas[i]['model'][0],positive=True)
+        weights.append(weight)
+        models.append(model)
+    return {
+        'weight': weights,
+        'model': models,
+        'mu_y': mu_y,
+        'alpha_init': alpha_init
+    }
+
+
+def predict_CoopLasso(models,newx,alpha=None):
+    y_hat = []
+    #newxx = np.hstack([newx, -newx])
+    for i in range(len(models['model'])):
+        newxx = np.hstack([newx[:,:,i],-newx[:,:,i]])
+        newx_scale = newxx * models['weight'][i]
+        beta = models['model'][i][1]
+        if alpha is None:
+            y_hat.append(newx_scale @ beta + models['mu_y'][i])
+        else:
+            alpha_path = np.log(models['model'][i][0]+1e-09)
+            order_path = np.argsort(alpha_path)
+            alpha_path = alpha_path[order_path]
+            beta = beta[:,order_path]
+            alpha_full = np.log(alpha[i]+1e-09)
+            increase = np.hstack([True,np.diff(alpha_path)!=0])
+            func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
+            beta_inter = func_inter(alpha_full)
+            y_hat.append(newx_scale @ beta_inter + models['mu_y'][i])
+    return y_hat
+
+
+class CoopLassoCV(BaseEstimator,RegressorMixin):
+    def __init__(self, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1):
+        self.cv = cv
+        self.n_alphas = n_alphas
+        self.l1_ratio = l1_ratio
+        self.exp_y = exp_y
+        self.exp_x = exp_x
+    def fit(self,X,y,Z=None):
+        if X.ndim==2:
+            X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
+        #X, y = check_X_y(X[:,:,0], y, multi_output=True, y_numeric=True)
+        self.n, self.p, self.q = X.shape
+        self.n, self.q = y.shape
+        if Z is None:
+            Z = np.full((self.q,self.p),1)
+        elif Z.ndim==1:
+            Z = np.broadcast_to(Z[None,:],(self.q,self.p))
+        self.coef_ = np.full((self.q,self.p), np.nan)
+        foldid = np.random.randint(0,self.cv,size=self.n)
+        self.model = CoopLasso(X=X, y=y, Z=Z, n_alphas=self.n_alphas,  l1_ratio=self.l1_ratio, alpha_init=None,exp_y=self.exp_y, exp_x=self.exp_x)
+        alpha = []
+        for i in range(self.q):
+            alpha.append(self.model['model'][i][0])
+        y_hat = np.full((self.n,self.q,self.n_alphas),np.nan)
+        for i in range(self.cv):
+            sub = CoopLasso(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z, n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model['alpha_init'], exp_y=self.exp_y, exp_x=self.exp_x)
+            temp = predict_CoopLasso(models=sub,newx=X[foldid==i,:,:],alpha=alpha)
+            for j in range(len(temp)):
+                y_hat[foldid==i,j,:] = temp[j]
+        mses = []
+        self.mins = []
+        self.coef_ = np.full((self.q,self.p),np.nan)
+        for j in range(self.q):
+            mse = np.mean((y_hat[:,j,:] - y[:,j,np.newaxis])**2, axis=0)
+            mses.append(mse)
+            id_min = np.argmin(mse)
+            self.mins.append(id_min)
+            temp = self.model['model'][j][1][:,id_min]
+            self.coef_[j,:] = temp[0:self.p] - temp[self.p:2*self.p]
+        return self
+    def predict(self,X):
+        if X.ndim==2:
+            X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p, self.q))
+        #X = check_array(X[:,:,0], input_name='X')
+        check_is_fitted(self,attributes=['coef_'])
+        result = []
+        #newxx = np.hstack([X, -X])
+        y_hat = np.full((X.shape[0], self.q), np.nan)
+        for i in range(self.q):
+            newxx = np.hstack([X[:,:,i], -X[:,:,i]])
+            newx_scale = newxx * self.model['weight'][i]
+            id_min = self.mins[i]
+            beta = self.model['model'][i][1][:,id_min]
+            y_hat[:,i] = newx_scale @ beta + self.model['mu_y'][i]
+        return y_hat
+
+#--- application --- 
+
+rho = [0, 0.90]
+prob_com = [0.00, 0.05]
+prob_sep = [0.00, 0.05]
+iter = range(10)
+grid = np.array(list(product(rho, prob_com, prob_sep, iter)))
+grid = grid[(grid[:,1]!=0) | (grid[:,2]!=0),:] # remove if prob_com=prob_sep=0
+
+propnzero = np.full((len(grid),4),np.nan)
+precision = np.full((len(grid),4),np.nan)
+prederror = np.full((len(grid),4),np.nan)
+
+for i in range(len(grid)):
+    random.seed(i)
+    x_train, y_train, x_test, y_test, beta = simulate(rho=grid[i,0], prob_com=grid[i,1], prob_sep=grid[i,2])
+    #X, y = x_train, y_train # temporary
+    scaler = StandardScaler()
+    x_train_scaled = scaler.fit_transform(x_train)
+    x_train_scaled_repeated = np.repeat(x_train_scaled[None,:,:],repeats=y_train.shape[1],axis=0)
+    x_test_scaled = scaler.transform(x_test)
+    x_test_scaled_repeated = np.repeat(x_test_scaled[None,:,:],repeats=y_test.shape[1],axis=0)
+    # prediction by the mean
+    coef_mean = np.zeros(beta.T.shape)
+    pred_mean = np.tile(np.mean(y_train,axis=0),(y_test.shape[0],1))
+    # separate lasso regressions
+    model = SingleTaskLassoCV(n_alphas=100,cv=5)
+    model.fit(x_train_scaled,y_train)
+    coef_single = model.coef_
+    pred_single = model.predict(x_test_scaled)
+    # multi-task lasso regression
+    model = MultiTaskLassoCV(n_alphas=100,cv=5)
+    model.fit(x_train_scaled,y_train)
+    coef_multi = model.coef_
+    pred_multi = model.predict(x_test_scaled)
+    # cooperative lasso regression
+    model = CoopLassoCV(n_alphas=100,cv=5,l1_ratio=0.5)
+    model.fit(X=x_train_scaled,y=y_train)
+    coef_coop = model.coef_
+    pred_coop = model.predict(x_test_scaled)
+    
+    # mutar (add internal cross-validation)
+    
+    #model = GroupLasso()
+    #model.fit(x_train_scaled_repeated,y_train.T)
+    #coef_group = model.coef_.T
+    #pred_group = model.predict(x_test_scaled_repeated).T
+  
+    #model = DirtyModel()
+    #model.fit(x_train_scaled_repeated,y_train.T)
+    #coef_dirty = model.coef_.T
+    #pred_dirty = model.predict(x_test_scaled_repeated).T
+    #
+    #model = MultiLevelLasso()
+    #model.fit(x_train_scaled_repeated,y_train.T)
+    #coef_level = model.coef_.T
+    #pred_level = model.predict(x_test_scaled_repeated).T
+    
+    # comparison
+    coef = np.stack([coef_mean,coef_single,coef_multi,coef_coop])
+    pred = np.stack([pred_mean,pred_single,pred_multi,pred_coop])
+    for j in range(len(coef)):
+        propnzero[i,j] = np.mean(coef[j]!=0)
+        if np.sum(coef[j])==0:
+            precision[i,j] = None
+        else:
+            precision[i,j] = np.sum((beta.T!=0) & (coef[j]!=0))/np.sum(coef[j]!=0)
+        prederror[i,j] = mean_squared_error(y_test,pred[j],multioutput='uniform_average')
+
+
+# summary
+np.mean(propnzero,axis=0)
+np.mean(precision,axis=0)
+predratio = (prederror.T/prederror[:,0]).T
+np.mean(predratio,axis=0)
+#array([1.        , 0.31545336, 0.32678457, 0.30478868])
+
+ttest_rel(a=predratio[:,1],b=predratio[:,2])
+ttest_rel(a=predratio[:,1],b=predratio[:,3])
+ttest_rel(a=predratio[:,2],b=predratio[:,3])
+
+predratio.reshape(6,10,-1).mean(axis=1)
+
+# Consider using same fold identifiers for all methods.
+# Save results to file, load file to analyse results.
+# Visualise results separately for each setting (6 settings).
+```
