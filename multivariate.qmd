@@ -164,7 +164,7 @@ https://hichamjanati.github.io/mutar/index.html
 
 
 <!--
-- Standardise Y internally (i.e., calculate not only mu_y but also sd_y). This is important if the different targets have different variances, because the prior coefficients are shared between targets.
+- Standardise Y internally (i.e., calculate not only mu_y but also sd_y). This is important if the different targets have different variances, because the prior coefficients are shared between targets. DONE!
 
 - cubic spline might cause problems due to extrapolation, consider trimming requested range (from outer full-fit) to respect limits of available range (from inner sub-fit)
 
@@ -431,7 +431,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         n_, p_, q_ = check_args(X=X,y=y,Z=Z)
         coef = np.full((p_, q_), np.nan)
         self.mu_y = np.mean(y,axis=0)
-        y = y - self.mu_y
+        #y = y - self.mu_y # original
+        self.sd_y = np.std(y,axis=0)
+        y = (y - self.mu_y)/self.sd_y
         #cor = spearmanr(X,y).statistic
         #cor = np.nan_to_num(cor,nan=0)
         #cor_x = cor[0:p,0:p]
@@ -510,7 +512,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 increase = np.hstack([True,np.diff(alpha_path)!=0])
                 func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
                 beta_inter = func_inter(alpha_full)
-                y_hat.append(newx_scale @ beta_inter + self.mu_y[i])
+                #y_hat.append(newx_scale @ beta_inter + self.mu_y[i]) # original
+                y_hat.append((newx_scale @ beta_inter)*self.sd_y[i] + self.mu_y[i]) # trial
         return y_hat
 
 class CoopLassoCV(BaseEstimator,RegressorMixin):
@@ -638,7 +641,8 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             newx_scale = newxx * self.model.weight[i]
             id_min = self.mins[i]
             beta = self.model.model[i][1][:,id_min]
-            y_hat[:,i] = newx_scale @ beta + self.model.mu_y[i]
+            #y_hat[:,i] = newx_scale @ beta + self.model.mu_y[i] # original
+            y_hat[:,i] = (newx_scale @ beta)*self.model.sd_y[i] + self.model.mu_y[i] # trial
         return y_hat
       
 SingleTaskLassoCV.fit.__doc__ = CoopLassoCV.fit.__doc__
