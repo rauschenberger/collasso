@@ -8,6 +8,8 @@ format:
         \usepackage{amsmath,amssymb}
         \let\boldsymbol\symbf
 editor: source
+editor_options: 
+  chunk_output_type: console
 ---
 
 **Here we implement a simple approach to sparse multi-task regression that can select different features for different targets. It allows for multiple numerical targets and many numerical or binary features. Sharing information between targets and between features, it potentially improves the selection and predictive performance. The proposed approach allows for features that are available for model training but not for model testing (i.e., privileged information).**
@@ -195,7 +197,7 @@ from sklearn.model_selection import KFold
 from sklearn.utils.validation import check_X_y, check_is_fitted, _check_sample_weight, check_array
 from itertools import product
 import random
-from mutar import GroupLasso, DirtyModel, MultiLevelLasso, MTW, ReMTW
+#from mutar import GroupLasso, DirtyModel, MultiLevelLasso, MTW, ReMTW
 
 #--- simulate data ---
 
@@ -239,9 +241,9 @@ def simulate(rho=0.90,prob_com=0.05,prob_sep=0.05,common=True):
 #--- single-task lasso regressions ---
 
 class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
-    def __init__(self,cv=10,n_alphas=100):
+    def __init__(self,cv=10,alphas=100):
         self.cv = cv
-        self.n_alphas = n_alphas
+        self.alphas = alphas
     def fit(self,X,y):
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
@@ -251,7 +253,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         self.model = []
         self.coef_ = np.full((self.q,self.p), np.nan)
         for i in range(self.q):
-            model = LassoCV(n_alphas=self.n_alphas,cv=self.cv)
+            model = LassoCV(alphas=self.alphas,cv=self.cv)
             model.fit(X[:,:,i],y[:,i])
             self.model.append(model)
             self.coef_[i,:] = model.coef_
@@ -443,12 +445,12 @@ for i in range(len(grid)):
     coef_mean = np.zeros(beta.T.shape)
     pred_mean = np.tile(np.mean(y_train,axis=0),(y_test.shape[0],1))
     # separate lasso regressions
-    model = SingleTaskLassoCV(n_alphas=100,cv=5)
+    model = SingleTaskLassoCV(alphas=100,cv=5)
     model.fit(x_train_scaled,y_train)
     coef_single = model.coef_
     pred_single = model.predict(x_test_scaled)
     # multi-task lasso regression
-    model = MultiTaskLassoCV(n_alphas=100,cv=5)
+    model = MultiTaskLassoCV(alphas=100,cv=5)
     model.fit(x_train_scaled,y_train)
     coef_multi = model.coef_
     pred_multi = model.predict(x_test_scaled)
