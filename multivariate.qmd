@@ -483,10 +483,10 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-          common feature matrix for all targets or separate features matrices for each target
+          common feature matrix for all targets or a separate feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
           target matrix
-        Z : ndarray of shape (p_features,) or (p_features, q_targets), or None
+        Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
           logical vector or matrix indicating primary (1, True) and auxiliary features (0, False) for all targets or each target
           
         Returns
@@ -528,20 +528,20 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
     def predict(self,X):
-    """
-    Make predictions
-
-    Parameters
-    ----------
-    X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-        common feature matrix for all targets, separate feature matrices for each target
-
-    Returns
-    -------
-    y_hat : ndarray of shape (n_samples, q_targets)
-        predicted values
+        """
+        Make predictions
+  
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets, or a separate feature matrix for each target
         
-    """
+        Returns
+        -------
+        y_hat : ndarray of shape (n_samples, q_targets)
+            matrix of predicted values (of the target in the column for the sample in the row)
+        
+        """
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
         #X = check_array(X[:,:,0], input_name='X')
@@ -556,6 +556,9 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             beta = self.model['model'][i][1][:,id_min]
             y_hat[:,i] = newx_scale @ beta + self.model['mu_y'][i]
         return y_hat
+      
+SingleTaskLassoCV.fit.__doc__ = CoopLassoCV.fit.__doc__
+SingleTaskLassoCV.predict.__doc__ = CoopLassoCV.predict.__doc__
 
 #--- application --- 
 
