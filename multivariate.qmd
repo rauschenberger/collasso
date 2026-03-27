@@ -164,6 +164,8 @@ https://hichamjanati.github.io/mutar/index.html
 
 
 <!--
+- Standardise Y internally (i.e., calculate not only mu_y but also sd_y). This is important if the different targets have different variances, because the prior coefficients are shared between targets.
+
 - cubic spline might cause problems due to extrapolation, consider trimming requested range (from outer full-fit) to respect limits of available range (from inner sub-fit)
 
 - Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
