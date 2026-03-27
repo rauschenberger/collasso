@@ -166,7 +166,7 @@ https://hichamjanati.github.io/mutar/index.html
 <!--
 - Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
 
-- Write code for elastic net (rather than only lasso).
+- Write code for elastic net (rather than only lasso). But lasso_path function comes with argument positive=True.
 
 - Allow for tuning extra hyperparameters (e.g., exponent for initial coefficients).
 - For other distributional families, it might be easier to implement this approach without sign constraints. Before this, compare performance in linear case with and without constraints.
@@ -338,102 +338,133 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
 
 #--- multi-task lasso regression ---  
 
-def CoopLasso(X,y,Z,n_alphas=100,alphas=None,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
-    n, p, q = X.shape
-    n, q = y.shape
-    coef = np.full((p, q), np.nan)
-    mu_y = np.mean(y,axis=0)
-    y = y - mu_y
-    #cor = spearmanr(X,y).statistic
-    #cor = np.nan_to_num(cor,nan=0)
-    #cor_x = cor[0:p,0:p]
-    #cor_y = cor[p:(p+q),p:(p+q)]
-    cor_y = spearmanr(y).statistic
-    cor_x = []
-    for j in range(q):
-        cor_x.append(spearmanr(X[:,:,j]).statistic)
-    if l1_ratio is None:
-        #coef = cor[0:p,p:(p+q)]
-        coef = None
-    else:
-        if alpha_init is None:
-            #enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
-            #enet.fit(X,y)
-            #coef = enet.coef_.T
-            #alpha_init = enet.alpha_
-            alpha_init = np.full(q,np.nan)
-            for j in range(q):
-                enet = ElasticNetCV(l1_ratio=l1_ratio)
-                enet.fit(X[:,:,j],y[:,j])
-                coef[:,j] = enet.coef_
-                alpha_init[j] = enet.alpha_
-        else:
-            #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
-            #enet.fit(X,y)
-            #coef = enet.coef_.T
-            for j in range(q):
-                  enet = ElasticNet(alpha=alpha_init[j],l1_ratio=l1_ratio)
-                  enet.fit(X[:,:,j],y[:,j])
-                  coef[:,j] = enet.coef_
-    #xx = np.hstack([X, -X])
-    weights = []
-    models = []
-    for i in range(q):
-        xx = np.hstack([X[:,:,i],-X[:,:,i]])
-        temp = coef * (np.sign(cor_y[:, i]) * (np.abs(cor_y[:, i])**exp_y))
-        w_pos = np.full(p,np.nan)
-        w_neg = np.full(p,np.nan)
-        w_abs = np.full(p,np.nan)
-        for j in range(p):
-            cont = temp * (np.sign(cor_x[i][:, j]) * (np.abs(cor_x[i][:, j])**exp_x))[:, np.newaxis]
-            w_pos[j] = np.sum(np.maximum(cont, 0))
-            w_neg[j] = np.sum(np.maximum(-cont, 0))
-            w_abs[j] = np.sum(np.abs(cont))
-        exclude = Z[i,:]==0
-        w_pos[exclude] = 0
-        w_neg[exclude] = 0
-        weight = np.append(w_pos+1e-09,w_neg+1e-09)
-        #weight = (w_abs + 1e-9)
-        xx_scale = xx * weight
-        if alphas is None:
-            model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=n_alphas,alphas=None,positive=True)
-        else:
-            model = lasso_path(X=xx_scale,y=y[:,i],alphas=alphas[i]['model'][0],positive=True)
-        weights.append(weight)
-        models.append(model)
-    return {
-        'weight': weights,
-        'model': models,
-        'mu_y': mu_y,
-        'alpha_init': alpha_init
-    }
+class CoopLasso(BaseEstimator,RegressorMixin):
+    """
+    Cooperative Multi-Task Lasso Regression
+  
+    ...
 
-
-def predict_CoopLasso(models,newx,alpha=None):
-    y_hat = []
-    #newxx = np.hstack([newx, -newx])
-    for i in range(len(models['model'])):
-        newxx = np.hstack([newx[:,:,i],-newx[:,:,i]])
-        newx_scale = newxx * models['weight'][i]
-        beta = models['model'][i][1]
-        if alpha is None:
-            y_hat.append(newx_scale @ beta + models['mu_y'][i])
+    Parameters
+    ----------
+    alphas : int
+        number of candidate values for the regularisation parameter
+        
+    Attributes
+    ----------
+    n_ : int
+      number of training samples
+    p_ : int
+      number of features
+    q_ : int
+      number of targets
+    model : list
+        fitted model from CoopLassoCV 
+    coef_ : ndarray of shape (q_, p_)
+        estimated coefficients (of the feature in the column on the target in the row)
+        
+    Methods
+    -------
+    fit(X,y)
+        Fits the models
+    predict(X)
+        Makes predictions
+    """
+    def __init__(self,n_alphas=100,alphas=None,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
+        self.n_alphas = n_alphas
+        self.alphas = alphas
+        self.l1_ratio = l1_ratio
+        self.alpha_init = alpha_init
+        self.exp_y = exp_y
+        self.exp_x = exp_x
+    def fit(self,X,y,Z):
+        n, p, q = X.shape
+        n, q = y.shape
+        coef = np.full((p, q), np.nan)
+        self.mu_y = np.mean(y,axis=0)
+        y = y - self.mu_y
+        #cor = spearmanr(X,y).statistic
+        #cor = np.nan_to_num(cor,nan=0)
+        #cor_x = cor[0:p,0:p]
+        #cor_y = cor[p:(p+q),p:(p+q)]
+        cor_y = spearmanr(y).statistic
+        cor_x = []
+        for j in range(q):
+            cor_x.append(spearmanr(X[:,:,j]).statistic)
+        if self.l1_ratio is None:
+            #coef = cor[0:p,p:(p+q)]
+            coef = None
         else:
-            alpha_path = np.log(models['model'][i][0]+1e-09)
-            order_path = np.argsort(alpha_path)
-            alpha_path = alpha_path[order_path]
-            beta = beta[:,order_path]
-            alpha_full = np.log(alpha[i]+1e-09)
-            increase = np.hstack([True,np.diff(alpha_path)!=0])
-            func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
-            beta_inter = func_inter(alpha_full)
-            y_hat.append(newx_scale @ beta_inter + models['mu_y'][i])
-    return y_hat
+            if self.alpha_init is None:
+                #enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
+                #enet.fit(X,y)
+                #coef = enet.coef_.T
+                #alpha_init = enet.alpha_
+                self.alpha_init = np.full(q,np.nan)
+                for j in range(q):
+                    enet = ElasticNetCV(l1_ratio=self.l1_ratio)
+                    enet.fit(X[:,:,j],y[:,j])
+                    coef[:,j] = enet.coef_
+                    self.alpha_init[j] = enet.alpha_
+            else:
+                #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
+                #enet.fit(X,y)
+                #coef = enet.coef_.T
+                for j in range(q):
+                      enet = ElasticNet(alpha=self.alpha_init[j],l1_ratio=self.l1_ratio)
+                      enet.fit(X[:,:,j],y[:,j])
+                      coef[:,j] = enet.coef_
+        #xx = np.hstack([X, -X])
+        self.weight = []
+        self.model = []
+        for i in range(q):
+            xx = np.hstack([X[:,:,i],-X[:,:,i]])
+            temp = coef * (np.sign(cor_y[:, i]) * (np.abs(cor_y[:, i])**self.exp_y))
+            w_pos = np.full(p,np.nan)
+            w_neg = np.full(p,np.nan)
+            w_abs = np.full(p,np.nan)
+            for j in range(p):
+                cont = temp * (np.sign(cor_x[i][:, j]) * (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
+                w_pos[j] = np.sum(np.maximum(cont, 0))
+                w_neg[j] = np.sum(np.maximum(-cont, 0))
+                w_abs[j] = np.sum(np.abs(cont))
+            exclude = Z[i,:]==0
+            w_pos[exclude] = 0
+            w_neg[exclude] = 0
+            weight = np.append(w_pos+1e-09,w_neg+1e-09)
+            #weight = (w_abs + 1e-9)
+            xx_scale = xx * weight
+            if self.alphas is None:
+                model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
+            else:
+                model = lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
+            self.weight.append(weight)
+            self.model.append(model)
+        return self
+    def predict(self,X,alpha=None):
+        y_hat = []
+        #newxx = np.hstack([X, -X])
+        for i in range(len(self.model)):
+            newxx = np.hstack([X[:,:,i],-X[:,:,i]])
+            newx_scale = newxx * self.weight[i]
+            beta = self.model[i][1]
+            if alpha is None:
+                y_hat.append(newx_scale @ beta + self.mu_y[i])
+            else:
+                alpha_path = np.log(self.model[i][0]+1e-09)
+                order_path = np.argsort(alpha_path)
+                alpha_path = alpha_path[order_path]
+                beta = beta[:,order_path]
+                alpha_full = np.log(alpha[i]+1e-09)
+                increase = np.hstack([True,np.diff(alpha_path)!=0])
+                func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
+                beta_inter = func_inter(alpha_full)
+                y_hat.append(newx_scale @ beta_inter + self.mu_y[i])
+        return y_hat
 
 
 class CoopLassoCV(BaseEstimator,RegressorMixin):
     """
-    Class CoopLassoCV
+    Cross-Validated Cooperative Multi-Task Lasso Regression
     
     ...
 
@@ -506,14 +537,19 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             Z = np.broadcast_to(Z[None,:],(self.q_,self.p_))
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         foldid = np.random.randint(0,self.cv,size=self.n_)
-        self.model = CoopLasso(X=X, y=y, Z=Z, n_alphas=self.n_alphas,  l1_ratio=self.l1_ratio, alpha_init=None,exp_y=self.exp_y, exp_x=self.exp_x)
+        #self.model = CoopLasso(X=X, y=y, Z=Z, n_alphas=self.n_alphas,  l1_ratio=self.l1_ratio, alpha_init=None,exp_y=self.exp_y, exp_x=self.exp_x)
+        self.model = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
+        self.model.fit(X=X,y=y,Z=Z)
         alpha = []
         for i in range(self.q_):
-            alpha.append(self.model['model'][i][0])
+            alpha.append(self.model.model[i][0])
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
         for i in range(self.cv):
-            sub = CoopLasso(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z, n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model['alpha_init'], exp_y=self.exp_y, exp_x=self.exp_x)
-            temp = predict_CoopLasso(models=sub,newx=X[foldid==i,:,:],alpha=alpha)
+            #sub = CoopLasso(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z, n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model['alpha_init'], exp_y=self.exp_y, exp_x=self.exp_x)
+            #temp = predict_CoopLasso(models=sub,newx=X[foldid==i,:,:],alpha=alpha)
+            sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model.alpha_init, exp_y=self.exp_y, exp_x=self.exp_x)
+            sub.fit(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z)
+            temp = sub.predict(X=X[foldid==i,:,:],alpha=alpha)
             for j in range(len(temp)):
                 y_hat[foldid==i,j,:] = temp[j]
         mses = []
@@ -524,7 +560,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             mses.append(mse)
             id_min = np.argmin(mse)
             self.mins.append(id_min)
-            temp = self.model['model'][j][1][:,id_min]
+            temp = self.model.model[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
     def predict(self,X):
@@ -551,10 +587,10 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         for i in range(self.q_):
             newxx = np.hstack([X[:,:,i], -X[:,:,i]])
-            newx_scale = newxx * self.model['weight'][i]
+            newx_scale = newxx * self.model.weight[i]
             id_min = self.mins[i]
-            beta = self.model['model'][i][1][:,id_min]
-            y_hat[:,i] = newx_scale @ beta + self.model['mu_y'][i]
+            beta = self.model.model[i][1][:,id_min]
+            y_hat[:,i] = newx_scale @ beta + self.model.mu_y[i]
         return y_hat
       
 SingleTaskLassoCV.fit.__doc__ = CoopLassoCV.fit.__doc__
