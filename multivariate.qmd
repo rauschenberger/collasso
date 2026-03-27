@@ -201,6 +201,37 @@ import random
 #--- simulate data ---
 
 def simulate(rho=0.90,prob_com=0.05,prob_sep=0.05,common=True):
+    """
+    Simulate Data for Linear Multi-Task Regression
+    
+    Simulates feature matrix and target matrix, with given probabilities of (i) common effects on all targets and (ii) separate effects on each target.
+    
+    ....
+    
+    Parameters
+    ----------
+    
+    rho : float, default=0.90
+      correlation coefficient, 0<=rho<=1
+    prob_com : float, default=0.05
+      probability of common effects for all targets, 0<=prob_com<=1
+    prob_sep : float, default=0.05
+      probability of separate effects for each target
+      
+     Returns
+    -------
+    x_train : ndarray of shape (n0,p)
+        training feature matrix
+    y_train : ndarray of shape (n0,q)
+        training target matrix
+    x_test : ndarray of shape (n1,p)
+        test feature matrix
+    y_test : ndarray of shape (n1,q)
+        test target matrix
+    beta : ndarray of shape (p,q)
+        true effects in the training and the test data (of the feature in the row on the target in the column) CONSIDER TRANSPOSING THIS TO BE CONSISTENT WITH OTHER FUNCTIONS
+        
+    """
     # parameters
     n0 = 100
     n1 = 10000
@@ -426,7 +457,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
     model : list
         fitted model from CoopLasso 
     coef_ : ndarray of shape (q_, p_)
-        estimated coefficients (of the feature in the column on the target in the row)
+        estimated effects (of the feature in the column on the target in the row)
     
     Methods
     -------
@@ -442,6 +473,19 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.exp_y = exp_y
         self.exp_x = exp_x
     def fit(self,X,y,Z=None):
+        """
+        Fit CoopLassoCV
+        
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+          common feature matrix for all targets or separate features matrices for each target
+        y : ndarray of shape (n_samples, q_targets)
+          target matrix
+        Z : ndarray of shape (n_features,) or (n_features,n_targets), or None
+          logical vector or matrix indicating primary (1, True) and auxiliary features (0, False) for all targets or each target
+          
+        """
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         #X, y = check_X_y(X[:,:,0], y, multi_output=True, y_numeric=True)
