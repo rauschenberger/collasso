@@ -338,6 +338,40 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
 
 #--- multi-task lasso regression ---  
 
+def check_args(X,y,Z):
+    #--- targets ---
+    if not isinstance(y,np.ndarray) or y.ndim!=2:
+        raise ValueError("'y' should be an 'n x q' matrix")
+    n, q = y.shape
+    
+    #--- features ---
+    if not isinstance(X,np.ndarray) or X.ndim not in (2,3):
+        raise ValueError("'X' should be an 'n x p' matrix or an 'n x p x q' array")
+    if X.shape[0]!=n:
+        raise ValueError("'y' and 'X' should have the same number of samples (first dimension in 'y' and 'X')")
+    if X.ndim==3 and X.shape[2]!=q:
+        raise ValueError("'y' and 'X' should have the same number of targets (second dimension in 'y', third dimension in 'X')")
+    p = X.shape[1]
+    
+    #--- indicators ---
+    if Z is not None:
+        if not isinstance(Z,np.ndarray) or Z.ndim not in (2,3):
+            raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
+        if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[1]!=p):
+            raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y', only or second dimension in 'Z')")
+        if Z.ndim==2 and Z.shape[0]!=q:
+            raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y' and 'Z')")
+    return n, p, q
+  
+
+#if X.ndim==2:
+#    X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
+#if Z is None:
+#    Z = np.full((self.q_,self.p_),1)
+#elif Z.ndim==1:
+#    Z = np.broadcast_to(Z[None,:],(self.q_,self.p_))
+
+
 class CoopLasso(BaseEstimator,RegressorMixin):
     """
     Cooperative Multi-Task Lasso Regression
@@ -369,14 +403,15 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     predict(X)
         Makes predictions
     """
-    def __init__(self,n_alphas=100,alphas=None,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
+    def __init__(self,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
         self.n_alphas = n_alphas
-        self.alphas = alphas
+        self.alphas = None # alphas
         self.l1_ratio = l1_ratio
         self.alpha_init = alpha_init
         self.exp_y = exp_y
         self.exp_x = exp_x
     def fit(self,X,y,Z):
+        check_args(X=X,y=y,Z=Z)
         n, p, q = X.shape
         n, q = y.shape
         coef = np.full((p, q), np.nan)
@@ -393,6 +428,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         if self.l1_ratio is None:
             #coef = cor[0:p,p:(p+q)]
             coef = None
+            # use correlation coefficients in this case?
         else:
             if self.alpha_init is None:
                 #enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
@@ -433,10 +469,10 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             weight = np.append(w_pos+1e-09,w_neg+1e-09)
             #weight = (w_abs + 1e-9)
             xx_scale = xx * weight
-            if self.alphas is None:
-                model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
-            else:
-                model = lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
+            #if self.alphas is None:
+            model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
+            #else:
+            #    model = lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight.append(weight)
             self.model.append(model)
         return self
@@ -460,7 +496,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 beta_inter = func_inter(alpha_full)
                 y_hat.append(newx_scale @ beta_inter + self.mu_y[i])
         return y_hat
-
 
 class CoopLassoCV(BaseEstimator,RegressorMixin):
     """
@@ -526,6 +561,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self: CoopLassoCV
             fitted model
         """
+        check_args(X=X,y=y,Z=Z)
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         #X, y = check_X_y(X[:,:,0], y, multi_output=True, y_numeric=True)
