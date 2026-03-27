@@ -166,6 +166,8 @@ https://hichamjanati.github.io/mutar/index.html
 <!--
 - cubic spline might cause problems due to extrapolation, consider trimming requested range (from outer full-fit) to respect limits of available range (from inner sub-fit)
 
+- check whether q=2 indeed leads to scalar instead of matrix (if yes, fix this)
+
 - Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
 
 - Write code for elastic net (rather than only lasso). (However, only lasso_path function comes with the option positive=True!)
@@ -198,6 +200,7 @@ from sklearn.model_selection import KFold
 from sklearn.utils.validation import check_is_fitted
 from itertools import product
 import random
+from scipy.stats import rankdata
 #from mutar import GroupLasso, DirtyModel, MultiLevelLasso, MTW, ReMTW
 
 #--- simulate data ---
@@ -422,7 +425,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         #cor = np.nan_to_num(cor,nan=0)
         #cor_x = cor[0:p,0:p]
         #cor_y = cor[p:(p+q),p:(p+q)]
-        cor_y = spearmanr(y).statistic
+        #cor_y = spearmanr(y).statistic # problem under q=2
+        cor_y = np.corrcoef(rankdata(y, axis=0),rowvar=False)
         cor_x = []
         for j in range(q_):
             cor_x.append(spearmanr(X[:,:,j]).statistic)
