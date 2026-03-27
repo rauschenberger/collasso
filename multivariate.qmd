@@ -357,9 +357,9 @@ def check_args(X,y,Z):
     if Z is not None:
         if not isinstance(Z,np.ndarray) or Z.ndim not in (2,3):
             raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
-        if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[1]!=p):
-            raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y', only or second dimension in 'Z')")
-        if Z.ndim==2 and Z.shape[0]!=q:
+        if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[0]!=p):
+            raise ValueError("X' and 'Z' should have the same number of features (second dimension in 'X', first dimension in 'Z')")
+        if Z.ndim==2 and Z.shape[1]!=q:
             raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y' and 'Z')")
     return n, p, q
   
@@ -463,7 +463,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 w_pos[j] = np.sum(np.maximum(cont, 0))
                 w_neg[j] = np.sum(np.maximum(-cont, 0))
                 w_abs[j] = np.sum(np.abs(cont))
-            exclude = Z[i,:]==0
+            exclude = Z.T[i,:]==0
             w_pos[exclude] = 0
             w_neg[exclude] = 0
             weight = np.append(w_pos+1e-09,w_neg+1e-09)
@@ -568,9 +568,9 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.n_, self.p_, self.q_ = X.shape
         self.n_, self.q_ = y.shape
         if Z is None:
-            Z = np.full((self.q_,self.p_),1)
+            Z = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
-            Z = np.broadcast_to(Z[None,:],(self.q_,self.p_))
+            Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         foldid = np.random.randint(0,self.cv,size=self.n_)
         #self.model = CoopLasso(X=X, y=y, Z=Z, n_alphas=self.n_alphas,  l1_ratio=self.l1_ratio, alpha_init=None,exp_y=self.exp_y, exp_x=self.exp_x)
