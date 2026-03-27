@@ -168,7 +168,7 @@ https://hichamjanati.github.io/mutar/index.html
 
 - cubic spline might cause problems due to extrapolation, consider trimming requested range (from outer full-fit) to respect limits of available range (from inner sub-fit)
 
-- Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
+- Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result. (As scikit-learn funcs returns coefs on transformed scale, only bring them back to the original scale for the unit tests.)
 
 - Use KFold and random state to set fold identifiers, use the same internal folds for all method.
 
