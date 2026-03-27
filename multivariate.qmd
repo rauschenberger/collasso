@@ -166,7 +166,7 @@ https://hichamjanati.github.io/mutar/index.html
 <!--
 - Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
 
-- Write code for elastic net (rather than only lasso). But lasso_path function comes with argument positive=True.
+- Write code for elastic net (rather than only lasso). (However, only lasso_path function comes with the option positive=True!)
 
 - Allow for tuning extra hyperparameters (e.g., exponent for initial coefficients).
 - For other distributional families, it might be easier to implement this approach without sign constraints. Before this, compare performance in linear case with and without constraints.
@@ -367,9 +367,9 @@ def check_args(X,y,Z):
 #if X.ndim==2:
 #    X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
 #if Z is None:
-#    Z = np.full((self.q_,self.p_),1)
+#    Z = np.full((self.p_,self.q_),1)
 #elif Z.ndim==1:
-#    Z = np.broadcast_to(Z[None,:],(self.q_,self.p_))
+#    Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
 
 
 class CoopLasso(BaseEstimator,RegressorMixin):
@@ -411,10 +411,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.exp_y = exp_y
         self.exp_x = exp_x
     def fit(self,X,y,Z):
-        check_args(X=X,y=y,Z=Z)
-        n, p, q = X.shape
-        n, q = y.shape
-        coef = np.full((p, q), np.nan)
+        n_, p_, q_ = check_args(X=X,y=y,Z=Z)
+        coef = np.full((p_, q_), np.nan)
         self.mu_y = np.mean(y,axis=0)
         y = y - self.mu_y
         #cor = spearmanr(X,y).statistic
@@ -423,7 +421,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         #cor_y = cor[p:(p+q),p:(p+q)]
         cor_y = spearmanr(y).statistic
         cor_x = []
-        for j in range(q):
+        for j in range(q_):
             cor_x.append(spearmanr(X[:,:,j]).statistic)
         if self.l1_ratio is None:
             #coef = cor[0:p,p:(p+q)]
@@ -435,8 +433,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 #enet.fit(X,y)
                 #coef = enet.coef_.T
                 #alpha_init = enet.alpha_
-                self.alpha_init = np.full(q,np.nan)
-                for j in range(q):
+                self.alpha_init = np.full(q_,np.nan)
+                for j in range(q_):
                     enet = ElasticNetCV(l1_ratio=self.l1_ratio)
                     enet.fit(X[:,:,j],y[:,j])
                     coef[:,j] = enet.coef_
@@ -445,20 +443,20 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
                 #enet.fit(X,y)
                 #coef = enet.coef_.T
-                for j in range(q):
+                for j in range(q_):
                       enet = ElasticNet(alpha=self.alpha_init[j],l1_ratio=self.l1_ratio)
                       enet.fit(X[:,:,j],y[:,j])
                       coef[:,j] = enet.coef_
         #xx = np.hstack([X, -X])
         self.weight = []
         self.model = []
-        for i in range(q):
+        for i in range(q_):
             xx = np.hstack([X[:,:,i],-X[:,:,i]])
             temp = coef * (np.sign(cor_y[:, i]) * (np.abs(cor_y[:, i])**self.exp_y))
-            w_pos = np.full(p,np.nan)
-            w_neg = np.full(p,np.nan)
-            w_abs = np.full(p,np.nan)
-            for j in range(p):
+            w_pos = np.full(p_,np.nan)
+            w_neg = np.full(p_,np.nan)
+            w_abs = np.full(p_,np.nan)
+            for j in range(p_):
                 cont = temp * (np.sign(cor_x[i][:, j]) * (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
                 w_pos[j] = np.sum(np.maximum(cont, 0))
                 w_neg[j] = np.sum(np.maximum(-cont, 0))
@@ -561,12 +559,9 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self: CoopLassoCV
             fitted model
         """
-        check_args(X=X,y=y,Z=Z)
+        self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
-        #X, y = check_X_y(X[:,:,0], y, multi_output=True, y_numeric=True)
-        self.n_, self.p_, self.q_ = X.shape
-        self.n_, self.q_ = y.shape
         if Z is None:
             Z = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
