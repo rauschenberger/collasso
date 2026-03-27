@@ -166,13 +166,22 @@ https://hichamjanati.github.io/mutar/index.html
 <!--
 - cubic spline might cause problems due to extrapolation, consider trimming requested range (from outer full-fit) to respect limits of available range (from inner sub-fit)
 
-- check whether q=2 indeed leads to scalar instead of matrix (if yes, fix this)
-
 - Bring estimated coefficients back to original scale. Test whether X %*% coef and predict lead to the same result.
+
+- Use KFold and random state to set fold identifiers, use the same internal folds for all method.
+
+- Write functions to bring X (from matrix to array) and Z (from None or vector to matrix) to required shape. Call these functions in CoopLasso and CoopLassoCV.
+
+- Vectorise weight computation (no loop over q).
+
+- Consider adapting simulation study to separate (instead of common) features matrices. Also consider adapting simulation study to privileged information.
+
+XXX
 
 - Write code for elastic net (rather than only lasso). (However, only lasso_path function comes with the option positive=True!)
 
 - Allow for tuning extra hyperparameters (e.g., exponent for initial coefficients).
+
 - For other distributional families, it might be easier to implement this approach without sign constraints. Before this, compare performance in linear case with and without constraints.
 -->
 
