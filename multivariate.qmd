@@ -583,12 +583,13 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
     predict(X)
         Makes predictions
     """
-    def __init__(self, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1):
+    def __init__(self, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state = None):
         self.cv = cv
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio
         self.exp_y = exp_y
         self.exp_x = exp_x
+        self.random_state = random_state
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None):
         """
         Fit CoopLassoCV
@@ -610,42 +611,32 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         """
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
-        #if X.ndim==2:
-        #    X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         if Z is None:
             Z = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
             Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
         self.coef_ = np.full((self.q_,self.p_), np.nan)
-        foldid = np.random.randint(0,self.cv,size=self.n_)
-        #self.model = CoopLasso(X=X, y=y, Z=Z, n_alphas=self.n_alphas,  l1_ratio=self.l1_ratio, alpha_init=None,exp_y=self.exp_y, exp_x=self.exp_x)
         self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
         self.model_.fit(X=X,y=y,Z=Z)
         alpha = []
         for i in range(self.q_):
             alpha.append(self.model_.model_[i][0])
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
-        CVF = KFold(n_splits=self.cv,shuffle=True,random_state=0) # change random_state!
-        #for i in range(self.cv):
-        for train_id, test_id in CVF.split(X=X,y=y): # Does this work if X=array?
-            #sub = CoopLasso(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z, n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model['alpha_init'], exp_y=self.exp_y, exp_x=self.exp_x)
-            #temp = predict_CoopLasso(models=sub,newx=X[foldid==i,:,:],alpha=alpha)
+        CVF = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
+        for train_id, test_id in CVF.split(X=X,y=y):
             sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model_.alpha_init_, exp_y=self.exp_y, exp_x=self.exp_x)
-            #sub.fit(X=X[foldid!=i,...], y=y[foldid!=i,:], Z=Z) # replaced :,: by ...
             sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
-            #temp = sub.predict(X=X[foldid==i,...],alpha=alpha) # replaced :,: by ...
             temp = sub.predict(X=X[test_id,...],alpha=alpha)
             for j in range(len(temp)):
-                #y_hat[foldid==i,j,:] = temp[j]
                 y_hat[test_id,j,:] = temp[j]
         mses = []
-        self.mins = []
+        self.mins_ = []
         self.coef_ = np.full((self.q_,self.p_),np.nan)
         for j in range(self.q_):
             mse = np.mean((y_hat[:,j,:] - y[:,j,np.newaxis])**2, axis=0)
             mses.append(mse)
             id_min = np.argmin(mse)
-            self.mins.append(id_min)
+            self.mins_.append(id_min)
             temp = self.model_.model_[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
@@ -664,11 +655,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             matrix of predicted values (of the target in the column for the sample in the row)
         
         """
-        #if X.ndim==2:
-        #    X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
         check_is_fitted(self,attributes=['coef_'])
-        result = []
-        #newxx = np.hstack([X, -X])
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         if X.ndim==2:
             newxx = np.hstack([X,-X])
@@ -676,9 +663,9 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             if X.ndim==3:
                 newxx = np.hstack([X[:,:,i], -X[:,:,i]])
             newx_scale = newxx * self.model_.weight_[i]
-            id_min = self.mins[i]
+            id_min = self.mins_[i]
             beta = self.model_.model_[i][1][:,id_min]
-            y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i] # trial
+            y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i]
         return y_hat
       
 SingleTaskLassoCV.fit.__doc__ = CoopLassoCV.fit.__doc__
@@ -690,7 +677,7 @@ SingleTaskLassoCV.predict.__doc__ = CoopLassoCV.predict.__doc__
 x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
 x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
 x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
-model = CoopLassoCV()
+model = CoopLassoCV(random_state=1)
 model.fit(x_train,y_train)
 y_hat = []
 y_hat.append(model.predict(x_test))
