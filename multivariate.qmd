@@ -339,12 +339,12 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         #self.n_, self.p_, self.q_ = X.shape
         #self.n_, self.q_ = y.shape
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=None)
-        self.model = []
+        self.model_ = []
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         for i in range(self.q_):
             model = LassoCV(alphas=self.alphas,cv=self.cv)
             model.fit(X[:,:,i],y[:,i])
-            self.model.append(model)
+            self.model_.append(model)
             self.coef_[i,:] = model.coef_
         return self
     def predict(self,X:np.ndarray):
@@ -353,7 +353,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         check_is_fitted(self,attributes=['coef_'])
         y_hat = np.full((X.shape[0],self.q_), np.nan)
         for i in range(self.q_):
-            y_hat[:, i] = self.model[i].predict(X[:,:,i])
+            y_hat[:, i] = self.model_[i].predict(X[:,:,i])
         return y_hat
 
 #--- multi-task lasso regression ---  
@@ -441,10 +441,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         elif Z.ndim==1:
             Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
         coef = np.full((self.p_, self.q_), np.nan)
-        self.mu_y = np.mean(y,axis=0)
-        #y = y - self.mu_y # original
-        self.sd_y = np.std(y,axis=0)
-        y = (y - self.mu_y)/self.sd_y
+        self.mu_y_ = np.mean(y,axis=0)
+        self.sd_y_ = np.std(y,axis=0)
+        y = (y - self.mu_y_)/self.sd_y_
         #cor = spearmanr(X,y).statistic
         #cor = np.nan_to_num(cor,nan=0)
         #cor_x = cor[0:p,0:p]
@@ -469,7 +468,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 #enet.fit(X,y)
                 #coef = enet.coef_.T
                 #alpha_init = enet.alpha_
-                self.alpha_init = np.full(self.q_,np.nan)
+                self.alpha_init_ = np.full(self.q_,np.nan)
                 for j in range(self.q_):
                     enet = ElasticNetCV(l1_ratio=self.l1_ratio)
                     if X.ndim==2:
@@ -477,20 +476,21 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                     else:
                       enet.fit(X[:,:,j],y[:,j])
                     coef[:,j] = enet.coef_
-                    self.alpha_init[j] = enet.alpha_
+                    self.alpha_init_[j] = enet.alpha_
             else:
                 #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
                 #enet.fit(X,y)
                 #coef = enet.coef_.T
+                self.alpha_init_ = self.alpha_init
                 for j in range(self.q_):
-                      enet = ElasticNet(alpha=self.alpha_init[j],l1_ratio=self.l1_ratio)
+                      enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
                       if X.ndim==2:
                           enet.fit(X[:,:],y[:,j])
                       else:
                           enet.fit(X[:,:,j],y[:,j])
                       coef[:,j] = enet.coef_
-        self.weight = []
-        self.model = []
+        self.weight_ = []
+        self.model_ = []
         if X.ndim==2:
             xx = np.hstack([X,-X])
         for i in range(self.q_):
@@ -515,22 +515,22 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
             #else:
             #    model = lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
-            self.weight.append(weight)
-            self.model.append(model)
+            self.weight_.append(weight)
+            self.model_.append(model)
         return self
     def predict(self,X:np.ndarray,alpha:np.ndarray|None=None):
         y_hat = []
         if X.ndim==2:
             newxx = np.hstack([X, -X])
-        for i in range(len(self.model)):
+        for i in range(len(self.model_)):
             if X.ndim==3:
                 newxx = np.hstack([X[:,:,i],-X[:,:,i]])
-            newx_scale = newxx * self.weight[i]
-            beta = self.model[i][1]
+            newx_scale = newxx * self.weight_[i]
+            beta = self.model_[i][1]
             if alpha is None:
-                y_hat.append(newx_scale @ beta + self.mu_y[i])
+                y_hat.append(newx_scale @ beta + self.mu_y_[i])
             else:
-                alpha_path = np.log(self.model[i][0]+self._EPS)
+                alpha_path = np.log(self.model_[i][0]+self._EPS)
                 order_path = np.argsort(alpha_path)
                 alpha_path = alpha_path[order_path]
                 beta = beta[:,order_path]
@@ -539,8 +539,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 increase = np.hstack([True,np.diff(alpha_path)!=0])
                 func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
                 beta_inter = func_inter(alpha_full)
-                #y_hat.append(newx_scale @ beta_inter + self.mu_y[i]) # original
-                y_hat.append((newx_scale @ beta_inter)*self.sd_y[i] + self.mu_y[i]) # trial
+                y_hat.append((newx_scale @ beta_inter)*self.sd_y_[i] + self.mu_y_[i])
         return y_hat
 
 class CoopLassoCV(BaseEstimator,RegressorMixin):
@@ -620,18 +619,18 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         foldid = np.random.randint(0,self.cv,size=self.n_)
         #self.model = CoopLasso(X=X, y=y, Z=Z, n_alphas=self.n_alphas,  l1_ratio=self.l1_ratio, alpha_init=None,exp_y=self.exp_y, exp_x=self.exp_x)
-        self.model = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
-        self.model.fit(X=X,y=y,Z=Z)
+        self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
+        self.model_.fit(X=X,y=y,Z=Z)
         alpha = []
         for i in range(self.q_):
-            alpha.append(self.model.model[i][0])
+            alpha.append(self.model_.model_[i][0])
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
         CVF = KFold(n_splits=self.cv,shuffle=True,random_state=0) # change random_state!
         #for i in range(self.cv):
         for train_id, test_id in CVF.split(X=X,y=y): # Does this work if X=array?
             #sub = CoopLasso(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z, n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model['alpha_init'], exp_y=self.exp_y, exp_x=self.exp_x)
             #temp = predict_CoopLasso(models=sub,newx=X[foldid==i,:,:],alpha=alpha)
-            sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model.alpha_init, exp_y=self.exp_y, exp_x=self.exp_x)
+            sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model_.alpha_init_, exp_y=self.exp_y, exp_x=self.exp_x)
             #sub.fit(X=X[foldid!=i,...], y=y[foldid!=i,:], Z=Z) # replaced :,: by ...
             sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
             #temp = sub.predict(X=X[foldid==i,...],alpha=alpha) # replaced :,: by ...
@@ -647,7 +646,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             mses.append(mse)
             id_min = np.argmin(mse)
             self.mins.append(id_min)
-            temp = self.model.model[j][1][:,id_min]
+            temp = self.model_.model_[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
     def predict(self,X:np.ndarray):
@@ -676,11 +675,10 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         for i in range(self.q_):
             if X.ndim==3:
                 newxx = np.hstack([X[:,:,i], -X[:,:,i]])
-            newx_scale = newxx * self.model.weight[i]
+            newx_scale = newxx * self.model_.weight_[i]
             id_min = self.mins[i]
-            beta = self.model.model[i][1][:,id_min]
-            #y_hat[:,i] = newx_scale @ beta + self.model.mu_y[i] # original
-            y_hat[:,i] = (newx_scale @ beta)*self.model.sd_y[i] + self.model.mu_y[i] # trial
+            beta = self.model_.model_[i][1][:,id_min]
+            y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i] # trial
         return y_hat
       
 SingleTaskLassoCV.fit.__doc__ = CoopLassoCV.fit.__doc__
