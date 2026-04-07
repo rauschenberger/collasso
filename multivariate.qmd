@@ -626,14 +626,19 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         for i in range(self.q_):
             alpha.append(self.model.model[i][0])
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
-        for i in range(self.cv):
+        CVF = KFold(n_splits=self.cv,shuffle=True,random_state=0) # change random_state!
+        #for i in range(self.cv):
+        for train_id, test_id in CVF.split(X=X,y=y): # Does this work if X=array?
             #sub = CoopLasso(X=X[foldid!=i,:,:], y=y[foldid!=i,:], Z=Z, n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model['alpha_init'], exp_y=self.exp_y, exp_x=self.exp_x)
             #temp = predict_CoopLasso(models=sub,newx=X[foldid==i,:,:],alpha=alpha)
             sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model.alpha_init, exp_y=self.exp_y, exp_x=self.exp_x)
-            sub.fit(X=X[foldid!=i,...], y=y[foldid!=i,:], Z=Z) # replaced :,: by ...
-            temp = sub.predict(X=X[foldid==i,...],alpha=alpha) # replaced :,: by ...
+            #sub.fit(X=X[foldid!=i,...], y=y[foldid!=i,:], Z=Z) # replaced :,: by ...
+            sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
+            #temp = sub.predict(X=X[foldid==i,...],alpha=alpha) # replaced :,: by ...
+            temp = sub.predict(X=X[test_id,...],alpha=alpha)
             for j in range(len(temp)):
-                y_hat[foldid==i,j,:] = temp[j]
+                #y_hat[foldid==i,j,:] = temp[j]
+                y_hat[test_id,j,:] = temp[j]
         mses = []
         self.mins = []
         self.coef_ = np.full((self.q_,self.p_),np.nan)
@@ -682,23 +687,21 @@ SingleTaskLassoCV.fit.__doc__ = CoopLassoCV.fit.__doc__
 SingleTaskLassoCV.predict.__doc__ = CoopLassoCV.predict.__doc__
 
 #--- unit tests ---
-# (requires fixed fold identifiers)
 
+# test whether funcs return same results if x is broadcast from matrix to array (for fitting or predicting)
 x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
 x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
 x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
-
 model = CoopLassoCV()
 model.fit(x_train,y_train)
-y_hat1 = model.predict(x_test)
-y_hat2 = model.predict(x_test_bc)
+y_hat = []
+y_hat.append(model.predict(x_test))
+y_hat.append(model.predict(x_test_bc))
 model.fit(x_train_bc,y_train)
-y_hat3 = model.predict(x_test)
-y_hat4 = model.predict(x_test_bc)
-
-
-
-
+y_hat.append(model.predict(x_test))
+y_hat.append(model.predict(x_test_bc))
+y_hat = np.array(y_hat)
+np.allclose(y_hat, y_hat[0])
 
 #--- application --- 
 
