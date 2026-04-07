@@ -370,7 +370,7 @@ def check_args(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
     
     #--- indicators ---
     if Z is not None:
-        if not isinstance(Z,np.ndarray) or Z.ndim not in (2,3):
+        if not isinstance(Z,np.ndarray) or Z.ndim not in (1,2):
             raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
         if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[0]!=p):
             raise ValueError("X' and 'Z' should have the same number of features (second dimension in 'X', first dimension in 'Z')")
