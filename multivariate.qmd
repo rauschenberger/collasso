@@ -185,6 +185,11 @@ XXX
 - Allow for tuning extra hyperparameters (e.g., exponent for initial coefficients).
 
 - For other distributional families, it might be easier to implement this approach without sign constraints. Before this, compare performance in linear case with and without constraints.
+
+
+XXX
+
+- unit tests: (1) Run with q=2 to check whether cor returns matrix or scalar. (2) Run with matrix X and array X (where all matrices are equal) and check whether the result is the same.
 -->
 
 <!--
@@ -429,8 +434,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.exp_x = exp_x
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None):
         self._EPS = 1e-9
-        n_, p_, q_ = check_args(X=X,y=y,Z=Z)
-        coef = np.full((p_, q_), np.nan)
+        self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
+        self.n_features_in_ = self.p_
+        coef = np.full((self.p_, self.q_), np.nan)
         self.mu_y = np.mean(y,axis=0)
         #y = y - self.mu_y # original
         self.sd_y = np.std(y,axis=0)
@@ -442,7 +448,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         #cor_y = spearmanr(y).statistic # problem under q=2
         cor_y = np.corrcoef(rankdata(y, axis=0),rowvar=False)
         cor_x = []
-        for j in range(q_):
+        for j in range(self.q_):
             cor_x.append(spearmanr(X[:,:,j]).statistic)
         if self.l1_ratio is None:
             #coef = cor[0:p,p:(p+q)]
@@ -454,8 +460,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 #enet.fit(X,y)
                 #coef = enet.coef_.T
                 #alpha_init = enet.alpha_
-                self.alpha_init = np.full(q_,np.nan)
-                for j in range(q_):
+                self.alpha_init = np.full(self.q_,np.nan)
+                for j in range(self.q_):
                     enet = ElasticNetCV(l1_ratio=self.l1_ratio)
                     enet.fit(X[:,:,j],y[:,j])
                     coef[:,j] = enet.coef_
@@ -464,20 +470,20 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
                 #enet.fit(X,y)
                 #coef = enet.coef_.T
-                for j in range(q_):
+                for j in range(self.q_):
                       enet = ElasticNet(alpha=self.alpha_init[j],l1_ratio=self.l1_ratio)
                       enet.fit(X[:,:,j],y[:,j])
                       coef[:,j] = enet.coef_
         #xx = np.hstack([X, -X])
         self.weight = []
         self.model = []
-        for i in range(q_):
+        for i in range(self.q_):
             xx = np.hstack([X[:,:,i],-X[:,:,i]])
             temp = coef * (np.sign(cor_y[:, i]) * (np.abs(cor_y[:, i])**self.exp_y))
-            w_pos = np.full(p_,np.nan)
-            w_neg = np.full(p_,np.nan)
-            w_abs = np.full(p_,np.nan)
-            for j in range(p_):
+            w_pos = np.full(self.p_,np.nan)
+            w_neg = np.full(self.p_,np.nan)
+            w_abs = np.full(self.p_,np.nan)
+            for j in range(self.p_):
                 cont = temp * (np.sign(cor_x[i][:, j]) * (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
                 w_pos[j] = np.sum(np.maximum(cont, 0))
                 w_neg[j] = np.sum(np.maximum(-cont, 0))
@@ -510,6 +516,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 alpha_path = alpha_path[order_path]
                 beta = beta[:,order_path]
                 alpha_full = np.log(alpha[i]+self._EPS)
+                #alpha_full = np.clip(alpha_full,alpha_path.min(),alpha_path.max()) # trial
                 increase = np.hstack([True,np.diff(alpha_path)!=0])
                 func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
                 beta_inter = func_inter(alpha_full)
@@ -584,6 +591,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             fitted model
         """
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
+        self.n_features_in_ = self.p_
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         if Z is None:
