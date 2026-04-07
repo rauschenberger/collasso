@@ -294,7 +294,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     """
     Single-Task Lasso Regression For Multiple Targets
     
-    Fits single-task lasso regression separately to multiple targets, optimising the regularisation parameter by cross-validation.
+    Fits single-task lasso regression separately to multiple targets, optimising the regularisation parameters by cross-validation.
     
     ...
 
@@ -391,6 +391,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     """
     Cooperative Multi-Task Lasso Regression
   
+    Fits cooperative multi-task lasso regression
     ...
 
     Parameters
@@ -519,6 +520,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
 class CoopLassoCV(BaseEstimator,RegressorMixin):
     """
     Cross-Validated Cooperative Multi-Task Lasso Regression
+    
+    Fits cooperative multi-task lasso regression, optimising the regularisation parameters by cross-validation.
     
     ...
 
@@ -712,7 +715,7 @@ for i in range(len(grid)):
     for j in range(len(coef)):
         propnzero[i,j] = np.mean(coef[j]!=0)
         if np.sum(coef[j])==0:
-            precision[i,j] = None
+            precision[i,j] = np.nan
         else:
             precision[i,j] = np.sum((beta.T!=0) & (coef[j]!=0))/np.sum(coef[j]!=0)
         prederror[i,j] = mean_squared_error(y_test,pred[j],multioutput='uniform_average')
