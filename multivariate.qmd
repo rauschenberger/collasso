@@ -401,7 +401,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
 
     Parameters
     ----------
-    alphas : int
+    n_alphas : int
         number of candidate values for the regularisation parameter
         
     Attributes
@@ -412,8 +412,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         number of features
     q_ : int
         number of targets
-    model : list
-        fitted model from CoopLassoCV 
+    model_ : list
+        list of q_ fitted models
     coef_ : ndarray of shape (q_, p_)
         estimated coefficients (of the feature in the column on the target in the row)
         
