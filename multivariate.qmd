@@ -401,8 +401,17 @@ class CoopLasso(BaseEstimator,RegressorMixin):
 
     Parameters
     ----------
-    n_alphas : int
-        number of candidate values for the regularisation parameter
+    n_alphas : int, default=100
+        number of candidate values for the regularisation parameter in the final regression
+    l1_ratio : float, default=0.5
+        elastic net mixing parameter for initial regression, ratio in [0,1]
+    alpha_init : float, default=None    
+        regularisation parameter for the initial regression, non-negative number (VERIFY THIS)
+    exp_y : float, default=1.0
+        exponent for target-target correlation coefficients, non-negative number
+    exp_x : float, default=1.0
+        exponent for feature-feature correlation coefficients, non-negative number
+        
         
     Attributes
     ----------
@@ -433,6 +442,24 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.exp_y = exp_y
         self.exp_x = exp_x
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None):
+        """
+        Fit CoopLasso
+        
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets or a separate feature matrix for each target
+        y : ndarray of shape (n_samples, q_targets)
+            target matrix
+        Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
+            logical vector or matrix indicating primary (1, True) and auxiliary features (0, False) for all targets or each target
+          
+        Returns
+        -------
+        
+        self: CoopLasso
+            fitted model
+        """
         self._EPS = 1e-9
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
@@ -517,6 +544,22 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             self.model_.append(model)
         return self
     def predict(self,X:np.ndarray,alpha:np.ndarray|None=None):
+              """
+        Make predictions
+  
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets, or a separate feature matrix for each target
+        alpha : ndarray of shape (n_alphas) or None
+            set of regularisation parameters (VERIFY THIS)
+        
+        Returns
+        -------
+        y_hat : ndarray of shape (n_samples, q_targets)
+            matrix of predicted values (of the target in the column for the sample in the row) (CHANGE OUTPUT OF FUNCTION FROM LIST TO ARRAY)
+        
+        """
         y_hat = []
         if X.ndim==2:
             newxx = np.hstack([X, -X])
