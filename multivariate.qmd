@@ -457,11 +457,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             cor_x = []
             for j in range(self.q_):
                 cor_x.append(spearmanr(X[:,:,j]).statistic)
-        # provide alternative for three lines above if X.ndim==2
         if self.l1_ratio is None:
+            raise ValueError("The correlation-based initialisation (l1_ratio=None) has not yet been implemented.")
             #coef = cor[0:p,p:(p+q)]
-            coef = None
-            # use correlation coefficients in this case?
         else:
             if self.alpha_init is None:
                 #enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
