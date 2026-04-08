@@ -227,8 +227,6 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
     
     Simulates feature matrix and target matrix, with given probabilities of (i) common effects on all targets and (ii) separate effects on each target.
     
-    ....
-    
     Parameters
     ----------
     
@@ -272,6 +270,7 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
     if common is True:
         x = multivariate_normal.rvs(mean=mean, cov=sigma, size=n)
     else:
+        raise ValueError("Simulation of separate feature matrices has not yet been implemented.")
         x = []
         for k in range(q):
             x.append(multivariate_normal.rvs(mean=mean, cov=sigma, size=n))
@@ -283,6 +282,7 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
     if common is True:
         eta = x @ beta
     else:
+        raiseError ""
         eta = np.full((n,q),np.nan)
         for k in range(q):
             eta[:,k] = x[k] @ beta[:,k]
@@ -336,8 +336,6 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     def fit(self,X:np.ndarray,y:np.ndarray):
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
-        #self.n_, self.p_, self.q_ = X.shape
-        #self.n_, self.q_ = y.shape
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=None)
         self.model_ = []
         self.coef_ = np.full((self.q_,self.p_), np.nan)
@@ -383,15 +381,6 @@ def check_args(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
             raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y' and 'Z')")
     return n, p, q
   
-
-#if X.ndim==2:
-#    X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
-#if Z is None:
-#    Z = np.full((self.p_,self.q_),1)
-#elif Z.ndim==1:
-#    Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-
-
 class CoopLasso(BaseEstimator,RegressorMixin):
     """
     Cooperative Multi-Task Lasso Regression
@@ -434,7 +423,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     _EPS = 1e-09
     def __init__(self,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
         self.n_alphas = n_alphas
-        #self.alphas = None # alphas
         self.l1_ratio = l1_ratio
         self.alpha_init = alpha_init
         self.exp_y = exp_y
@@ -458,7 +446,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self: CoopLasso
             fitted model
         """
-        #self._EPS = 1e-9
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         if Z is None:
@@ -469,28 +456,25 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.mu_y_ = np.mean(y,axis=0)
         self.sd_y_ = np.std(y,axis=0)
         y = (y - self.mu_y_)/self.sd_y_
-        #cor = spearmanr(X,y).statistic
-        #cor = np.nan_to_num(cor,nan=0)
-        #cor_x = cor[0:p,0:p]
-        #cor_y = cor[p:(p+q),p:(p+q)]
-        #cor_y = spearmanr(y).statistic # problem under q=2
         cor_y = np.corrcoef(rankdata(y, axis=0),rowvar=False)
+        # This would not return a matrix under q=2:
+        # cor_y = spearmanr(y).statistic
+        cor_y = np.nan_to_num(cor_y,nan=0)
         if X.ndim==2:
             cor = spearmanr(X).statistic
+            cor = np.nan_to_num(cor,nan=0)
             cor_x = [cor] * self.q_
         elif X.ndim==3:
             cor_x = []
             for j in range(self.q_):
-                cor_x.append(spearmanr(X[:,:,j]).statistic)
+                cor = spearmanr(X[:,:,j]).statistic
+                cor = np.nan_to_num(cor,nan=0)
+                cor_x.append(cor)
         if self.l1_ratio is None:
             raise ValueError("The correlation-based initialisation (l1_ratio=None) has not yet been implemented.")
-            #coef = cor[0:p,p:(p+q)]
+            # Maybe only implement it for X.ndim=2.
         else:
             if self.alpha_init is None:
-                #enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
-                #enet.fit(X,y)
-                #coef = enet.coef_.T
-                #alpha_init = enet.alpha_
                 self.alpha_init_ = np.full(self.q_,np.nan)
                 for j in range(self.q_):
                     enet = ElasticNetCV(l1_ratio=self.l1_ratio)
@@ -500,10 +484,12 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                       enet.fit(X[:,:,j],y[:,j])
                     coef[:,j] = enet.coef_
                     self.alpha_init_[j] = enet.alpha_
+                # Alternative with multivariate initialisation:
+                # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
+                # enet.fit(X,y)
+                # coef = enet.coef_.T
+                # self.alpha_init_ = enet.alpha_
             else:
-                #enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
-                #enet.fit(X,y)
-                #coef = enet.coef_.T
                 self.alpha_init_ = self.alpha_init
                 for j in range(self.q_):
                       enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
@@ -512,6 +498,10 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                       else:
                           enet.fit(X[:,:,j],y[:,j])
                       coef[:,j] = enet.coef_
+                # Alternative with multivariate initialisation:
+                # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
+                # enet.fit(X,y)
+                # coef = enet.coef_.T
         self.weight_ = []
         self.model_ = []
         if X.ndim==2:
@@ -532,12 +522,12 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             w_pos[exclude] = 0
             w_neg[exclude] = 0
             weight = np.append(w_pos+self._EPS,w_neg+self._EPS)
-            #weight = (w_abs + 1e-9)
+            # This alternative does not need the non-negativity constraint:
+            # weight = (w_abs + 1e-9)
             xx_scale = xx * weight
-            #if self.alphas is None:
             model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
-            #else:
-            #    model = lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
+            # This alternative is computationally expensive: 
+            # lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight_.append(weight)
             self.model_.append(model)
         return self
@@ -574,7 +564,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 alpha_path = alpha_path[order_path]
                 beta = beta[:,order_path]
                 alpha_full = np.log(alpha[i]+self._EPS)
-                #alpha_full = np.clip(alpha_full,alpha_path.min(),alpha_path.max()) # trial
+                # This avoids extrapolation outside range of fitted path:
+                # alpha_full = np.clip(alpha_full,alpha_path.min(),alpha_path.max())
                 increase = np.hstack([True,np.diff(alpha_path)!=0])
                 func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
                 beta_inter = func_inter(alpha_full)
