@@ -318,9 +318,9 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         number of features
     q_ : int
         number of targets
-    model : list of length q_
+    model_ : list of length q_targets
         fitted models from LassoCV (one for each target)   
-    coef_ : ndarray of shape (q_, p_)
+    coef_ : ndarray of shape (q_targets, p_features)
         estimated coefficients (of the feature in the column on the target in the row)
         
     Methods
@@ -393,6 +393,7 @@ def check_args(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
 
 
 class CoopLasso(BaseEstimator,RegressorMixin):
+    _EPS = 1e-09
     """
     Cooperative Multi-Task Lasso Regression
   
@@ -458,7 +459,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self: CoopLasso
             fitted model
         """
-        self._EPS = 1e-9
+        #self._EPS = 1e-9
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         if Z is None:
