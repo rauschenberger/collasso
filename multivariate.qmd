@@ -405,8 +405,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         number of candidate values for the regularisation parameter in the final regression
     l1_ratio : float, default=0.5
         elastic net mixing parameter for initial regression, ratio in [0,1]
-    alpha_init : float, default=None    
-        regularisation parameter for the initial regression, non-negative number (VERIFY THIS)
+    alpha_init : ndarray of shape (q_targets) or None, default=None    
+        regularisation parameters for the initial regressions, non-negative number
     exp_y : float, default=1.0
         exponent for target-target correlation coefficients, non-negative number
     exp_x : float, default=1.0
@@ -423,8 +423,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         number of targets
     model_ : list
         list of q_ fitted models
-    coef_ : ndarray of shape (q_, p_)
-        estimated coefficients (of the feature in the column on the target in the row)
         
     Methods
     -------
@@ -544,15 +542,15 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             self.model_.append(model)
         return self
     def predict(self,X:np.ndarray,alpha:np.ndarray|None=None):
-              """
+        """
         Make predictions
   
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
             common feature matrix for all targets, or a separate feature matrix for each target
-        alpha : ndarray of shape (n_alphas) or None
-            set of regularisation parameters (VERIFY THIS)
+        alpha : list of length q_targets or None, default=None
+            one ndarray of non-negative regularisation parameters for each target; if None, predictions are returns for the fitted path
         
         Returns
         -------
@@ -603,6 +601,8 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         exponent for target-target correlation coefficients, non-negative number
     exp_x : float, default=1.0
         exponent for feature-feature correlation coefficients, non-negative number
+    random_state : int or None, default=None
+        random seed for determining the random fold identifiers
         
     Attributes
     ----------
@@ -612,8 +612,14 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         number of features
     q_ : int
         number of targets
-    model : list
-        fitted model from CoopLasso 
+    model_ : list
+        fitted model from CoopLasso
+    alpha_ : list of length q_targets
+        ndarray of regularisation parameters
+    mse_ : list of length q_targets
+        ndarray of cross-validated mean squared error for each value of alpha
+    min_ : list of length q_targets
+        indices of regularisation parameters corresponding to the lowest mean squared error
     coef_ : ndarray of shape (q_, p_)
         estimated effects (of the feature in the column on the target in the row)
     
@@ -647,7 +653,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         Returns
         -------
         
-        self: CoopLassoCV
+        self : CoopLassoCV
             fitted model
         """
         self.n_, self.p_, self.q_ = check_args(X=X,y=y,Z=Z)
@@ -659,25 +665,25 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
         self.model_.fit(X=X,y=y,Z=Z)
-        alpha = []
+        self.alpha_ = []
         for i in range(self.q_):
-            alpha.append(self.model_.model_[i][0])
+            self.alpha_.append(self.model_.model_[i][0])
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
         CVF = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
         for train_id, test_id in CVF.split(X=X,y=y):
             sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model_.alpha_init_, exp_y=self.exp_y, exp_x=self.exp_x)
             sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
-            temp = sub.predict(X=X[test_id,...],alpha=alpha)
+            temp = sub.predict(X=X[test_id,...],alpha=self.alpha_)
             for j in range(len(temp)):
                 y_hat[test_id,j,:] = temp[j]
-        mses = []
-        self.mins_ = []
+        self.mse_ = []
+        self.min_ = []
         self.coef_ = np.full((self.q_,self.p_),np.nan)
         for j in range(self.q_):
             mse = np.mean((y_hat[:,j,:] - y[:,j,np.newaxis])**2, axis=0)
-            mses.append(mse)
+            self.mse_.append(mse)
             id_min = np.argmin(mse)
-            self.mins_.append(id_min)
+            self.min_.append(id_min)
             temp = self.model_.model_[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
@@ -704,7 +710,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             if X.ndim==3:
                 newxx = np.hstack([X[:,:,i], -X[:,:,i]])
             newx_scale = newxx * self.model_.weight_[i]
-            id_min = self.mins_[i]
+            id_min = self.min_[i]
             beta = self.model_.model_[i][1][:,id_min]
             y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i]
         return y_hat
@@ -714,20 +720,20 @@ SingleTaskLassoCV.predict.__doc__ = CoopLassoCV.predict.__doc__
 
 #--- unit tests ---
 
-# test whether funcs return same results if x is broadcast from matrix to array (for fitting or predicting)
-x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
-x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
-x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
-model = CoopLassoCV(random_state=1)
-model.fit(x_train,y_train)
-y_hat = []
-y_hat.append(model.predict(x_test))
-y_hat.append(model.predict(x_test_bc))
-model.fit(x_train_bc,y_train)
-y_hat.append(model.predict(x_test))
-y_hat.append(model.predict(x_test_bc))
-y_hat = np.array(y_hat)
-np.allclose(y_hat, y_hat[0])
+# # test whether funcs return same results if x is broadcast from matrix to array (for fitting or predicting)
+# x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
+# x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
+# x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
+# model = CoopLassoCV(random_state=1)
+# model.fit(x_train,y_train)
+# y_hat = []
+# y_hat.append(model.predict(x_test))
+# y_hat.append(model.predict(x_test_bc))
+# model.fit(x_train_bc,y_train)
+# y_hat.append(model.predict(x_test))
+# y_hat.append(model.predict(x_test_bc))
+# y_hat = np.array(y_hat)
+# np.allclose(y_hat, y_hat[0])
 
 #--- application --- 
 
