@@ -393,7 +393,6 @@ def check_args(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
 
 
 class CoopLasso(BaseEstimator,RegressorMixin):
-    _EPS = 1e-09
     """
     Cooperative Multi-Task Lasso Regression
   
@@ -432,7 +431,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     predict(X)
         Makes predictions
     """
-    
+    _EPS = 1e-09
     def __init__(self,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
         self.n_alphas = n_alphas
         #self.alphas = None # alphas
