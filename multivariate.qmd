@@ -247,15 +247,15 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
       
     Returns
     -------
-    x_train : ndarray of shape (n0,p)
+    x_train : ndarray of shape (n0_samples,p_features)
         training feature matrix
-    y_train : ndarray of shape (n0,q)
+    y_train : ndarray of shape (n0_samples,q_targets)
         training target matrix
-    x_test : ndarray of shape (n1,p)
+    x_test : ndarray of shape (n1_samples,p_features)
         test feature matrix
-    y_test : ndarray of shape (n1,q)
+    y_test : ndarray of shape (n1_samples,q_targets)
         test target matrix
-    beta : ndarray of shape (p,q)
+    beta : ndarray of shape (p_features,q_targets)
         true effects in the training and the test data (of the feature in the row on the target in the column)
         
     """
@@ -386,7 +386,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     Cooperative Multi-Task Lasso Regression
   
     Fits cooperative multi-task lasso regression
-    ...
 
     Parameters
     ----------
@@ -394,13 +393,12 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         number of candidate values for the regularisation parameter in the final regression
     l1_ratio : float, default=0.5
         elastic net mixing parameter for initial regression, ratio in [0,1]
-    alpha_init : ndarray of shape (q_targets) or None, default=None    
+    alpha_init : ndarray of shape (q_targets,) or None, default=None    
         regularisation parameters for the initial regressions, non-negative number
     exp_y : float, default=1.0
         exponent for target-target correlation coefficients, non-negative number
     exp_x : float, default=1.0
         exponent for feature-feature correlation coefficients, non-negative number
-        
         
     Attributes
     ----------
@@ -411,7 +409,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     q_ : int
         number of targets
     model_ : list
-        list of q_ fitted models
+        list of q_ models (one for each target) fitted by sklearn.linear_model.lasso_path with concatenated identity and inverse of feature matrix (X,-X) and non-negativity constraint (positive=True)
         
     Methods
     -------
@@ -452,7 +450,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             Z = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
             Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-        coef = np.full((self.p_, self.q_), np.nan)
         self.mu_y_ = np.mean(y,axis=0)
         self.sd_y_ = np.std(y,axis=0)
         y = (y - self.mu_y_)/self.sd_y_
@@ -470,9 +467,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 cor = spearmanr(X[:,:,j]).statistic
                 cor = np.nan_to_num(cor,nan=0)
                 cor_x.append(cor)
+        coef = np.full((self.p_, self.q_), np.nan)        
         if self.l1_ratio is None:
-            raise ValueError("The correlation-based initialisation (l1_ratio=None) has not yet been implemented.")
-            # Maybe only implement it for X.ndim=2.
+            raise ValueError("Initial correlation coefficients (l1_ratio=None) have not yet been implemented.")
         else:
             if self.alpha_init is None:
                 self.alpha_init_ = np.full(self.q_,np.nan)
@@ -603,15 +600,15 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         number of features
     q_ : int
         number of targets
-    model_ : list
-        fitted model from CoopLasso
+    model_ : list of length q_targets
+        fitted models from CoopLasso
     alpha_ : list of length q_targets
         ndarray of regularisation parameters
     mse_ : list of length q_targets
         ndarray of cross-validated mean squared error for each value of alpha
     min_ : list of length q_targets
         indices of regularisation parameters corresponding to the lowest mean squared error
-    coef_ : ndarray of shape (q_, p_)
+    coef_ : ndarray of shape (q_targets, p_features)
         estimated effects (of the feature in the column on the target in the row)
     
     Methods
