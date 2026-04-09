@@ -1,6 +1,6 @@
 
 import numpy as np
-
+import pytest
 from collasso import simulate, CoopLasso, CoopLassoCV
 
 @pytest.fixture
