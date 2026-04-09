@@ -10,7 +10,11 @@ This Python library implements "Sparse linear multi-task regression with correla
 
 # Reference
 
-Armin Rauschenberger (2026). "Sparse linear multi-task regression with correlation-based information sharing". *Manuscript in preparation.*
+Armin Rauschenberger
+[![AR](https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png)](https://orcid.org/0000-0001-6498-4801)
+(2026).
+"Sparse linear multi-task regression with correlation-based information sharing". 
+*Manuscript in preparation.*
 
 # Disclaimer
 
