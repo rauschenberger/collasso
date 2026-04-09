@@ -6,8 +6,9 @@ from collasso import simulate, CoopLasso, CoopLassoCV
 @pytest.fixture
 def data():
     x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
+    return x_train, y_train, x_test, y_test, beta   
 
-def test_matrix_array_equivalence():
+def test_matrix_array_equivalence(data):
     """CoopLassoCV can use matrix or array during training or testing."""
     x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
     x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
@@ -22,7 +23,7 @@ def test_matrix_array_equivalence():
     y_hat = np.array(y_hat)
     assert np.allclose(y_hat, y_hat[0]), 'predictions should be the same'
 
-def test_path_interpolate_equivalence():
+def test_path_interpolate_equivalence(data):
     """CoopLasso can use original or interpolated alpha values."""
     model = CoopLasso()
     model.fit(X=x_train,y=y_train)
