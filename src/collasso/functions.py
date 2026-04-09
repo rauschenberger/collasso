@@ -10,7 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 #--- simulate data ---
 
-def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,common=True): -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,common=True) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Simulate Data for Linear Multi-Task Regression
     
@@ -119,7 +119,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     def __init__(self,cv=10,alphas=100):
         self.cv = cv
         self.alphas = alphas
-    def fit(self,X:np.ndarray,y:np.ndarray): -> "SingleTaskLassoCV":
+    def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV":
         check_array(array=X,allow_nd=True)
         check_array(array=y)
         if X.ndim==2:
@@ -133,7 +133,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
             self.model_.append(model)
             self.coef_[i,:] = model.coef_
         return self
-    def predict(self,X:np.ndarray): -> ndarray:
+    def predict(self,X:np.ndarray) -> ndarray:
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
         check_is_fitted(self,attributes=['coef_'])
@@ -213,7 +213,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.alpha_init = alpha_init
         self.exp_y = exp_y
         self.exp_x = exp_x
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None): -> "CoopLasso":
+    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso":
         """
         Fit CoopLasso
         
@@ -320,7 +320,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             self.weight_.append(weight)
             self.model_.append(model)
         return self
-    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None): -> list[ndarray]:
+    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[ndarray]:
         """
         Make predictions
   
@@ -416,7 +416,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.exp_y = exp_y
         self.exp_x = exp_x
         self.random_state = random_state
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None): -> "CoopLassoCV":
+    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLassoCV":
         """
         Fit CoopLassoCV
         
@@ -463,7 +463,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             temp = self.model_.model_[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
-    def predict(self,X:np.ndarray): -> ndarray:
+    def predict(self,X:np.ndarray) -> ndarray:
         """
         Make predictions
   
