@@ -287,7 +287,7 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
     noise_sd = 0.5 * np.std(eta, axis=0)
     y = eta + np.random.normal(size=eta.shape, scale=noise_sd)
     if common is False:
-        raise NotImplementError("Returning multiple feature matrices is not implemented.")
+        raise NotImplementedError("Returning multiple feature matrices is not implemented.")
     x_train, y_train = x[fold==0], y[fold==0]
     x_test, y_test = x[fold==1], y[fold==1]
     return x_train, y_train, x_test, y_test, beta
@@ -654,16 +654,9 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         check_array(array=y)
         self.n_, self.p_, self.q_ = _check_args(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
-        #if Z is None:
-        #    Z_ = np.full((self.p_,self.q_),1)
-        #elif Z.ndim==1:
-        #    Z_ = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-        #elif Z.ndim==2:
-        #    Z_ = Z
-        Z_ = Z
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
-        self.model_.fit(X=X,y=y,Z=Z_)
+        self.model_.fit(X=X,y=y,Z=Z)
         self.alpha_ = []
         for i in range(self.q_):
             self.alpha_.append(self.model_.model_[i][0])
@@ -671,7 +664,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         CVF = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
         for train_id, test_id in CVF.split(X=X,y=y):
             sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model_.alpha_init_, exp_y=self.exp_y, exp_x=self.exp_x)
-            sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z_)
+            sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
             temp = sub.predict(X=X[test_id,...],alpha=self.alpha_)
             for j in range(len(temp)):
                 y_hat[test_id,j,:] = temp[j]
