@@ -207,7 +207,7 @@ python setup.py develop
 #   #| eval: false
 from itertools import product
 import numpy as np
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, interp1d
 from scipy.stats import multivariate_normal, rankdata, spearmanr, ttest_rel
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV, MultiTaskLasso, MultiTaskLassoCV
@@ -566,9 +566,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 beta = beta[:,order_path]
                 alpha_full = np.log(alpha[i]+self._EPS)
                 # This avoids extrapolation outside range of fitted path:
-                # alpha_full = np.clip(alpha_full,alpha_path.min(),alpha_path.max())
+                alpha_full = np.clip(alpha_full,alpha_path.min(),alpha_path.max())
                 increase = np.hstack([True,np.diff(alpha_path)!=0])
-                func_inter = CubicSpline(alpha_path[increase],beta[:,increase],axis=1)
+                func_inter = interp1d(alpha_path[increase],beta[:,increase],axis=1)
                 beta_inter = func_inter(alpha_full)
                 y_hat.append((newx_scale @ beta_inter)*self.sd_y_[i] + self.mu_y_[i])
         return y_hat
