@@ -1,4 +1,12 @@
 
+from itertools import product
+import numpy as np
+from scipy.stats import  ttest_rel
+from sklearn.linear_model import MultiTaskLassoCV
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import StandardScaler
+import random
+
 rho = [0, 0.90]
 prob_com = [0.00, 0.05]
 prob_sep = [0.00, 0.05]

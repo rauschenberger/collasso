@@ -1,17 +1,13 @@
 
-from itertools import product
 import numpy as np
 from scipy.interpolate import CubicSpline, interp1d
 from scipy.stats import multivariate_normal, rankdata, spearmanr, ttest_rel
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV, MultiTaskLasso, MultiTaskLassoCV
+from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, MultiTaskElasticNet, MultiTaskElasticNetCV
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-import random
-#from mutar import GroupLasso, DirtyModel, MultiLevelLasso, MTW, ReMTW
 
 #--- simulate data ---
 
