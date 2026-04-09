@@ -5,7 +5,6 @@ from scipy.stats import  ttest_rel
 from sklearn.linear_model import MultiTaskLassoCV
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
-import random
 
 rho = [0, 0.90]
 prob_com = [0.00, 0.05]
@@ -19,7 +18,7 @@ precision = np.full((len(grid),4),np.nan)
 prederror = np.full((len(grid),4),np.nan)
 
 for i in range(len(grid)):
-    random.seed(i)
+    np.random.seed(i)
     x_train, y_train, x_test, y_test, beta = simulate(rho=grid[i,0], prob_com=grid[i,1], prob_sep=grid[i,2])
     #X, y = x_train, y_train # temporary
     scaler = StandardScaler()
