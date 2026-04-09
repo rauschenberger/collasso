@@ -1,10 +1,9 @@
 
 import numpy as np
-from scipy.interpolate import CubicSpline, interp1d
-from scipy.stats import multivariate_normal, rankdata, spearmanr, ttest_rel
+from scipy.interpolate import interp1d # switch to np.interp
+from scipy.stats import multivariate_normal, rankdata, spearmanr
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, MultiTaskElasticNet, MultiTaskElasticNetCV
-from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV
 from sklearn.model_selection import KFold
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted

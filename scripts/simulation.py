@@ -6,6 +6,8 @@ from sklearn.linear_model import MultiTaskLassoCV
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
 
+from collasso import simulate, SingleTaskLassoCV, CoopLasso, CoopLassoCV
+
 rho = [0, 0.90]
 prob_com = [0.00, 0.05]
 prob_sep = [0.00, 0.05]

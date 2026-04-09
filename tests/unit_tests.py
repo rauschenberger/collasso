@@ -1,6 +1,8 @@
 
 import numpy as np
 
+from collasso import simulate, CoopLasso, CoopLassoCV
+
 x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
 
 # test whether CoopLassoCV returns same results if x is broadcast from matrix to array (for fitting or predicting)
