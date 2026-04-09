@@ -1,4 +1,4 @@
 .DS_Store
 .Rhistory
-.pdf
-.html
+*.pdf
+*.html
