@@ -133,7 +133,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
             self.model_.append(model)
             self.coef_[i,:] = model.coef_
         return self
-    def predict(self,X:np.ndarray) -> ndarray:
+    def predict(self,X:np.ndarray) -> np.ndarray:
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
         check_is_fitted(self,attributes=['coef_'])
@@ -320,7 +320,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             self.weight_.append(weight)
             self.model_.append(model)
         return self
-    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[ndarray]:
+    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[np.ndarray]:
         """
         Make predictions
   
@@ -463,7 +463,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             temp = self.model_.model_[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
-    def predict(self,X:np.ndarray) -> ndarray:
+    def predict(self,X:np.ndarray) -> np.ndarray:
         """
         Make predictions
   
