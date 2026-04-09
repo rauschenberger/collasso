@@ -337,7 +337,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         check_array(array=y)
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
-        self.n_, self.p_, self.q_ = _check_args(X=X,y=y,Z=None)
+        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=None)
         self.model_ = []
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         for i in range(self.q_):
@@ -357,14 +357,14 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
 
 #--- multi-task lasso regression ---  
 
-def _check_args(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
+def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
     #--- targets ---
-    if not isinstance(y,np.ndarray) or y.ndim!=2:
+    if y.ndim!=2:
         raise ValueError("'y' should be an 'n x q' matrix")
     n, q = y.shape
     
     #--- features ---
-    if not isinstance(X,np.ndarray) or X.ndim not in (2,3):
+    if X.ndim not in (2,3):
         raise ValueError("'X' should be an 'n x p' matrix or an 'n x p x q' array")
     if X.shape[0]!=n:
         raise ValueError("'y' and 'X' should have the same number of samples (first dimension in 'y' and 'X')")
@@ -374,10 +374,10 @@ def _check_args(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
     
     #--- indicators ---
     if Z is not None:
-        if not isinstance(Z,np.ndarray) or Z.ndim not in (1,2):
+        if Z.ndim not in (1,2):
             raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
         if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[0]!=p):
-            raise ValueError("X' and 'Z' should have the same number of features (second dimension in 'X', first dimension in 'Z')")
+            raise ValueError("'X' and 'Z' should have the same number of features (second dimension in 'X', first dimension in 'Z')")
         if Z.ndim==2 and Z.shape[1]!=q:
             raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y' and 'Z')")
     return n, p, q
@@ -447,7 +447,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         """
         check_array(array=X,allow_nd=True)
         check_array(array=y)
-        self.n_, self.p_, self.q_ = _check_args(X=X,y=y,Z=Z)
+        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         if Z is None:
             Z_ = np.full((self.p_,self.q_),1)
@@ -652,7 +652,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         """
         check_array(array=X,allow_nd=True)
         check_array(array=y)
-        self.n_, self.p_, self.q_ = _check_args(X=X,y=y,Z=Z)
+        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
