@@ -9,6 +9,7 @@ description = "Sparse linear multi-task regression with correlation-based inform
 authors = [
     { name = "Armin Rauschenberger" }
 ]
+license = {text = "no license"}
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24",
