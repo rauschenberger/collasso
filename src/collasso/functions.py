@@ -73,8 +73,8 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
         eta = np.full((n,q),np.nan)
         for k in range(q):
             eta[:,k] = x[k] @ beta[:,k]
-    noise_sd = 0.5 * np.std(eta, axis=0)
-    y = eta + np.random.normal(size=eta.shape, scale=noise_sd)
+    noise_sd = 0.5 * np.std(eta, axis = 0)
+    y = eta + np.random.normal(size = eta.shape, scale = noise_sd)
     if common is False:
         raise NotImplementedError("Returning multiple feature matrices is not implemented.")
     x_train, y_train = x[fold==0], y[fold==0]
@@ -129,7 +129,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         for i in range(self.q_):
             model = LassoCV(alphas=self.alphas,cv=self.cv)
-            model.fit(X[:,:,i],y[:,i])
+            model.fit(X[:, :, i],y[:, i])
             self.model_.append(model)
             self.coef_[i,:] = model.coef_
         return self
@@ -268,9 +268,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 for j in range(self.q_):
                     enet = ElasticNetCV(l1_ratio=self.l1_ratio)
                     if X.ndim==2:
-                      enet.fit(X,y[:,j])
+                        enet.fit(X,y[:,j])
                     else:
-                      enet.fit(X[:,:,j],y[:,j])
+                        enet.fit(X[:,:,j],y[:,j])
                     coef[:,j] = enet.coef_
                     self.alpha_init_[j] = enet.alpha_
                 # Alternative with multivariate initialisation:
@@ -481,12 +481,12 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         check_is_fitted(self,attributes=['coef_'])
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         if X.ndim==2:
-            newxx = np.hstack([X,-X])
+            newxx = np.hstack([X, -X])
         for i in range(self.q_):
             if X.ndim==3:
-                newxx = np.hstack([X[:,:,i], -X[:,:,i]])
+                newxx = np.hstack([X[:, :, i], -X[:, :, i]])
             newx_scale = newxx * self.model_.weight_[i]
             id_min = self.min_[i]
-            beta = self.model_.model_[i][1][:,id_min]
+            beta = self.model_.model_[i][1][:, id_min]
             y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i]
         return y_hat
