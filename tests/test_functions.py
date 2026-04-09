@@ -10,6 +10,7 @@ def data():
 
 def test_matrix_array_equivalence(data):
     """CoopLassoCV can use matrix or array during training or testing."""
+    x_train, y_train, x_test, y_test, beta = data
     x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
     x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
     model = CoopLassoCV(random_state=1)
@@ -25,6 +26,7 @@ def test_matrix_array_equivalence(data):
 
 def test_path_interpolate_equivalence(data):
     """CoopLasso can use original or interpolated alpha values."""
+    x_train, y_train, x_test, y_test, beta = data
     model = CoopLasso()
     model.fit(X=x_train,y=y_train)
     pred1 = model.predict(X=x_test)
