@@ -22,8 +22,6 @@ def test_matrix_array_equivalence():
     y_hat = np.array(y_hat)
     assert np.allclose(y_hat, y_hat[0]), 'predictions should be the same'
 
-# test whether CoopLasso returns same results if alpha=None and alpha is provided from fitted path
-
 def test_path_interpolate_equivalence():
     """CoopLasso can use original or interpolated alpha values."""
     model = CoopLasso()
