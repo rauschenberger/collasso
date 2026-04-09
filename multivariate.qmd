@@ -208,11 +208,11 @@ python setup.py develop
 from itertools import product
 import numpy as np
 from scipy.interpolate import CubicSpline
-from scipy.stats import multivariate_normal, rankdata, spearmanr 
+from scipy.stats import multivariate_normal, rankdata, spearmanr, ttest_rel
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV, MultiTaskLasso, MultiTaskLassoCV
-from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
@@ -707,7 +707,7 @@ SingleTaskLassoCV.predict.__doc__ = CoopLassoCV.predict.__doc__
 
 #--- unit tests ---
 
-# # test whether funcs return same results if x is broadcast from matrix to array (for fitting or predicting)
+# # test whether CoopLassoCV returns same results if x is broadcast from matrix to array (for fitting or predicting)
 # x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
 # x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
 # x_test_bc = np.broadcast_to(x_test[:,:,None],(x_test.shape[0],x_test.shape[1],y_test.shape[1]))
@@ -721,6 +721,18 @@ SingleTaskLassoCV.predict.__doc__ = CoopLassoCV.predict.__doc__
 # y_hat.append(model.predict(x_test_bc))
 # y_hat = np.array(y_hat)
 # np.allclose(y_hat, y_hat[0])
+
+# # test whether CoopLasso returns same results if alpha=None and alpha is provided from fitted path
+# x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
+# model = CoopLasso()
+# model.fit(X=x_train_scaled,y=y_train)
+# pred1 = model.predict(X=x_test_scaled)
+# alpha = []
+# for i in range(len(model.model_)):
+#     alpha.append(model.model_[i][0])
+# pred2 = model.predict(X=x_test_scaled,alpha=alpha)
+# np.allclose(pred1,pred2)
+
 
 #--- application --- 
 
@@ -749,19 +761,19 @@ for i in range(len(grid)):
     pred_mean = np.tile(np.mean(y_train,axis=0),(y_test.shape[0],1))
     # separate lasso regressions
     model = SingleTaskLassoCV(alphas=100,cv=5)
-    model.fit(x_train_scaled,y_train)
+    model.fit(X=x_train_scaled,y=y_train)
     coef_single = model.coef_
-    pred_single = model.predict(x_test_scaled)
+    pred_single = model.predict(X=x_test_scaled)
     # multi-task lasso regression
     model = MultiTaskLassoCV(alphas=100,cv=5)
-    model.fit(x_train_scaled,y_train)
+    model.fit(X=x_train_scaled,y=y_train)
     coef_multi = model.coef_
-    pred_multi = model.predict(x_test_scaled)
+    pred_multi = model.predict(X=x_test_scaled)
     # cooperative lasso regression
     model = CoopLassoCV(n_alphas=100,cv=5,l1_ratio=0.5)
     model.fit(X=x_train_scaled,y=y_train)
     coef_coop = model.coef_
-    pred_coop = model.predict(x_test_scaled)
+    pred_coop = model.predict(X=x_test_scaled)
     
     # mutar (add internal cross-validation)
     
