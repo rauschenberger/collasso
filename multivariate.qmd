@@ -14,6 +14,10 @@ editor_options:
 
 **Here we implement a simple approach to sparse multi-task regression that can select different features for different targets. It allows for multiple numerical targets and many numerical or binary features. Sharing information between targets and between features, it potentially improves the selection and predictive performance. The proposed approach allows for features that are available for model training but not for model testing (i.e., privileged information).**
 
+<!--
+Consider chaning the name from collasso to corlasso (package) and CoopLasso to MultiTaskLasso (function).
+-->
+
 # Background
 
 The Python library `scikit-learn` and the R package `glmnet` implement penalised multivariate Gaussian regression (Python library `scikit-learn`: functions `MultiTaskLassoCV` and `MultiTaskElasticNetCV`; R package `glmnet`: function `cv.glmnet` with argument `family="mgaussian"`, *Simon et al., 2013*). While these implementations do not select features under ridge ($\ell_2$) penalisation, they select the same features for all targets under lasso ($\ell_1$) or elastic net ($\ell_2 + \ell_1$) penalisation.
