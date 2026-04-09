@@ -8,7 +8,9 @@ This Python library implements "Sparse linear multi-task regression with correla
 
 # Installation
 
-...
+```bash
+pip install git+https://github.com/rauschenberger/collasso.git
+```
 
 # Reference
 
