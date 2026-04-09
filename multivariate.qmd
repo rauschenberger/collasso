@@ -531,7 +531,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             self.weight_.append(weight)
             self.model_.append(model)
         return self
-    def predict(self,X:np.ndarray,alpha:np.ndarray|None=None):
+    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None):
         """
         Make predictions
   
@@ -540,12 +540,12 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
             common feature matrix for all targets, or a separate feature matrix for each target
         alpha : list of length q_targets or None, default=None
-            one ndarray of non-negative regularisation parameters for each target; if None, predictions are returns for the fitted path
+            one ndarray of non-negative regularisation parameters for each target; if None, predictions are returned for the fitted path
         
         Returns
         -------
-        y_hat : ndarray of shape (n_samples, q_targets)
-            matrix of predicted values (of the target in the column for the sample in the row) (CHANGE OUTPUT OF FUNCTION FROM LIST TO ARRAY)
+        y_hat : list of length q_targets
+            one ndarray of shape (n_samples, n_alphas) for each target
         
         """
         check_is_fitted(self,attributes=['model_'])
@@ -558,7 +558,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             newx_scale = newxx * self.weight_[i]
             beta = self.model_[i][1]
             if alpha is None:
-                y_hat.append(newx_scale @ beta + self.mu_y_[i])
+                y_hat.append((newx_scale @ beta)*self.sd_y_[i] + self.mu_y_[i])
             else:
                 alpha_path = np.log(self.model_[i][0]+self._EPS)
                 order_path = np.argsort(alpha_path)
