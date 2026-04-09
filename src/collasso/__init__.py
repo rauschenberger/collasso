@@ -8,3 +8,5 @@ from .functions import (
     CoopLasso,
     CoopLassoCV,
 )
+
+__all__ = ["simulate", "SingleTaskLassoCV", "CoopLasso", "CoopLassoCV"]
