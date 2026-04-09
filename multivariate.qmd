@@ -299,8 +299,6 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     Single-Task Lasso Regression For Multiple Targets
     
     Fits single-task lasso regression separately to multiple targets, optimising the regularisation parameters by cross-validation.
-    
-    ...
 
     Parameters
     ----------
