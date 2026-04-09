@@ -479,7 +479,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 for j in range(self.q_):
                     enet = ElasticNetCV(l1_ratio=self.l1_ratio)
                     if X.ndim==2:
-                      enet.fit(X[:,:],y[:,j])
+                      enet.fit(X,y[:,j])
                     else:
                       enet.fit(X[:,:,j],y[:,j])
                     coef[:,j] = enet.coef_
@@ -494,7 +494,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 for j in range(self.q_):
                       enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
                       if X.ndim==2:
-                          enet.fit(X[:,:],y[:,j])
+                          enet.fit(X,y[:,j])
                       else:
                           enet.fit(X[:,:,j],y[:,j])
                       coef[:,j] = enet.coef_
@@ -578,8 +578,6 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
     Cross-Validated Cooperative Multi-Task Lasso Regression
     
     Fits cooperative multi-task lasso regression, optimising the regularisation parameters by cross-validation.
-    
-    ...
 
     Parameters
     ----------
@@ -652,7 +650,6 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         check_array(array=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
-        self.coef_ = np.full((self.q_,self.p_), np.nan)
         self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
         self.model_.fit(X=X,y=y,Z=Z)
         self.alpha_ = []
