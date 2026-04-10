@@ -2,7 +2,7 @@
 ![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yml/badge.svg)
 ![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
 
-# Sparse linear multi-task regression
+# Sparse Linear Multi-Task Regression
 
 This personal GitHub repository is mirrored at two institutional GitLab instances (see [LIH](https://git.lih.lu/arauschenberger/collasso) and [LCSB](https://gitlab.com/uniluxembourg/Personalfolders/armin.rauschenberger/collasso)). It contains a Python library that implements "Sparse linear multi-task regression with correlation-based information sharing". 
 
