@@ -19,7 +19,7 @@ jobs:
         run: pip install pdoc numpy scipy scikit-learn
       - name: Build docs
         run: |
-          pdoc src/collasso/functions.py -o docs/
+          pdoc src/collasso/functions.py -o docs/ --no-show-source
           touch docs/.nojekyll
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
