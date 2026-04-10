@@ -11,4 +11,3 @@ from .functions import (
 )
 
 __all__ = ["simulate", "SingleTaskLassoCV", "CoopLasso", "CoopLassoCV"]
-
