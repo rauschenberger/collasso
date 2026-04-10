@@ -13,7 +13,7 @@ Install `collasso` from GitHub:
 pip install git+https://github.com/rauschenberger/collasso.git
 ```
 
-Use the function `CoopLassoCV` to model a multivariate target (n x q matrix Y) based on high-dimensional features (n x q matrix X).
+Use the function `CoopLassoCV` to model a multivariate target ($n \times q$ matrix $\boldsymbol{Y}$) based on high-dimensional features ($n \times q$ matrix $\boldsymbol{X}$).
 
 ```python
 from collasso import CoopLassoCV
