@@ -25,6 +25,7 @@ from sklearn.utils.validation import check_is_fitted
 #--- simulate data ---
 
 def simulate(
+    *,
     n0=100,
     n1=10000,
     p=200,
@@ -34,6 +35,7 @@ def simulate(
     prob_sep=0.05,
     common=True,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    # pylint: disable=too-many-arguments
     """
     Simulate Data for Linear Multi-Task Regression
     
@@ -151,7 +153,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     predict(X)
         Makes predictions
     """
-    def __init__(self,cv=10,alphas=100):
+    def __init__(self,*,cv=10,alphas=100):
         """
         cv : int, default=10
             number of cross-validation folds
@@ -307,7 +309,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         Makes predictions
     """
     _EPS = 1e-09
-    def __init__(self,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
+    def __init__(self,*,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1): # pylint: disable=too-many-arguments
         """
             n_alphas : int
                 number of candidate values for the regularisation parameter in the final regressions
@@ -552,7 +554,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
     predict(X)
         Makes predictions
     """
-    def __init__(self, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state = None):
+    def __init__(self, *, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state = None): # pylint: disable=too-many-arguments
         """
             n_alphas : int
                 number of candidate values for the regularisation parameter in the final regressions
