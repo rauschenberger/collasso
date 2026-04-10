@@ -120,6 +120,8 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         self.cv = cv
         self.alphas = alphas
     def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV":
+        if y.ndim==1:
+            y = y.reshape(-1,1)
         check_array(array=X,allow_nd=True)
         check_array(array=y)
         if X.ndim==2:
@@ -232,6 +234,8 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self: CoopLasso
             fitted model
         """
+        if y.ndim==1:
+            y = y.reshape(-1,1)
         check_array(array=X,allow_nd=True)
         check_array(array=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
@@ -435,6 +439,8 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self : CoopLassoCV
             fitted model
         """
+        if y.ndim==1:
+            y = y.reshape(-1,1)
         check_array(array=X,allow_nd=True)
         check_array(array=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
