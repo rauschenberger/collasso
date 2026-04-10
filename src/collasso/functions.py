@@ -362,7 +362,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             Z_ = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
             Z_ = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-        elif Z.ndim==2:
+        else:
             Z_ = Z
         self.mu_y_ = np.mean(y,axis=0)
         self.sd_y_ = np.std(y,axis=0)
@@ -418,6 +418,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 # coef = enet.coef_.T
         self.weight_ = []
         self.model_ = []
+        xx = None
         if X.ndim==2:
             xx = np.hstack([X,-X])
         for i in range(self.q_):
@@ -474,6 +475,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         """
         check_is_fitted(self,attributes=['model_'])
         y_hat = []
+        #if X.ndim not in (2,3):
+        #    raise ValueError("X must be a matrix or an array")
+        newxx = None
         if X.ndim==2:
             newxx = np.hstack([X, -X])
         for i in range(len(self.model_)):
@@ -650,6 +654,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         """
         check_is_fitted(self,attributes=['coef_'])
         y_hat = np.full((X.shape[0], self.q_), np.nan)
+        newxx = None
         if X.ndim==2:
             newxx = np.hstack([X, -X])
         for i in range(self.q_):
