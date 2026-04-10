@@ -1,5 +1,7 @@
 
 ![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yml/badge.svg)
+![tests](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
+[![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 
 # Sparse linear multi-task regression
 
