@@ -1,7 +1,8 @@
 
 import numpy as np
 import pytest
-from collasso import simulate, CoopLasso, CoopLassoCV
+from collasso import CoopLasso, CoopLassoCV, simulate, SingleTaskLassoCV
+from sklearn.utils.estimator_checks import parametrize_with_checks
 
 @pytest.fixture
 def data():
@@ -35,3 +36,14 @@ def test_path_interpolate_equivalence(data):
         alpha.append(model.model_[i][0])
     pred2 = model.predict(X=x_test,alpha=alpha)
     assert np.allclose(pred1,pred2), 'prediction should be the same'
+
+#SKIP = {
+#    "",
+#    # ...
+#}
+
+#@parametrize_with_checks([CoopLassoCV(), SingleTaskLassoCV()])
+#def test_sklearn_compatible(estimator, check):
+#    if check.func.__name__ in SKIP:
+#        pytest.skip("skipped")
+#    check(estimator)
