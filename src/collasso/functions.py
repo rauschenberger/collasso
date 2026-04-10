@@ -1,4 +1,5 @@
-"""Sparse linear multi-task regression with correlation-based information sharing
+"""Sparse linear multi-task regression 
+with correlation-based information sharing
 
 Classes:
     SingleTaskLassoCV: Modelling multiple targets separately
@@ -16,18 +17,30 @@ import numpy as np
 from scipy.interpolate import interp1d # switch to np.interp
 from scipy.stats import multivariate_normal, rankdata, spearmanr
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV
+from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV
 from sklearn.model_selection import KFold
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
 #--- simulate data ---
 
-def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,common=True) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def simulate(
+    n0=100,
+    n1=10000,
+    p=200,
+    q=10,
+    rho=0.90,
+    prob_com=0.05,
+    prob_sep=0.05,
+    common=True,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Simulate Data for Linear Multi-Task Regression
     
-    Simulates feature matrix and target matrix, with given probabilities of (i) common effects on all targets and (ii) separate effects on each target.
+    Simulates feature matrix and target matrix,
+    with given probabilities of
+    (i) common effects on all targets and
+    (ii) separate effects on each target.
     
     Parameters
     ----------
@@ -58,7 +71,8 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
     y_test : ndarray of shape (n1_samples,q_targets)
         test target matrix
     beta : ndarray of shape (p_features,q_targets)
-        true effects in the training and the test data (of the feature in the row on the target in the column)
+        true effects in the training and the test data
+        (of the feature in the row on the target in the column)
         
     """
     # parameters
@@ -76,8 +90,14 @@ def simulate(n0=100,n1=10000,p=200,q=10,rho=0.90,prob_com=0.05,prob_sep=0.05,com
         for k in range(q):
             x.append(multivariate_normal.rvs(mean=mean, cov=sigma, size=n))
     # effects
-    beta_com = np.random.binomial(n=1, p=prob_com, size=p) * np.abs(np.random.normal(size=p)) # np.abs?
-    beta_sep = np.random.binomial(n=1, p=prob_sep, size=p * q).reshape(p, q)*np.abs(np.random.normal(size=p * q)).reshape(p, q) # np.abs?
+    beta_com = (
+        np.random.binomial(n=1, p=prob_com, size=p) *
+        np.abs(np.random.normal(size=p))
+    )
+    beta_sep = (
+        np.random.binomial(n=1, p=prob_sep, size=p * q).reshape(p, q) *
+        np.abs(np.random.normal(size=p * q)).reshape(p, q)
+    )
     beta = beta_com[:, np.newaxis] + beta_sep
     # targets
     if common is True:
@@ -100,7 +120,8 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     """
     Single-Task Lasso Regression For Multiple Targets
     
-    Fits single-task lasso regression separately to multiple targets, optimising the regularisation parameters by cross-validation.
+    Fits single-task lasso regression separately to multiple targets,
+    optimising the regularisation parameters by cross-validation.
 
     Parameters
     ----------
@@ -120,7 +141,8 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
     model_ : list of length q_targets
         fitted models from LassoCV (one for each target)   
     coef_ : ndarray of shape (q_targets, p_features)
-        estimated coefficients (of the feature in the column on the target in the row)
+        estimated coefficients
+        (of the feature in the column on the target in the row)
         
     Methods
     -------
@@ -138,14 +160,15 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         """
         self.cv = cv
         self.alphas = alphas
-    def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV":
+    def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV": # pylint: disable=invalid-name
         """
         Fit SingleTaskLassoCV
         
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets or a separate feature matrix for each target
+            common feature matrix for all targets or
+            a separate feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
             target matrix
           
@@ -170,14 +193,15 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
             self.model_.append(model)
             self.coef_[i,:] = model.coef_
         return self
-    def predict(self,X:np.ndarray) -> np.ndarray:
+    def predict(self,X:np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
         """
         Make predictions
   
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets, or a separate feature matrix for each target
+            common feature matrix for all targets,
+            or a separate feature matrix for each target
         
         Returns
         -------
@@ -192,9 +216,9 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
             y_hat[:, i] = self.model_[i].predict(X[:,:,i])
         return y_hat
 
-#--- multi-task lasso regression ---  
+#--- multi-task lasso regression ---
 
-def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
+def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=invalid-name
     """
     Check dimensionality of inputs
     
@@ -209,26 +233,38 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
     if y.ndim!=2:
         raise ValueError("'y' should be an 'n x q' matrix")
     n, q = y.shape
-    
+
     #--- features ---
     if X.ndim not in (2,3):
         raise ValueError("'X' should be an 'n x p' matrix or an 'n x p x q' array")
     if X.shape[0]!=n:
-        raise ValueError("'y' and 'X' should have the same number of samples (first dimension in 'y' and 'X')")
+        raise ValueError(
+            "'y' and 'X' should have the same number of samples"
+            "(first dimension in 'y' and 'X')"
+        )
     if X.ndim==3 and X.shape[2]!=q:
-        raise ValueError("'y' and 'X' should have the same number of targets (second dimension in 'y', third dimension in 'X')")
+        raise ValueError(
+            "'y' and 'X' should have the same number of targets"
+            "(second dimension in 'y', third dimension in 'X')"
+        )
     p = X.shape[1]
-    
+
     #--- indicators ---
     if Z is not None:
         if Z.ndim not in (1,2):
             raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
         if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[0]!=p):
-            raise ValueError("'X' and 'Z' should have the same number of features (second dimension in 'X', first dimension in 'Z')")
+            raise ValueError(
+                "'X' and 'Z' should have the same number of features"
+                "(second dimension in 'X', first dimension in 'Z')"
+            )
         if Z.ndim==2 and Z.shape[1]!=q:
-            raise ValueError("'y' and 'Z' should have the same number of targets (second dimension in 'y' and 'Z')")
+            raise ValueError(
+                "'y' and 'Z' should have the same number of targets"
+                "(second dimension in 'y' and 'Z')"
+            )
     return n, p, q
-  
+
 class CoopLasso(BaseEstimator,RegressorMixin):
     """
     Cooperative Multi-Task Lasso Regression
@@ -257,7 +293,10 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     q_ : int
         number of targets
     model_ : list
-        list of q_ models (one for each target) fitted by sklearn.linear_model.lasso_path with concatenated identity and inverse of feature matrix (X,-X) and non-negativity constraint (positive=True)
+        list of q_ models (one for each target)
+        fitted by sklearn.linear_model.lasso_path
+        with concatenated identity and inverse of feature matrix (X,-X)
+        and non-negativity constraint (positive=True)
         
     Methods
     -------
@@ -272,9 +311,15 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             n_alphas : int
                 number of candidate values for the regularisation parameter in the final regressions
             l1_ratio : float
-                elastic net mixing parameter, with 0<=l1_ratio<=1, where l1_ratio=0 leads to L2 (ridge) and l1_ratio=1 leads to L1 (lasso) penalisation
+                elastic net mixing parameter,
+                with 0<=l1_ratio<=1,
+                where l1_ratio=0 leads to L2 (ridge)
+                and l1_ratio=1 leads to L1 (lasso) penalisation
             alpha_init : ndarray, default=None
-                vector of length q_targets containing the regularisation parameter for the initial regressions (if None: optimisation by cross-validation)
+                vector of length q_targets
+                containing the regularisation parameter
+                for the initial regressions
+                (if None: optimisation by cross-validation)
             exp_y : float, default=1
                 non-negative number for exponentiating the target-target correlation coefficients
             exp_x : float, default=1
@@ -285,7 +330,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.alpha_init = alpha_init
         self.exp_y = exp_y
         self.exp_x = exp_x
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso":
+    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name
         """
         Fit CoopLasso
         
@@ -296,7 +341,10 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         y : ndarray of shape (n_samples, q_targets)
             target matrix
         Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
-            logical vector or matrix indicating primary (1, True) and auxiliary features (0, False) for all targets or each target
+            logical vector or matrix
+            indicating primary (1, True)
+            and auxiliary features (0, False)
+            for all targets together or each target separately
           
         Returns
         -------
@@ -333,9 +381,12 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 cor = spearmanr(X[:,:,j]).statistic
                 cor = np.nan_to_num(cor,nan=0)
                 cor_x.append(cor)
-        coef = np.full((self.p_, self.q_), np.nan)        
+        coef = np.full((self.p_, self.q_), np.nan)
         if self.l1_ratio is None:
-            raise NotImplementedError("Initial correlation coefficients (l1_ratio=None) have not yet been implemented.")
+            raise NotImplementedError(
+                "Initial correlation coefficients (l1_ratio=None)"
+                "have not yet been implemented."
+            )
         else:
             if self.alpha_init is None:
                 self.alpha_init_ = np.full(self.q_,np.nan)
@@ -355,12 +406,12 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             else:
                 self.alpha_init_ = self.alpha_init
                 for j in range(self.q_):
-                      enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
-                      if X.ndim==2:
-                          enet.fit(X,y[:,j])
-                      else:
-                          enet.fit(X[:,:,j],y[:,j])
-                      coef[:,j] = enet.coef_
+                    enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
+                    if X.ndim==2:
+                        enet.fit(X,y[:,j])
+                    else:
+                        enet.fit(X[:,:,j],y[:,j])
+                    coef[:,j] = enet.coef_
                 # Alternative with multivariate initialisation:
                 # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
                 # enet.fit(X,y)
@@ -372,12 +423,20 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         for i in range(self.q_):
             if X.ndim==3:
                 xx = np.hstack([X[:,:,i],-X[:,:,i]])
-            temp = coef * (np.sign(cor_y[:, i]) * (np.abs(cor_y[:, i])**self.exp_y))
+            temp = (
+                coef *
+                (np.sign(cor_y[:, i]) *
+                (np.abs(cor_y[:, i])**self.exp_y))
+            )
             w_pos = np.full(self.p_,np.nan)
             w_neg = np.full(self.p_,np.nan)
             w_abs = np.full(self.p_,np.nan)
             for j in range(self.p_):
-                cont = temp * (np.sign(cor_x[i][:, j]) * (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
+                cont = (
+                    temp *
+                    (np.sign(cor_x[i][:, j]) *
+                    (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
+                )
                 w_pos[j] = np.sum(np.maximum(cont, 0))
                 w_neg[j] = np.sum(np.maximum(-cont, 0))
                 w_abs[j] = np.sum(np.abs(cont))
@@ -389,21 +448,23 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             # weight = (w_abs + 1e-9)
             xx_scale = xx * weight
             model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
-            # This alternative is computationally expensive: 
+            # This alternative is computationally expensive:
             # lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight_.append(weight)
             self.model_.append(model)
         return self
-    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[np.ndarray]:
+    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[np.ndarray]: # pylint: disable=invalid-name
         """
         Make predictions
   
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets, or a separate feature matrix for each target
+            common feature matrix for all targets,
+            or a separate feature matrix for each target
         alpha : list of length q_targets or None, default=None
-            one ndarray of non-negative regularisation parameters for each target; if None, predictions are returned for the fitted path
+            one ndarray of non-negative regularisation parameters for each target;
+            if None, predictions are returned for the fitted path
         
         Returns
         -------
@@ -440,7 +501,8 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
     """
     Cross-Validated Cooperative Multi-Task Lasso Regression
     
-    Fits cooperative multi-task lasso regression, optimising the regularisation parameters by cross-validation.
+    Fits cooperative multi-task lasso regression,
+    optimising the regularisation parameters by cross-validation.
 
     Parameters
     ----------
@@ -488,9 +550,15 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             n_alphas : int
                 number of candidate values for the regularisation parameter in the final regressions
             l1_ratio : float
-                elastic net mixing parameter, with `0<=l1_ratio<=1`, where `l1_ratio=0` leads to L2 (ridge) and `l1_ratio=1` leads to L1 (lasso) penalisation
+                elastic net mixing parameter,
+                with `0<=l1_ratio<=1`,
+                where `l1_ratio=0` leads to L2 (ridge)
+                and `l1_ratio=1` leads to L1 (lasso) penalisation
             alpha_init : ndarray, default=None
-                vector of length q_targets containing the regularisation parameter for the initial regressions (if None: optimisation by cross-validation)
+                vector of length q_targets
+                containing the regularisation parameter
+                for the initial regressions
+                (if None: optimisation by cross-validation)
             exp_y : float, default=1
                 non-negative number for exponentiating the target-target correlation coefficients
             exp_x : float, default=1
@@ -504,7 +572,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.exp_y = exp_y
         self.exp_x = exp_x
         self.random_state = random_state
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLassoCV":
+    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLassoCV": # pylint: disable=invalid-name
         """
         Fit CoopLassoCV
         
@@ -515,7 +583,9 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         y : ndarray of shape (n_samples, q_targets)
             target matrix
         Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
-            logical vector or matrix indicating primary (1, True) and auxiliary features (0, False) for all targets or each target
+            logical vector or matrix
+            indicating primary (1, True) and auxiliary features (0, False)
+            for all targets or each target
           
         Returns
         -------
@@ -529,7 +599,12 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         check_array(array=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
-        self.model_ = CoopLasso(l1_ratio=self.l1_ratio,n_alphas=self.n_alphas,alpha_init=None,exp_y=self.exp_y,exp_x=self.exp_x)
+        self.model_ = CoopLasso(
+            l1_ratio=self.l1_ratio,
+            n_alphas=self.n_alphas,
+            alpha_init=None,
+            exp_y=self.exp_y,
+            exp_x=self.exp_x)
         self.model_.fit(X=X,y=y,Z=Z)
         self.alpha_ = []
         for i in range(self.q_):
@@ -537,7 +612,12 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
         CVF = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
         for train_id, test_id in CVF.split(X=X,y=y):
-            sub = CoopLasso(n_alphas=self.n_alphas, l1_ratio=self.l1_ratio, alpha_init=self.model_.alpha_init_, exp_y=self.exp_y, exp_x=self.exp_x)
+            sub = CoopLasso(
+                n_alphas=self.n_alphas,
+                l1_ratio=self.l1_ratio,
+                alpha_init=self.model_.alpha_init_,
+                exp_y=self.exp_y,
+                exp_x=self.exp_x)
             sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
             temp = sub.predict(X=X[test_id,...],alpha=self.alpha_)
             for j in range(len(temp)):
@@ -553,7 +633,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
             temp = self.model_.model_[j][1][:,id_min]
             self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
         return self
-    def predict(self,X:np.ndarray) -> np.ndarray:
+    def predict(self,X:np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
         """
         Make predictions
   
