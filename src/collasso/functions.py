@@ -130,6 +130,12 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         Makes predictions
     """
     def __init__(self,cv=10,alphas=100):
+        """
+        cv : int, default=10
+            number of cross-validation folds
+        alphas : int, default=100
+            number of candidate values for the regularisation parameter
+        """
         self.cv = cv
         self.alphas = alphas
     def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV":
@@ -223,6 +229,18 @@ class CoopLasso(BaseEstimator,RegressorMixin):
     """
     _EPS = 1e-09
     def __init__(self,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
+        """
+            n_alphas : int
+                number of candidate values for the regularisation parameter in the final regressions
+            l1_ratio : float
+                elastic net mixing parameter, with 0<=l1_ratio<=1, where l1_ratio=0 leads to L2 (ridge) and l1_ratio=1 leads to L1 (lasso) penalisation
+            alpha_init : ndarray, default=None
+                vector of length q_targets containing the regularisation parameter for the initial regressions (if None: optimisation by cross-validation)
+            exp_y : float, default=1
+                non-negative number for exponentiating the target-target correlation coefficients
+            exp_x : float, default=1
+                non-negative number for exponentiating the feature-feature correlation coefficients
+        """
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio
         self.alpha_init = alpha_init
@@ -427,6 +445,20 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         Makes predictions
     """
     def __init__(self, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state = None):
+        """
+            n_alphas : int
+                number of candidate values for the regularisation parameter in the final regressions
+            l1_ratio : float
+                elastic net mixing parameter, with `0<=l1_ratio<=1`, where `l1_ratio=0` leads to L2 (ridge) and `l1_ratio=1` leads to L1 (lasso) penalisation
+            alpha_init : ndarray, default=None
+                vector of length q_targets containing the regularisation parameter for the initial regressions (if None: optimisation by cross-validation)
+            exp_y : float, default=1
+                non-negative number for exponentiating the target-target correlation coefficients
+            exp_x : float, default=1
+                non-negative number for exponentiating the feature-feature correlation coefficients
+            random_state : int or None, default=None
+                random seed for generating reproducible cross-validation folds
+        """
         self.cv = cv
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio
