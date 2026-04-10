@@ -139,6 +139,22 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         self.cv = cv
         self.alphas = alphas
     def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV":
+        """
+        Fit SingleTaskLassoCV
+        
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets or a separate feature matrix for each target
+        y : ndarray of shape (n_samples, q_targets)
+            target matrix
+          
+        Returns
+        -------
+        
+        self: SingleTaskLassoCV
+            fitted model
+        """
         if y.ndim==1:
             y = y.reshape(-1,1)
         check_array(array=X,allow_nd=True)
@@ -155,6 +171,19 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
             self.coef_[i,:] = model.coef_
         return self
     def predict(self,X:np.ndarray) -> np.ndarray:
+        """
+        Make predictions
+  
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets, or a separate feature matrix for each target
+        
+        Returns
+        -------
+        y_hat : ndarray of shape (n_samples, q_targets)
+            matrix of predicted values
+        """
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
         check_is_fitted(self,attributes=['coef_'])
@@ -166,6 +195,16 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
 #--- multi-task lasso regression ---  
 
 def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None):
+    """
+    Check dimensionality of inputs
+    
+    Parameters
+    ----------
+        X np.ndarray
+        y np.ndarray
+        Z np.ndarray
+    
+    """
     #--- targets ---
     if y.ndim!=2:
         raise ValueError("'y' should be an 'n x q' matrix")
