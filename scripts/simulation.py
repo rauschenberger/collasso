@@ -1,6 +1,7 @@
 """Simulation
 
-This script performs a simulation study to compare the selection performance and the predictive performance between different methods.
+This script performs a simulation study to compare the selection performance
+and the predictive performance between different methods.
 
 """
 
@@ -26,7 +27,11 @@ prederror = np.full((len(grid),4),np.nan)
 
 for i in range(len(grid)):
     np.random.seed(i)
-    x_train, y_train, x_test, y_test, beta = simulate(rho=grid[i,0], prob_com=grid[i,1], prob_sep=grid[i,2])
+    x_train, y_train, x_test, y_test, beta = simulate(
+        rho=grid[i,0],
+        prob_com=grid[i,1],
+        prob_sep=grid[i,2]
+    )
     #X, y = x_train, y_train # temporary
     scaler = StandardScaler()
     x_train_scaled = scaler.fit_transform(x_train)
@@ -51,14 +56,14 @@ for i in range(len(grid)):
     model.fit(X=x_train_scaled,y=y_train)
     coef_coop = model.coef_
     pred_coop = model.predict(X=x_test_scaled)
-    
+
     # mutar (add internal cross-validation)
-    
+    #
     #model = GroupLasso()
     #model.fit(x_train_scaled_repeated,y_train.T)
     #coef_group = model.coef_.T
     #pred_group = model.predict(x_test_scaled_repeated).T
-  
+    #
     #model = DirtyModel()
     #model.fit(x_train_scaled_repeated,y_train.T)
     #coef_dirty = model.coef_.T
@@ -68,7 +73,7 @@ for i in range(len(grid)):
     #model.fit(x_train_scaled_repeated,y_train.T)
     #coef_level = model.coef_.T
     #pred_level = model.predict(x_test_scaled_repeated).T
-    
+
     # comparison
     coef = np.stack([coef_mean,coef_single,coef_multi,coef_coop])
     pred = np.stack([pred_mean,pred_single,pred_multi,pred_coop])
