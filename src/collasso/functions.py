@@ -86,11 +86,11 @@ def simulate(
     row_idx, col_idx = np.meshgrid(idx, idx)
     sigma = rho ** np.abs(col_idx - row_idx)
     if common is True:
-        x = multivariate_normal.rvs(mean=mean, cov=sigma, size=n)
+        x = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
     else:
         x = []
         for k in range(q):
-            x.append(multivariate_normal.rvs(mean=mean, cov=sigma, size=n))
+            x.append(multivariate_normal.rvs(mean=mean,cov=sigma,size=n))
     # effects
     beta_com = (
         np.random.binomial(n=1, p=prob_com, size=p) *
@@ -221,6 +221,31 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
 
 #--- multi-task lasso regression ---
 
+# def _construct_weights(self,*,coef,cor_y,cor_x,exp_y,exp_x,Z):
+#     temp = (
+#         coef *
+#         (np.sign(cor_y[:, i]) *
+#         (np.abs(cor_y[:, i])**self.exp_y))
+#     )
+#     w_pos = np.full(self.p_,np.nan)
+#     w_neg = np.full(self.p_,np.nan)
+#     w_abs = np.full(self.p_,np.nan)
+#     for j in range(self.p_):
+#         cont = (
+#             temp *
+#             (np.sign(cor_x[i][:, j]) *
+#              (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
+#         )
+#         w_pos[j] = np.sum(np.maximum(cont, 0))
+#         w_neg[j] = np.sum(np.maximum(-cont, 0))
+#         w_abs[j] = np.sum(np.abs(cont))
+#     exclude = Z.T[i,:]==0
+#     w_pos[exclude] = 0
+#     w_neg[exclude] = 0
+#     weight = np.append(w_pos+self._EPS,w_neg+self._EPS)
+# return weight
+
+
 def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=invalid-name
     """
     Check dimensionality of inputs
@@ -269,6 +294,7 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=
     return n, p, q
 
 class CoopLasso(BaseEstimator,RegressorMixin):
+    # pylint: disable=too-many-instance-attributes
     """
     Cooperative Multi-Task Lasso Regression
   
@@ -392,35 +418,34 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 "Initial correlation coefficients (l1_ratio=None)"
                 "have not yet been implemented."
             )
+        if self.alpha_init is None:
+            self.alpha_init_ = np.full(self.q_,np.nan)
+            for j in range(self.q_):
+                enet = ElasticNetCV(l1_ratio=self.l1_ratio)
+                if X.ndim==2:
+                    enet.fit(X,y[:,j])
+                else:
+                    enet.fit(X[:,:,j],y[:,j])
+                coef[:,j] = enet.coef_
+                self.alpha_init_[j] = enet.alpha_
+            # Alternative with multivariate initialisation:
+            # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
+            # enet.fit(X,y)
+            # coef = enet.coef_.T
+            # self.alpha_init_ = enet.alpha_
         else:
-            if self.alpha_init is None:
-                self.alpha_init_ = np.full(self.q_,np.nan)
-                for j in range(self.q_):
-                    enet = ElasticNetCV(l1_ratio=self.l1_ratio)
-                    if X.ndim==2:
-                        enet.fit(X,y[:,j])
-                    else:
-                        enet.fit(X[:,:,j],y[:,j])
-                    coef[:,j] = enet.coef_
-                    self.alpha_init_[j] = enet.alpha_
-                # Alternative with multivariate initialisation:
-                # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
-                # enet.fit(X,y)
-                # coef = enet.coef_.T
-                # self.alpha_init_ = enet.alpha_
-            else:
-                self.alpha_init_ = self.alpha_init
-                for j in range(self.q_):
-                    enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
-                    if X.ndim==2:
-                        enet.fit(X,y[:,j])
-                    else:
-                        enet.fit(X[:,:,j],y[:,j])
-                    coef[:,j] = enet.coef_
-                # Alternative with multivariate initialisation:
-                # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
-                # enet.fit(X,y)
-                # coef = enet.coef_.T
+            self.alpha_init_ = self.alpha_init
+            for j in range(self.q_):
+                enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
+                if X.ndim==2:
+                    enet.fit(X,y[:,j])
+                else:
+                    enet.fit(X[:,:,j],y[:,j])
+                coef[:,j] = enet.coef_
+            # Alternative with multivariate initialisation:
+            # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
+            # enet.fit(X,y)
+            # coef = enet.coef_.T
         self.weight_ = []
         self.model_ = []
         xx = None
@@ -430,9 +455,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             if X.ndim==3:
                 xx = np.hstack([X[:,:,i],-X[:,:,i]])
             temp = (
-                coef *
-                (np.sign(cor_y[:, i]) *
-                (np.abs(cor_y[:, i])**self.exp_y))
+               coef *
+               (np.sign(cor_y[:, i]) *
+               (np.abs(cor_y[:, i])**self.exp_y))
             )
             w_pos = np.full(self.p_,np.nan)
             w_neg = np.full(self.p_,np.nan)
@@ -507,6 +532,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         return y_hat
 
 class CoopLassoCV(BaseEstimator,RegressorMixin):
+    # pylint: disable=too-many-instance-attributes
     """
     Cross-Validated Cooperative Multi-Task Lasso Regression
     

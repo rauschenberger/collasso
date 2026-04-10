@@ -8,8 +8,8 @@ Tests:
 
 import numpy as np
 import pytest
-from sklearn.utils.estimator_checks import parametrize_with_checks
-from collasso import CoopLasso, CoopLassoCV, simulate, SingleTaskLassoCV
+#from sklearn.utils.estimator_checks import parametrize_with_checks
+from collasso import CoopLasso, CoopLassoCV, simulate
 
 @pytest.fixture
 def data():
