@@ -254,10 +254,12 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=
     
     Parameters
     ----------
-        X np.ndarray
-        y np.ndarray
-        Z np.ndarray
-    
+    X : np.ndarray
+        feature matrix
+    y : np.ndarray
+        target matrix
+    Z : np.ndarray or None
+        indicator matrix (0=auxiliary, 1=primary)
     """
     #--- targets ---
     if y.ndim!=2:
