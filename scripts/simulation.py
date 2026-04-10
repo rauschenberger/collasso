@@ -1,3 +1,8 @@
+"""Simulation
+
+This script performs a simulation study to compare the selection performance and the predictive performance between different methods.
+
+"""
 
 from itertools import product
 import numpy as np

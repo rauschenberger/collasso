@@ -1,15 +1,23 @@
+"""Unit tests
+
+Tests:
+    test_broadcasting: matrix/array during training/testing
+    test_interpolation: original/interpolated values
+    test_compatibility: sklearn tests
+"""
 
 import numpy as np
 import pytest
-from collasso import CoopLasso, CoopLassoCV, simulate, SingleTaskLassoCV
+import doctest
 from sklearn.utils.estimator_checks import parametrize_with_checks
+from collasso import CoopLasso, CoopLassoCV, simulate, SingleTaskLassoCV
 
 @pytest.fixture
 def data():
     x_train, y_train, x_test, y_test, beta = simulate(rho=0.9, prob_com=0.05, prob_sep=0.05)
     return x_train, y_train, x_test, y_test, beta   
 
-def test_matrix_array_equivalence(data):
+def test_broadcasting(data):
     """CoopLassoCV can use matrix or array during training or testing."""
     x_train, y_train, x_test, y_test, beta = data
     x_train_bc = np.broadcast_to(x_train[:,:,None],(x_train.shape[0],x_train.shape[1],y_train.shape[1]))
@@ -25,7 +33,7 @@ def test_matrix_array_equivalence(data):
     y_hat = np.array(y_hat)
     assert np.allclose(y_hat, y_hat[0]), 'predictions should be the same'
 
-def test_path_interpolate_equivalence(data):
+def test_interpolation(data):
     """CoopLasso can use original or interpolated alpha values."""
     x_train, y_train, x_test, y_test, beta = data
     model = CoopLasso()
@@ -43,7 +51,13 @@ def test_path_interpolate_equivalence(data):
 #}
 
 #@parametrize_with_checks([CoopLassoCV(), SingleTaskLassoCV()])
-#def test_sklearn_compatible(estimator, check):
+#def test_compatibility(estimator, check):
 #    if check.func.__name__ in SKIP:
 #        pytest.skip("skipped")
 #    check(estimator)
+
+#import collasso
+#
+#def test_docstrings_collasso():
+#    results = doctest.testmod(collasso, verbose=False)
+#    assert results.failed == 0
