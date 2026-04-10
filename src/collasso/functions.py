@@ -160,6 +160,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
         """
         self.cv = cv
         self.alphas = alphas
+        self.n_ = self.p_ = self.q_ = self.model_ = self.coef_ = None
     def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV": # pylint: disable=invalid-name
         """
         Fit SingleTaskLassoCV
@@ -330,6 +331,10 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.alpha_init = alpha_init
         self.exp_y = exp_y
         self.exp_x = exp_x
+        self.n_ = self.p_ = self.q_ = None # dimensionality
+        self.n_features_in_ = None # compatibility
+        self.mu_y_ = self.sd_y_ = None # standardisation
+        self.alpha_init_ = self.weight_ = self.model_ = None # modelling
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name
         """
         Fit CoopLasso
@@ -359,11 +364,9 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         if Z is None:
-            Z_ = np.full((self.p_,self.q_),1)
+            Z = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
-            Z_ = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-        else:
-            Z_ = Z
+            Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
         self.mu_y_ = np.mean(y,axis=0)
         self.sd_y_ = np.std(y,axis=0)
         y = (y - self.mu_y_)/self.sd_y_
@@ -441,7 +444,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
                 w_pos[j] = np.sum(np.maximum(cont, 0))
                 w_neg[j] = np.sum(np.maximum(-cont, 0))
                 w_abs[j] = np.sum(np.abs(cont))
-            exclude = Z_.T[i,:]==0
+            exclude = Z.T[i,:]==0
             w_pos[exclude] = 0
             w_neg[exclude] = 0
             weight = np.append(w_pos+self._EPS,w_neg+self._EPS)
@@ -576,6 +579,10 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         self.exp_y = exp_y
         self.exp_x = exp_x
         self.random_state = random_state
+        self.n_ = self.p_ = self.q_ = None # dimensionality
+        self.n_features_in_ = None # compatibility
+        self.alpha_ = self.mse_ = self.min_ = None # cross-validation
+        self.model_ = self.coef_ = None # modelling
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLassoCV": # pylint: disable=invalid-name
         """
         Fit CoopLassoCV
@@ -614,8 +621,8 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
         for i in range(self.q_):
             self.alpha_.append(self.model_.model_[i][0])
         y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
-        CVF = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
-        for train_id, test_id in CVF.split(X=X,y=y):
+        folds = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
+        for train_id, test_id in folds.split(X=X,y=y):
             sub = CoopLasso(
                 n_alphas=self.n_alphas,
                 l1_ratio=self.l1_ratio,
