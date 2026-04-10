@@ -77,6 +77,21 @@ def simulate(
         (of the feature in the row on the target in the column)
         
     """
+    if n0 < 10:
+        raise ValueError(f"Use n0>=10 (not n0={n0})")
+    if n1 < 10:
+        raise ValueError(f"Use n1>=10 (not n1={n1})")
+    if p < 2:
+        raise ValueError(f"Use p>=2 (not p={p})")
+    if q < 2:
+        raise ValueError(f"Use q>=2 (not q={q})")
+    if not 0 <= rho <= 1:
+        raise ValueError(f"Use rho in [0, 1] (not rho={rho})")
+    if not 0 <= prob_com <= 1:
+        raise ValueError(f"Use prob_com in [0, 1] (not prob_com={prob_com})")
+    if not 0 <= prob_sep <= 1:
+        raise ValueError(f"Use prob_sep in [0, 1] (not prob_sep={prob_sep})")
+    
     # parameters
     n = n0 + n1
     fold = np.array([0]*n0+[1]*n1)
