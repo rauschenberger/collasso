@@ -26,5 +26,5 @@ where = ["src"]
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
 
-[tool.poe.tasks]
-docs = "pdoc --docformat numpy src/functions.py -o docs/"
+#[tool.poe.tasks]
+#docs = "pdoc --docformat numpy src/functions.py -o docs/"

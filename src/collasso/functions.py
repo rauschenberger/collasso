@@ -14,30 +14,6 @@ Example:
     # model.predict(x_test)
 """
 
-__pdoc__ = {
-    "CoopLasso.set_fit_request": False,
-    "CoopLasso.set_predict_request": False,
-    "CoopLasso.set_score_request": False,
-    "CoopLassoCV.set_fit_request": False,
-    "CoopLassoCV.set_score_request": False,
-    "SingleTaskLassoCV.set_score_request": False,
-    "SingleTaskLassoCV.cv": False,
-    "SingleTaskLassoCV.alphas": False,
-    "CoopLasso.n_alphas": False,
-    "CoopLasso.l1_ratio": False,
-    "CoopLasso.alpha_init": False,
-    "CoopLasso.exp_y": False,
-    "CoopLasso.exp_x": False,
-    "CoopLasso.n_features_in_": False,
-    "CoopLassoCV.cv": False,
-    "CoopLassoCV.n_alphas": False,
-    "CoopLassoCV.l1_ratio": False,
-    "CoopLassoCV.exp_y": False,
-    "CoopLassoCV.exp_x": False,
-    "CoopLassoCV.random_state": False,
-    "CoopLassoCV.n_features_in_": False,
-}
-
 import numpy as np
 from scipy.interpolate import interp1d # switch to np.interp
 from scipy.stats import multivariate_normal, rankdata, spearmanr
