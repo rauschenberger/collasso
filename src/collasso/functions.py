@@ -23,6 +23,47 @@ from sklearn.model_selection import KFold
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
+#--- test docrep ---
+
+# import docrep
+# docstrings = docrep.DocstringProcessor()
+# 
+# @docstrings.dedent
+# @docstrings.get_sections(base='do_something')
+# def do_something(a, b):
+#     """
+#     Add two numbers
+#     
+#     Parameters
+#     ----------
+#     a: int
+#        The first number
+#     b: int
+#        The second number
+# 
+#     Returns
+#     -------
+#     int
+#         `a` + `b`
+#     """
+#     return a + b
+# 
+# @docstrings.dedent
+# def do_more(*args, **kwargs):
+#     """
+#     Add two numbers and multiply it by 2
+# 
+#     Parameters
+#     ----------
+#     %(do_something.parameters)s
+# 
+#     Returns
+#     -------
+#     int
+#         (`a` + `b`) * 
+#     """
+#     return do_something(*args, **kwargs) * 2
+
 #--- simulate data ---
 
 def simulate(
@@ -36,7 +77,7 @@ def simulate(
     prob_sep=0.05,
     common=True,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-locals
     """
     Simulate Data for Linear Multi-Task Regression
     
@@ -94,7 +135,31 @@ def simulate(
     # parameters
     n = n0 + n1
     fold = np.array([0]*n0+[1]*n1)
-    # features
+
+    x = _simulate_features(n=n,p=p,q=q,rho=rho,common=common)
+    beta = _simulate_effects(p=p,q=q,prob_com=prob_com,prob_sep=prob_sep)
+    y = _simulate_targets(n=n,q=q,x=x,beta=beta,common=common)
+
+    if common is False:
+        raise NotImplementedError("Returning multiple feature matrices is not implemented.")
+    x_train, y_train = x[fold==0], y[fold==0]
+    x_test, y_test = x[fold==1], y[fold==1]
+    return x_train, y_train, x_test, y_test, beta
+
+def _simulate_features(*,n,p,q,rho,common):
+    """
+    Simulate Features
+    
+    Parameters
+    ----------
+    n : int
+        number of samples
+      
+    Returns
+    -------
+    x : ndarray of shape (n_samples, q_features) or
+        list of q_targets ndarrays of shape (n_samples, q_features)
+    """
     mean = np.zeros(p)
     idx = np.arange(p)
     row_idx, col_idx = np.meshgrid(idx, idx)
@@ -103,9 +168,21 @@ def simulate(
         x = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
     else:
         x = []
-        for k in range(q):
+        for _ in range(q):
             x.append(multivariate_normal.rvs(mean=mean,cov=sigma,size=n))
-    # effects
+    return x
+
+def _simulate_effects(*,p,q,prob_com,prob_sep):
+    """
+    Simulate Effects
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    beta : ndarray of shape (p_features, q_targets)
+    """
     beta_com = (
         np.random.binomial(n=1, p=prob_com, size=p) *
         np.abs(np.random.normal(size=p))
@@ -115,7 +192,20 @@ def simulate(
         np.abs(np.random.normal(size=p * q)).reshape(p, q)
     )
     beta = beta_com[:, np.newaxis] + beta_sep
-    # targets
+    return beta
+
+def _simulate_targets(*,n,q,x,beta,common):
+    """
+    Simulate Targets
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    y : ndarray of shape (n_samples,q_targets)
+
+    """
     if common is True:
         eta = x @ beta
     else:
@@ -124,11 +214,7 @@ def simulate(
             eta[:,k] = x[k] @ beta[:,k]
     noise_sd = 0.5 * np.std(eta, axis = 0)
     y = eta + np.random.normal(size = eta.shape, scale = noise_sd)
-    if common is False:
-        raise NotImplementedError("Returning multiple feature matrices is not implemented.")
-    x_train, y_train = x[fold==0], y[fold==0]
-    x_test, y_test = x[fold==1], y[fold==1]
-    return x_train, y_train, x_test, y_test, beta
+    return y
 
 #--- single-task lasso regressions ---
 
