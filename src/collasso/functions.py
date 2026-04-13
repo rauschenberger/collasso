@@ -396,6 +396,21 @@ def _cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
             cor_x.append(cor)
     return cor_x
 
+def _calc_weights(
+    *,
+    cor_y:np.ndarray,
+    cor_x:np.ndarray,
+    coef:np.ndarray,
+    exp_y:float,
+    exp_x:float
+    ) -> tuple[np.ndarray,np.ndarray]:
+    link_y = np.sign(cor_y)*np.abs(cor_y)**exp_y
+    link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
+    cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
+    w_pos = np.maximum(cont,0).sum(axis=(1,2))
+    w_neg = np.maximum(-cont,0).sum(axis=(1,2))
+    return w_pos, w_neg
+
 class CoopLasso(BaseEstimator,RegressorMixin):
     # pylint: disable=too-many-instance-attributes
     """
@@ -450,7 +465,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.n_features_in_ = None # compatibility
         self.mu_y_ = self.sd_y_ = None # standardisation
         self.alpha_init_ = self.weight_ = self.model_ = None # modelling
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
+    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name,too-many-locals,too-many-branches
         """
         Fit CoopLasso
         
@@ -506,7 +521,6 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         #        "Initial correlation coefficients (l1_ratio=None)"
         #        "have not yet been implemented."
         #    )
-        # previous run: 21/15, 19/12, 68/50
         if self.alpha_init is None:
             self.alpha_init_ = np.full(self.q_,np.nan)
         else:
@@ -585,11 +599,19 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             #     w_pos[j] = np.sum(np.maximum(cont, 0))
             #     w_neg[j] = np.sum(np.maximum(-cont, 0))
             #     #w_abs[j] = np.sum(np.abs(cont))
-            link_y = np.sign(cor_y[:, i])*np.abs(cor_y[:, i])**self.exp_y
-            link_x = np.sign(cor_x[i])*np.abs(cor_x[i])**self.exp_x
-            cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
-            w_pos = np.maximum(cont,0).sum(axis=(1,2))
-            w_neg = np.maximum(-cont,0).sum(axis=(1,2))
+
+            #link_y = np.sign(cor_y[:, i])*np.abs(cor_y[:, i])**self.exp_y
+            #link_x = np.sign(cor_x[i])*np.abs(cor_x[i])**self.exp_x
+            #cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
+            #w_pos = np.maximum(cont,0).sum(axis=(1,2))
+            #w_neg = np.maximum(-cont,0).sum(axis=(1,2))
+
+            w_pos, w_neg = _calc_weights(
+                cor_y=cor_y[:,i],
+                cor_x=cor_x[i],
+                coef=coef,
+                exp_y=self.exp_y,
+                exp_x=self.exp_x)
             exclude = Z.T[i,:]==0
             w_pos[exclude] = 0
             w_neg[exclude] = 0
