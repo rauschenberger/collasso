@@ -389,16 +389,16 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         cor_y = np.corrcoef(rankdata(y, axis=0),rowvar=False)
         # This would not return a matrix under q=2:
         # cor_y = spearmanr(y).statistic
-        cor_y = np.nan_to_num(cor_y,nan=0)
+        cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
         if X.ndim==2:
             cor = spearmanr(X).statistic
-            cor = np.nan_to_num(cor,nan=0)
+            cor = np.asarray(np.nan_to_num(cor,nan=0))
             cor_x = [cor] * self.q_
         elif X.ndim==3:
             cor_x = []
             for j in range(self.q_):
                 cor = spearmanr(X[:,:,j]).statistic
-                cor = np.nan_to_num(cor,nan=0)
+                cor = np.asarray(np.nan_to_num(cor,nan=0))
                 cor_x.append(cor)
         coef = np.full((self.p_, self.q_), np.nan)
         if self.l1_ratio is None:
