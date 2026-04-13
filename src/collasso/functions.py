@@ -436,7 +436,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
             # coef = enet.coef_.T
         self.weight_ = []
         self.model_ = []
-        xx = None
+        xx = np.empty(0)
         if X.ndim==2:
             xx = np.hstack([X,-X])
         for i in range(self.q_):
