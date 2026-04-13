@@ -1,0 +1,13 @@
+name: Ruff
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3

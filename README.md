@@ -1,6 +1,7 @@
 
 ![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yml/badge.svg)
 ![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
+![Ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yml/badge.svg)
 
 # Sparse Linear Multi-Task Regression
 
