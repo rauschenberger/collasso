@@ -27,40 +27,40 @@ from sklearn.utils.validation import check_is_fitted
 
 # import docrep
 # docstrings = docrep.DocstringProcessor()
-# 
+#
 # @docstrings.dedent
 # @docstrings.get_sections(base='do_something')
 # def do_something(a, b):
 #     """
 #     Add two numbers
-#     
+#
 #     Parameters
 #     ----------
 #     a: int
 #        The first number
 #     b: int
 #        The second number
-# 
+#
 #     Returns
 #     -------
 #     int
 #         `a` + `b`
 #     """
 #     return a + b
-# 
+#
 # @docstrings.dedent
 # def do_more(*args, **kwargs):
 #     """
 #     Add two numbers and multiply it by 2
-# 
+#
 #     Parameters
 #     ----------
 #     %(do_something.parameters)s
-# 
+#
 #     Returns
 #     -------
 #     int
-#         (`a` + `b`) * 
+#         (`a` + `b`) *
 #     """
 #     return do_something(*args, **kwargs) * 2
 
@@ -383,6 +383,19 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=
             )
     return n, p, q
 
+def _cor(*,x:np.ndarray,q:int) -> np.ndarray:
+    if x.ndim==2:
+        cor = spearmanr(x).statistic
+        cor = np.asarray(np.nan_to_num(cor,nan=0))
+        cor_x = [cor] * q
+    elif x.ndim==3:
+        cor_x = []
+        for j in range(q):
+            cor = spearmanr(x[:,:,j]).statistic
+            cor = np.asarray(np.nan_to_num(cor,nan=0))
+            cor_x.append(cor)
+    return cor_x
+
 class CoopLasso(BaseEstimator,RegressorMixin):
     # pylint: disable=too-many-instance-attributes
     """
@@ -476,50 +489,77 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         # This would not return a matrix under q=2:
         # cor_y = spearmanr(y).statistic
         cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
-        if X.ndim==2:
-            cor = spearmanr(X).statistic
-            cor = np.asarray(np.nan_to_num(cor,nan=0))
-            cor_x = [cor] * self.q_
-        elif X.ndim==3:
-            cor_x = []
-            for j in range(self.q_):
-                cor = spearmanr(X[:,:,j]).statistic
-                cor = np.asarray(np.nan_to_num(cor,nan=0))
-                cor_x.append(cor)
+        # if X.ndim==2:
+        #     cor = spearmanr(X).statistic
+        #     cor = np.asarray(np.nan_to_num(cor,nan=0))
+        #     cor_x = [cor] * self.q_
+        # elif X.ndim==3:
+        #     cor_x = []
+        #     for j in range(self.q_):
+        #         cor = spearmanr(X[:,:,j]).statistic
+        #         cor = np.asarray(np.nan_to_num(cor,nan=0))
+        #         cor_x.append(cor)
+        cor_x = _cor(x=X,q=self.q_)
         coef = np.full((self.p_, self.q_), np.nan)
         if self.l1_ratio is None:
             raise NotImplementedError(
                 "Initial correlation coefficients (l1_ratio=None)"
                 "have not yet been implemented."
             )
+        # previous run: 21/15, 19/12, 68/50
         if self.alpha_init is None:
             self.alpha_init_ = np.full(self.q_,np.nan)
-            for j in range(self.q_):
+        else:
+            self.alpha_init_ = self.alpha_init
+        for j in range(self.q_):
+            if self.alpha_init is None:
                 enet = ElasticNetCV(l1_ratio=self.l1_ratio)
-                if X.ndim==2:
-                    enet.fit(X,y[:,j])
-                else:
-                    enet.fit(X[:,:,j],y[:,j])
-                coef[:,j] = enet.coef_
+            else:
+                enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
+            if X.ndim==2:
+                enet.fit(X,y[:,j])
+            else:
+                enet.fit(X[:,:,j],y[:,j])
+            coef[:,j] = enet.coef_
+            if self.alpha_init is None:
                 self.alpha_init_[j] = enet.alpha_
             # Alternative with multivariate initialisation:
             # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
             # enet.fit(X,y)
             # coef = enet.coef_.T
             # self.alpha_init_ = enet.alpha_
-        else:
-            self.alpha_init_ = self.alpha_init
-            for j in range(self.q_):
-                enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
-                if X.ndim==2:
-                    enet.fit(X,y[:,j])
-                else:
-                    enet.fit(X[:,:,j],y[:,j])
-                coef[:,j] = enet.coef_
             # Alternative with multivariate initialisation:
             # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
             # enet.fit(X,y)
             # coef = enet.coef_.T
+        # if self.alpha_init is None:
+        #     self.alpha_init_ = np.full(self.q_,np.nan)
+        #     for j in range(self.q_):
+        #         enet = ElasticNetCV(l1_ratio=self.l1_ratio)
+        #         if X.ndim==2:
+        #             enet.fit(X,y[:,j])
+        #         else:
+        #             enet.fit(X[:,:,j],y[:,j])
+        #         coef[:,j] = enet.coef_
+        #         self.alpha_init_[j] = enet.alpha_
+        #     # Alternative with multivariate initialisation:
+        #     # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
+        #     # enet.fit(X,y)
+        #     # coef = enet.coef_.T
+        #     # self.alpha_init_ = enet.alpha_
+        # else:
+        #     self.alpha_init_ = self.alpha_init
+        #     for j in range(self.q_):
+        #         enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
+        #         if X.ndim==2:
+        #             enet.fit(X,y[:,j])
+        #         else:
+        #             enet.fit(X[:,:,j],y[:,j])
+        #         coef[:,j] = enet.coef_
+        #     # Alternative with multivariate initialisation:
+        #     # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
+        #     # enet.fit(X,y)
+        #     # coef = enet.coef_.T
         self.weight_ = []
         self.model_ = []
         xx = np.empty(0)
