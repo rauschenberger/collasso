@@ -383,7 +383,7 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=
             )
     return n, p, q
 
-def _cor(*,x:np.ndarray,q:int) -> np.ndarray:
+def _cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
     if x.ndim==2:
         cor = spearmanr(x).statistic
         cor = np.asarray(np.nan_to_num(cor,nan=0))
@@ -450,7 +450,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         self.n_features_in_ = None # compatibility
         self.mu_y_ = self.sd_y_ = None # standardisation
         self.alpha_init_ = self.weight_ = self.model_ = None # modelling
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name
+    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
         """
         Fit CoopLasso
         
@@ -501,11 +501,11 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         #         cor_x.append(cor)
         cor_x = _cor(x=X,q=self.q_)
         coef = np.full((self.p_, self.q_), np.nan)
-        if self.l1_ratio is None:
-            raise NotImplementedError(
-                "Initial correlation coefficients (l1_ratio=None)"
-                "have not yet been implemented."
-            )
+        #if self.l1_ratio is None:
+        #    raise NotImplementedError(
+        #        "Initial correlation coefficients (l1_ratio=None)"
+        #        "have not yet been implemented."
+        #    )
         # previous run: 21/15, 19/12, 68/50
         if self.alpha_init is None:
             self.alpha_init_ = np.full(self.q_,np.nan)
@@ -568,23 +568,28 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         for i in range(self.q_):
             if X.ndim==3:
                 xx = np.hstack([X[:,:,i],-X[:,:,i]])
-            temp = (
-               coef *
-               (np.sign(cor_y[:, i]) *
-               (np.abs(cor_y[:, i])**self.exp_y))
-            )
-            w_pos = np.full(self.p_,np.nan)
-            w_neg = np.full(self.p_,np.nan)
-            w_abs = np.full(self.p_,np.nan)
-            for j in range(self.p_):
-                cont = (
-                    temp *
-                    (np.sign(cor_x[i][:, j]) *
-                    (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
-                )
-                w_pos[j] = np.sum(np.maximum(cont, 0))
-                w_neg[j] = np.sum(np.maximum(-cont, 0))
-                w_abs[j] = np.sum(np.abs(cont))
+            #temp = (
+            #   coef *
+            #   (np.sign(cor_y[:, i]) *
+            #   (np.abs(cor_y[:, i])**self.exp_y))
+            #)
+            #w_pos = np.full(self.p_,np.nan)
+            #w_neg = np.full(self.p_,np.nan)
+            #w_abs = np.full(self.p_,np.nan)
+            # for j in range(self.p_):
+            #     cont = (
+            #         temp *
+            #         (np.sign(cor_x[i][:, j]) *
+            #         (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
+            #     )
+            #     w_pos[j] = np.sum(np.maximum(cont, 0))
+            #     w_neg[j] = np.sum(np.maximum(-cont, 0))
+            #     #w_abs[j] = np.sum(np.abs(cont))
+            link_y = np.sign(cor_y[:, i])*np.abs(cor_y[:, i])**self.exp_y
+            link_x = np.sign(cor_x[i])*np.abs(cor_x[i])**self.exp_x
+            cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
+            w_pos = np.maximum(cont,0).sum(axis=(1,2))
+            w_neg = np.maximum(-cont,0).sum(axis=(1,2))
             exclude = Z.T[i,:]==0
             w_pos[exclude] = 0
             w_neg[exclude] = 0
