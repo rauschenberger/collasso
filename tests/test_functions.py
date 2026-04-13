@@ -50,7 +50,7 @@ def test_interpolation(data): # pylint: disable=redefined-outer-name
     model.fit(X=x_train,y=y_train)
     pred1 = model.predict(X=x_test)
     alpha = []
-    for i in range(len(model.model_)):
+    for i,_ in enumerate(model.model_):
         alpha.append(model.model_[i][0])
     pred2 = model.predict(X=x_test,alpha=alpha)
     assert np.allclose(pred1,pred2), 'prediction should be the same'

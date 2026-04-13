@@ -498,7 +498,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         newxx = None
         if X.ndim==2:
             newxx = np.hstack([X, -X])
-        for i in range(len(self.model_)):
+        for i,_ in enumerate(self.model_):
             if X.ndim==3:
                 newxx = np.hstack([X[:,:,i],-X[:,:,i]])
             newx_scale = newxx * self.weight_[i]
@@ -630,7 +630,7 @@ class CoopLassoCV(BaseEstimator,RegressorMixin):
                 exp_x=self.exp_x)
             sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
             temp = sub.predict(X=X[test_id,...],alpha=self.alpha_)
-            for j in range(len(temp)):
+            for j,_ in enumerate(temp):
                 y_hat[test_id,j,:] = temp[j]
         self.mse_ = []
         self.min_ = []

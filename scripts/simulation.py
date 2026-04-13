@@ -25,7 +25,7 @@ propnzero = np.full((len(grid),4),np.nan)
 precision = np.full((len(grid),4),np.nan)
 prederror = np.full((len(grid),4),np.nan)
 
-for i in range(len(grid)):
+for i,_ in enumerate(grid):
     np.random.seed(i)
     x_train, y_train, x_test, y_test, beta = simulate(
         rho=grid[i,0],
@@ -77,7 +77,7 @@ for i in range(len(grid)):
     # comparison
     coef = np.stack([coef_mean,coef_single,coef_multi,coef_coop])
     pred = np.stack([pred_mean,pred_single,pred_multi,pred_coop])
-    for j in range(len(coef)):
+    for j,_ in enumerate(coef):
         propnzero[i,j] = np.mean(coef[j]!=0)
         if np.sum(coef[j])==0:
             precision[i,j] = np.nan
