@@ -334,7 +334,7 @@ class SingleTaskLassoCV(BaseEstimator,RegressorMixin):
 # return weight
 
 
-def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=invalid-name
+def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,int]: # pylint: disable=invalid-name
     """
     Check dimensionality of inputs
     
@@ -383,7 +383,7 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None): # pylint: disable=
             )
     return n, p, q
 
-def _cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
+def _calc_cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
     if x.ndim==2:
         cor = spearmanr(x).statistic
         cor = np.asarray(np.nan_to_num(cor,nan=0))
@@ -514,7 +514,7 @@ class CoopLasso(BaseEstimator,RegressorMixin):
         #         cor = spearmanr(X[:,:,j]).statistic
         #         cor = np.asarray(np.nan_to_num(cor,nan=0))
         #         cor_x.append(cor)
-        cor_x = _cor(x=X,q=self.q_)
+        cor_x = _calc_cor(x=X,q=self.q_)
         coef = np.full((self.p_, self.q_), np.nan)
         #if self.l1_ratio is None:
         #    raise NotImplementedError(
