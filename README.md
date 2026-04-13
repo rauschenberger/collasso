@@ -1,9 +1,10 @@
 
 ![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yml/badge.svg)
-![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
-![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yml/badge.svg)
-![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yml/badge.svg)
 [![codecov](https://codecov.io/gh/rauschenberger/collasso/graph/badge.svg?token=7E6GSQ32F5)](https://codecov.io/gh/rauschenberger/collasso)
+![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yml/badge.svg)
+![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yml/badge.svg)
+![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
+
 
 # Sparse Linear Multi-Task Regression
 
