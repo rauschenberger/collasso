@@ -36,6 +36,10 @@ Armin Rauschenberger
 "Sparse linear multi-task regression with correlation-based information sharing". 
 _Manuscript in preparation._
 
+## Disclosure
+
+Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for reviewing Python code and documentation and for adapting GitHub action workflows.
+
 ## Disclaimer
 
 The Python library `collasso` implements sparse linear multi-task regression with correlation-based information sharing (Rauschenberger, 2026).
