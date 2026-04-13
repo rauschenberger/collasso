@@ -23,6 +23,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install package with test dependencies
         run: pip install ".[test]"
+      - name: Audit dependencies          # new
+        run: |
+          pip install pip-audit
+          pip-audit
       #- name: Run tests
       #  run: pytest tests/
       - name: Run tests
