@@ -38,7 +38,7 @@ _Manuscript in preparation._
 
 ## Disclosure
 
-Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for repeatedly reviewing Python code and documentation and for adapting existing GitHub action workflows.
+Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for reviewing Python code and documentation as well as for creating or adapting configuration files (.toml and .yaml).
 
 ## Disclaimer
 
