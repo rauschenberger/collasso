@@ -8,7 +8,7 @@ Tests:
 
 import numpy as np
 import pytest
-#from sklearn.utils.estimator_checks import parametrize_with_checks
+from sklearn.utils.estimator_checks import parametrize_with_checks
 from collasso import CoopLasso, CoopLassoCV, simulate
 
 @pytest.fixture
@@ -60,14 +60,16 @@ def test_interpolation(data): # pylint: disable=redefined-outer-name
 #    # ...
 #}
 
-#@parametrize_with_checks([CoopLassoCV(), SingleTaskLassoCV()])
-#def test_compatibility(estimator, check):
-#    if check.func.__name__ in SKIP:
-#        pytest.skip("skipped")
-#    check(estimator)
+@parametrize_with_checks([CoopLassoCV()])
+def test_compatibility(estimator, check):
+    """compatibility with scikit-learn"""
+    #if check.func.__name__ in SKIP:
+    #    pytest.skip("skipped")
+    check(estimator)
 
-#import collasso
-#
+## This requires examples in docstrings:
+#import doctest
 #def test_docstrings_collasso():
-#    results = doctest.testmod(collasso, verbose=False)
+#    file = "C:/Users/arauschenberger/Desktop/collasso/src/collasso/functions.py"
+#    results = doctest.testfile(file,module_relative=False)
 #    assert results.failed == 0
