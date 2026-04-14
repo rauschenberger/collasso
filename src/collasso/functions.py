@@ -485,7 +485,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         self.mu_y_ : np.ndarray
         self.sd_y_ : np.ndarray
         self.alpha_init_ : np.ndarray
-        self.weight_ : np.ndarray
+        self.weight_ : list
         self.model_ : list
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
         """
@@ -770,7 +770,7 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         self.alpha_ : list
         self.mse_ : list
         self.min_ : list
-        self.model_ : list
+        self.model_ : CoopLasso
         self.coef_ : np.ndarray
     def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLassoCV": # pylint: disable=invalid-name
         """
