@@ -530,7 +530,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         if y.shape[1]==1:
             cor_y = np.ones((1,1))
         else:
-            cor_y = np.corrcoef(rankdata(y, axis=0),rowvar=False)
+            cor_y = np.atleast_2d(np.corrcoef(rankdata(y, axis=0),rowvar=False))
         # This would not return a matrix under q=2:
         # cor_y = spearmanr(y).statistic
         cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
