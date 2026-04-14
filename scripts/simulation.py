@@ -14,6 +14,8 @@ from sklearn.preprocessing import StandardScaler
 
 from collasso import simulate, SingleTaskLassoCV, CoopLassoCV
 
+# Consider decreasing q from 10 to 3 (faster and more realistic).
+
 rho = [0, 0.90]
 prob_com = [0.00, 0.05]
 prob_sep = [0.00, 0.05]
