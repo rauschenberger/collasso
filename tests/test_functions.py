@@ -40,8 +40,8 @@ def test_broadcasting(data): # pylint: disable=redefined-outer-name
     model.fit(x_train_bc,y_train)
     y_hat.append(model.predict(x_test))
     y_hat.append(model.predict(x_test_bc))
-    y_hat = np.array(y_hat)
-    assert np.allclose(y_hat, y_hat[0]), 'predictions should be the same'
+    y_hat_array = np.array(y_hat)
+    assert np.allclose(y_hat_array, y_hat_array[0]), 'predictions should be the same'
 
 def test_interpolation(data): # pylint: disable=redefined-outer-name
     """CoopLasso can use original or interpolated alpha values."""
@@ -54,6 +54,31 @@ def test_interpolation(data): # pylint: disable=redefined-outer-name
         alpha.append(model.model_[i][0])
     pred2 = model.predict(X=x_test,alpha=alpha)
     assert np.allclose(pred1,pred2), 'prediction should be the same'
+
+
+def test_privileged_information(data): # pylint: disable=redefined-outer-name
+    """CoopLassoCV estimates no coefficients for auxiliary variables"""
+    x_train, y_train, _, _, _ = data
+    p = x_train.shape[1]
+    q = y_train.shape[1]
+    z = np.random.binomial(n=1,p=0.5,size=p)
+    model = CoopLassoCV(random_state=1)
+    model.fit(x_train,y_train,z)
+    beta_hat = model.coef_[:,z==0]
+    assert np.count_nonzero(beta_hat)==0
+    z = np.random.binomial(n=1,p=0.5,size=(p,q))
+    model = CoopLassoCV(random_state=1)
+    model.fit(x_train,y_train,z)
+    beta_hat = model.coef_[z.T==0]
+    assert np.count_nonzero(beta_hat)==0
+
+# CoopLassoCV under Z!=Null and q=1:
+#x_train, y_train, _, _ , _ = simulate(rho=0.9,prob_com=0.05,prob_sep=0.05)
+#y_train = y_train[:,0]
+#z = np.random.binomial(n=1,p=0.5,size=x_train.shape[1])
+#model = CoopLassoCV(random_state=1)
+#model.fit(x_train,y_train,z)
+
 
 #SKIP = {
 #    "",
