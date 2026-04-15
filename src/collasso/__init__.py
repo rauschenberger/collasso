@@ -12,4 +12,11 @@ from .functions import (
     _calc_weights_fast,
 )
 
-__all__ = ["simulate", "SingleTaskLassoCV", "CoopLasso", "CoopLassoCV"]
+__all__ = [
+    "simulate",
+    "SingleTaskLassoCV",
+    "CoopLasso",
+    "CoopLassoCV",
+    "_calc_weights_slow",
+    "_calc_weights_fast"
+]
