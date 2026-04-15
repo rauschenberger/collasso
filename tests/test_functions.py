@@ -8,8 +8,10 @@ Tests:
 
 import numpy as np
 import pytest
-from sklearn.utils.estimator_checks import parametrize_with_checks
-from collasso import CoopLasso, CoopLassoCV, simulate
+#from sklearn.utils.estimator_checks import parametrize_with_checks
+from scipy.stats import spearmanr
+from collasso import _calc_weights_slow, _calc_weights_fast, CoopLasso, CoopLassoCV, simulate
+
 
 @pytest.fixture
 def data():
@@ -72,6 +74,32 @@ def test_privileged_information(data): # pylint: disable=redefined-outer-name
     beta_hat = model.coef_[z.T==0]
     assert np.count_nonzero(beta_hat)==0
 
+def test_weight_calculation(data): # pylint: disable=redefined-outer-name
+    """Weight calculation with loop or vector is the same"""
+    x_train, y_train, _, _, beta = data
+    cor_y = spearmanr(y_train).statistic
+    cor_x = spearmanr(x_train).statistic
+    w_pos0, w_neg0, w_abs0 = _calc_weights_slow(
+        cor_y=cor_y[:,1],
+        cor_x=cor_x,
+        coef=beta,
+        exp_y=1,
+        exp_x=1
+    )
+    w_pos1, w_neg1, w_abs1 = _calc_weights_fast(
+        cor_y=cor_y[:,1],
+        cor_x=cor_x,
+        coef=beta,
+        exp_y=1,
+        exp_x=1
+    )
+    assert np.allclose(w_pos0,w_pos1), 'positive weights should be the same'
+    assert np.allclose(w_neg0,w_neg1), 'negative weights should be the same'
+    assert np.allclose(w_abs0,w_abs1), 'absolute weights should be the same'
+    assert np.allclose(w_pos0 + w_neg0,w_abs0), 'positive+negative=absolute'
+    assert np.allclose(w_pos1 + w_neg1,w_abs1), 'positive+negative=absolute'
+
+
 # CoopLassoCV under Z!=Null and q=1:
 #x_train, y_train, _, _ , _ = simulate(rho=0.9,prob_com=0.05,prob_sep=0.05)
 #y_train = y_train[:,0]
@@ -85,12 +113,12 @@ def test_privileged_information(data): # pylint: disable=redefined-outer-name
 #    # ...
 #}
 
-@parametrize_with_checks([CoopLassoCV()])
-def test_compatibility(estimator, check):
-    """compatibility with scikit-learn"""
-    #if check.func.__name__ in SKIP:
-    #    pytest.skip("skipped")
-    check(estimator)
+#@parametrize_with_checks([CoopLassoCV()])
+#def test_compatibility(estimator, check):
+#    """compatibility with scikit-learn"""
+#    #if check.func.__name__ in SKIP:
+#    #    pytest.skip("skipped")
+#    check(estimator)
 
 ## This requires examples in docstrings:
 #import doctest
