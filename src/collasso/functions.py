@@ -410,14 +410,36 @@ def _calc_cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
             cor_x.append(cor)
     return cor_x
 
-def _calc_weights(
+def _calc_weights_slow(
     *,
     cor_y:np.ndarray,
     cor_x:np.ndarray,
     coef:np.ndarray,
     exp_y:float,
     exp_x:float
-    ) -> tuple[np.ndarray,np.ndarray]:
+    ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+    p_ = coef.shape[0]
+    #q_ = coef.shape[1]
+    link_y = np.sign(cor_y)*(np.abs(cor_y)**exp_y)
+    w_pos = np.full(p_,np.nan)
+    w_neg = np.full(p_,np.nan)
+    w_abs = np.full(p_,np.nan)
+    for j in range(p_):
+        link_x = (np.sign(cor_x[:,j])*(np.abs(cor_x[:,j])**exp_x))
+        cont = (coef * link_y * link_x[:, np.newaxis])
+        w_pos[j] = np.sum(np.maximum(cont, 0))
+        w_neg[j] = np.sum(np.maximum(-cont, 0))
+        w_abs[j] = np.sum(np.abs(cont))
+    return w_pos, w_neg, w_abs
+
+def _calc_weights_fast(
+    *,
+    cor_y:np.ndarray,
+    cor_x:np.ndarray,
+    coef:np.ndarray,
+    exp_y:float,
+    exp_x:float
+    ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
     #cor_y = np.atleast_1d(np.asarray(cor_y,dtype=float))
     #cor_x = np.atleast_2d(np.asarray(cor_x,dtype=float))
     #coef  = np.atleast_2d(np.asarray(coef,dtype=float))
@@ -426,7 +448,8 @@ def _calc_weights(
     cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
     w_pos = np.maximum(cont,0).sum(axis=(1,2))
     w_neg = np.maximum(-cont,0).sum(axis=(1,2))
-    return w_pos, w_neg
+    w_abs = np.abs(cont).sum(axis=(1,2))
+    return w_pos, w_neg, w_abs
 
 class CoopLasso(RegressorMixin,BaseEstimator):
     # pylint: disable=too-many-instance-attributes
@@ -636,7 +659,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             #w_pos = np.maximum(cont,0).sum(axis=(1,2))
             #w_neg = np.maximum(-cont,0).sum(axis=(1,2))
 
-            w_pos, w_neg = _calc_weights(
+            w_pos, w_neg, _ = _calc_weights_fast(
                 cor_y=cor_y[:,i],
                 cor_x=cor_x[i],
                 coef=coef,
