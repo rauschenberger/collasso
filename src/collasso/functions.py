@@ -275,8 +275,8 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
         """
         if y.ndim==1:
             y = y.reshape(-1,1)
-        check_array(array=X,allow_nd=True)
-        check_array(array=y)
+        check_array(array=X,allow_nd=True,dtype="numeric")
+        check_array(array=y,dtype="numeric")
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=None)
@@ -306,7 +306,7 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
         check_is_fitted(self,attributes=['coef_'])
-        check_array(X,allow_nd=True)
+        check_array(X,allow_nd=True,dtype="numeric")
         y_hat = np.full((X.shape[0],self.q_), np.nan)
         for i in range(self.q_):
             y_hat[:, i] = self.model_[i].predict(X[:,:,i])
@@ -472,7 +472,7 @@ def _calc_weights_fast(
 #                     w_neg[j,k] = w_neg[j,k] + np.maximum(0,-cont)
 #                     w_abs[j,k] = w_abs[j,k] + np.abs(cont)
 #     return w_pos, w_neg, w_abs
-# 
+#
 # def _calc_weights_matrix_fast(
 #     *,
 #     cor_y:np.ndarray,
@@ -581,8 +581,8 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         #    raise ValueError(f"Requires numeric target (received {y.dtype}).")
         #X = np.asarray(X,dtype=float)
         #y = np.asarray(y,dtype=float)
-        check_array(array=X,allow_nd=True)
-        check_array(array=y)
+        check_array(array=X,allow_nd=True,dtype="numeric")
+        check_array(array=y,dtype="numeric")
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         if Z is None:
@@ -682,7 +682,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         
         """
         check_is_fitted(self,attributes=['model_'])
-        check_array(X,allow_nd=True)
+        check_array(X,allow_nd=True,dtype="numeric")
         y_hat = []
         #if X.ndim not in (2,3):
         #    raise ValueError("X must be a matrix or an array")
@@ -810,8 +810,8 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
             y = y.reshape(-1,1)
         #if not np.issubdtype(y.dtype, np.floating) and not np.issubdtype(y.dtype, np.integer):
         #    raise ValueError(f"Requires numeric target (received {y.dtype}).")
-        check_array(array=X,allow_nd=True)
-        check_array(array=y)
+        check_array(array=X,allow_nd=True,dtype="numeric")
+        check_array(array=y,dtype="numeric")
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         self.model_ = CoopLasso(
@@ -864,7 +864,7 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         
         """
         check_is_fitted(self,attributes=['coef_'])
-        check_array(X,allow_nd=True)
+        check_array(X,allow_nd=True,dtype="numeric")
         if X.shape[1] != self.n_features_in_:
             raise ValueError(f"Expected {self.n_features_in_} but received {X.shape[1]} features")
         y_hat = np.full((X.shape[0], self.q_), np.nan)
