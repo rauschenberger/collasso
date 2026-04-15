@@ -446,10 +446,53 @@ def _calc_weights_fast(
     link_y = np.sign(cor_y)*np.abs(cor_y)**exp_y
     link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
     cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
-    w_pos = np.maximum(cont,0).sum(axis=(1,2))
-    w_neg = np.maximum(-cont,0).sum(axis=(1,2))
+    w_pos = np.maximum(0,cont).sum(axis=(1,2))
+    w_neg = np.maximum(0,-cont).sum(axis=(1,2))
     w_abs = np.abs(cont).sum(axis=(1,2))
     return w_pos, w_neg, w_abs
+
+# def _calc_weights_matrix_slow(
+#     *,
+#     cor_y:np.ndarray,
+#     cor_x:np.ndarray,
+#     coef:np.ndarray,
+#     exp_y:float,
+#     exp_x:float
+#     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+#     p_, q_ = coef.shape
+#     w_pos = np.zeros((p_,q_))
+#     w_neg = np.zeros((p_,q_))
+#     w_abs = np.zeros((p_,q_))
+#     for j in range(p_):
+#         for k in range(q_):
+#             for j_ in range(p_):
+#                 for k_ in range(q_):
+#                     cont = cor_x[j,j_]**exp_x*cor_y[k,k_]**exp_y*coef[j_,k_]
+#                     w_pos[j,k] = w_pos[j,k] + np.maximum(0,cont)
+#                     w_neg[j,k] = w_neg[j,k] + np.maximum(0,-cont)
+#                     w_abs[j,k] = w_abs[j,k] + np.abs(cont)
+#     return w_pos, w_neg, w_abs
+# 
+# def _calc_weights_matrix_fast(
+#     *,
+#     cor_y:np.ndarray,
+#     cor_x:np.ndarray,
+#     coef:np.ndarray,
+#     exp_y:float,
+#     exp_x:float
+#     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+#     p_, q_ = coef.shape
+#     w_pos = np.full((p_,q_),np.nan)
+#     w_neg = np.full((p_,q_),np.nan)
+#     w_abs = np.full((p_,q_),np.nan)
+#     for j in range(q_):
+#         link_y = np.sign(cor_y[:,j])*np.abs(cor_y[:,j])**exp_y
+#         link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
+#         cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
+#         w_pos[:,j] = np.maximum(0,cont).sum(axis=(1,2))
+#         w_neg[:,j] = np.maximum(0,-cont).sum(axis=(1,2))
+#         w_abs[:,j] = np.abs(cont).sum(axis=(1,2))
+#     return w_pos, w_neg, w_abs
 
 class CoopLasso(RegressorMixin,BaseEstimator):
     # pylint: disable=too-many-instance-attributes
@@ -591,7 +634,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
             # enet.fit(X,y)
             # coef = enet.coef_.T
-        #--- original ---
+        #--- estimating final coefficients ---
         self.weight_ = []
         self.model_ = []
         xx = np.empty(0)
@@ -618,10 +661,6 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             # lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight_.append(weight)
             self.model_.append(model)
-        #--- calculate weights ---
-        # ...
-        #--- estimate final coefficients ---
-        # ...
         return self
     def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[np.ndarray]: # pylint: disable=invalid-name
         """
