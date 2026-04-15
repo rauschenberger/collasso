@@ -404,20 +404,28 @@ def _spearmanr(x:np.ndarray) -> np.ndarray:
         cor = np.ones((1,1))
     else:
         cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0),rowvar=False))
+        cor = np.where(np.isnan(cor), np.eye(cor.shape[0]), cor)
+        #cor = np.asarray(cor, dtype=float)
+        #cor[np.isnan(cor)] = 0.0
+        #np.fill_diagonal(cor, 1.0)
+        #cor[np.arange(cor.shape[0]), np.arange(cor.shape[0])] = 1.0
+        cor = np.atleast_2d(np.asarray(cor))
+        #nan_mask = np.isnan(cor)
+        #cor[nan_mask] = np.eye(cor.shape[0])[nan_mask]
     return cor
 
 def _calc_cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
     if x.ndim==2:
         #cor = spearmanr(x).statistic
         cor = _spearmanr(x)
-        cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
+        #cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
         cor_x = [cor] * q
     elif x.ndim==3:
         cor_x = []
         for j in range(q):
             #cor = spearmanr(x[:,:,j]).statistic
             cor = _spearmanr(x[:,:,j])
-            cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
+            #cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
             cor_x.append(cor)
     return cor_x
 
@@ -596,13 +604,14 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         self.sd_y_ = np.std(y,axis=0)
         y = (y - self.mu_y_)/self.sd_y_
         #--- calculate correlation coefficients ---
-        if y.shape[1]==1:
-            cor_y = np.ones((1,1))
-        else:
-            cor_y = np.atleast_2d(np.corrcoef(rankdata(y, axis=0),rowvar=False))
-        # This would not return a matrix under q=2:
-        # cor_y = spearmanr(y).statistic
-        cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
+        #if y.shape[1]==1:
+        #    cor_y = np.ones((1,1))
+        #else:
+        #    cor_y = np.atleast_2d(np.corrcoef(rankdata(y, axis=0),rowvar=False))
+        ## This would not return a matrix under q=2:
+        ## cor_y = spearmanr(y).statistic
+        #cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
+        cor_y = _spearmanr(y)
         cor_x = _calc_cor(x=X,q=self.q_)
         #--- estimate initial coefficients ---
         coef = np.full((self.p_, self.q_), np.nan)
