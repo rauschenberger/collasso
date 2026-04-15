@@ -10,6 +10,7 @@ from .functions import (
     CoopLassoCV,
     _calc_weights_slow,
     _calc_weights_fast,
+    _spearmanr,
 )
 
 __all__ = [
@@ -18,5 +19,6 @@ __all__ = [
     "CoopLasso",
     "CoopLassoCV",
     "_calc_weights_slow",
-    "_calc_weights_fast"
+    "_calc_weights_fast",
+    "_spearmanr"
 ]
