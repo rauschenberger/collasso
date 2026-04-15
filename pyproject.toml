@@ -32,3 +32,8 @@ docs = "pdoc --docformat numpy src/functions.py -o docs/"
 [[tool.mypy.overrides]]
 module = ["sklearn.*"]
 ignore_missing_imports = true
+
+[tool.coverage.report]
+exclude_also = [
+  "raise ValueError",
+]
