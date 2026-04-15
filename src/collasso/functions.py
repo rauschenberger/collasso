@@ -591,34 +591,6 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
             # enet.fit(X,y)
             # coef = enet.coef_.T
-        # if self.alpha_init is None:
-        #     self.alpha_init_ = np.full(self.q_,np.nan)
-        #     for j in range(self.q_):
-        #         enet = ElasticNetCV(l1_ratio=self.l1_ratio)
-        #         if X.ndim==2:
-        #             enet.fit(X,y[:,j])
-        #         else:
-        #             enet.fit(X[:,:,j],y[:,j])
-        #         coef[:,j] = enet.coef_
-        #         self.alpha_init_[j] = enet.alpha_
-        #     # Alternative with multivariate initialisation:
-        #     # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
-        #     # enet.fit(X,y)
-        #     # coef = enet.coef_.T
-        #     # self.alpha_init_ = enet.alpha_
-        # else:
-        #     self.alpha_init_ = self.alpha_init
-        #     for j in range(self.q_):
-        #         enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
-        #         if X.ndim==2:
-        #             enet.fit(X,y[:,j])
-        #         else:
-        #             enet.fit(X[:,:,j],y[:,j])
-        #         coef[:,j] = enet.coef_
-        #     # Alternative with multivariate initialisation:
-        #     # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
-        #     # enet.fit(X,y)
-        #     # coef = enet.coef_.T
         #--- original ---
         self.weight_ = []
         self.model_ = []
