@@ -550,6 +550,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         self.mu_y_ = np.mean(y,axis=0)
         self.sd_y_ = np.std(y,axis=0)
         y = (y - self.mu_y_)/self.sd_y_
+        #--- calculate correlation coefficients ---
         if y.shape[1]==1:
             cor_y = np.ones((1,1))
         else:
@@ -557,17 +558,8 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         # This would not return a matrix under q=2:
         # cor_y = spearmanr(y).statistic
         cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
-        # if X.ndim==2:
-        #     cor = spearmanr(X).statistic
-        #     cor = np.asarray(np.nan_to_num(cor,nan=0))
-        #     cor_x = [cor] * self.q_
-        # elif X.ndim==3:
-        #     cor_x = []
-        #     for j in range(self.q_):
-        #         cor = spearmanr(X[:,:,j]).statistic
-        #         cor = np.asarray(np.nan_to_num(cor,nan=0))
-        #         cor_x.append(cor)
         cor_x = _calc_cor(x=X,q=self.q_)
+        #--- estimate initial coefficients ---
         coef = np.full((self.p_, self.q_), np.nan)
         #if self.l1_ratio is None:
         #    raise NotImplementedError(
@@ -627,6 +619,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         #     # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
         #     # enet.fit(X,y)
         #     # coef = enet.coef_.T
+        #--- original ---
         self.weight_ = []
         self.model_ = []
         xx = np.empty(0)
@@ -635,30 +628,6 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         for i in range(self.q_):
             if X.ndim==3:
                 xx = np.hstack([X[:,:,i],-X[:,:,i]])
-            #temp = (
-            #   coef *
-            #   (np.sign(cor_y[:, i]) *
-            #   (np.abs(cor_y[:, i])**self.exp_y))
-            #)
-            #w_pos = np.full(self.p_,np.nan)
-            #w_neg = np.full(self.p_,np.nan)
-            #w_abs = np.full(self.p_,np.nan)
-            # for j in range(self.p_):
-            #     cont = (
-            #         temp *
-            #         (np.sign(cor_x[i][:, j]) *
-            #         (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
-            #     )
-            #     w_pos[j] = np.sum(np.maximum(cont, 0))
-            #     w_neg[j] = np.sum(np.maximum(-cont, 0))
-            #     #w_abs[j] = np.sum(np.abs(cont))
-
-            #link_y = np.sign(cor_y[:, i])*np.abs(cor_y[:, i])**self.exp_y
-            #link_x = np.sign(cor_x[i])*np.abs(cor_x[i])**self.exp_x
-            #cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
-            #w_pos = np.maximum(cont,0).sum(axis=(1,2))
-            #w_neg = np.maximum(-cont,0).sum(axis=(1,2))
-
             w_pos, w_neg, _ = _calc_weights_fast(
                 cor_y=cor_y[:,i],
                 cor_x=cor_x[i],
@@ -677,6 +646,10 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             # lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight_.append(weight)
             self.model_.append(model)
+        #--- calculate weights ---
+        # ...
+        #--- estimate final coefficients ---
+        # ...
         return self
     def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[np.ndarray]: # pylint: disable=invalid-name
         """
