@@ -14,14 +14,16 @@ Example:
     # model.predict(x_test)
 """
 
+import warnings
 import numpy as np
 from scipy.interpolate import interp1d # switch to np.interp
-from scipy.stats import multivariate_normal, rankdata, spearmanr
+from scipy.stats import multivariate_normal, rankdata #, spearmanr
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV
 from sklearn.model_selection import KFold
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.exceptions import ConvergenceWarning, DataConversionWarning
 
 #--- test docrep ---
 
@@ -391,21 +393,30 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,in
     if n < 2:
         raise ValueError(f"Requires more than 1 sample (now: n={n}).")
     if p < 2:
-        raise ValueError(f"Requires more than 1 feature (now: p={p}, n_features = 1).")
+        raise ValueError(f"Requires at least 2 features (now: p={p}, n_features = 1).")
     if q < 1:
         raise ValueError(f"Requires at least 1 target (now: q={q}).")
 
     return n, p, q
 
+def _spearmanr(x:np.ndarray) -> np.ndarray:
+    if x.shape[1]==1:
+        cor = np.ones((1,1))
+    else:
+        cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0),rowvar=False))
+    return cor
+
 def _calc_cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
     if x.ndim==2:
-        cor = spearmanr(x).statistic
+        #cor = spearmanr(x).statistic
+        cor = _spearmanr(x)
         cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
         cor_x = [cor] * q
     elif x.ndim==3:
         cor_x = []
         for j in range(q):
-            cor = spearmanr(x[:,:,j]).statistic
+            #cor = spearmanr(x[:,:,j]).statistic
+            cor = _spearmanr(x[:,:,j])
             cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
             cor_x.append(cor)
     return cor_x
@@ -419,7 +430,6 @@ def _calc_weights_slow(
     exp_x:float
     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
     p_ = coef.shape[0]
-    #q_ = coef.shape[1]
     link_y = np.sign(cor_y)*(np.abs(cor_y)**exp_y)
     w_pos = np.full(p_,np.nan)
     w_neg = np.full(p_,np.nan)
@@ -440,9 +450,6 @@ def _calc_weights_fast(
     exp_y:float,
     exp_x:float
     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
-    #cor_y = np.atleast_1d(np.asarray(cor_y,dtype=float))
-    #cor_x = np.atleast_2d(np.asarray(cor_x,dtype=float))
-    #coef  = np.atleast_2d(np.asarray(coef,dtype=float))
     link_y = np.sign(cor_y)*np.abs(cor_y)**exp_y
     link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
     cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
@@ -577,10 +584,6 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         """
         if y.ndim==1:
             y = y.reshape(-1,1)
-        #if not np.issubdtype(y.dtype, np.floating) and not np.issubdtype(y.dtype, np.integer):
-        #    raise ValueError(f"Requires numeric target (received {y.dtype}).")
-        #X = np.asarray(X,dtype=float)
-        #y = np.asarray(y,dtype=float)
         check_array(array=X,allow_nd=True,dtype="numeric")
         check_array(array=y,dtype="numeric")
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
@@ -589,7 +592,6 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             Z = np.full((self.p_,self.q_),1)
         elif Z.ndim==1:
             Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-            #Z = np.tile(Z[:,None],(1,self.q_))
         self.mu_y_ = np.mean(y,axis=0)
         self.sd_y_ = np.std(y,axis=0)
         y = (y - self.mu_y_)/self.sd_y_
@@ -656,7 +658,15 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             # This alternative does not need the non-negativity constraint:
             # weight = (w_abs + 1e-9)
             xx_scale = xx * weight
-            model = lasso_path(X=xx_scale,y=y[:,i],n_alphas=self.n_alphas,alphas=None,positive=True)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=ConvergenceWarning)
+                model = lasso_path(
+                    X=xx_scale,
+                    y=y[:,i],
+                    n_alphas=self.n_alphas,
+                    alphas=None,
+                    positive=True
+                )
             # This alternative is computationally expensive:
             # lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight_.append(weight)
@@ -684,8 +694,6 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         check_is_fitted(self,attributes=['model_'])
         check_array(X,allow_nd=True,dtype="numeric")
         y_hat = []
-        #if X.ndim not in (2,3):
-        #    raise ValueError("X must be a matrix or an array")
         newxx = None
         if X.ndim==2:
             newxx = np.hstack([X, -X])
@@ -799,23 +807,29 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         self : CoopLassoCV
             fitted model
         """
+        if y is None:
+            raise ValueError(
+                "Requires target matrix y."
+                "(requires y to be passed, but the target y is None)"
+            )
+        y = np.asarray(y)
+        if y.ndim == 2 and y.shape[1] == 1:
+            warnings.warn(
+                "A column-vector y was passed when a 1d array was expected.",
+                DataConversionWarning,
+                stacklevel=2,
+            )
+            y = y.ravel()
         if isinstance(X, np.ndarray) and X.ndim == 3:
-            #if y is None or y.ndim==0:
-            #    raise ValueError("Requires target matrix y."
-            #        "(requires y to be passed, but the target y is None)")
-            #if X is None or X.ndim==0:
-            #    raise ValueError("Requires feature matrix X.")
-            #X = np.asarray(X,dtype=float)
-            #y = np.asarray(y,dtype=float)
             if y.ndim==1:
                 y = y.reshape(-1,1)
-                #if not np.issubdtype(y.dtype, np.floating) and not np.issubdtype(y.dtype, np.integer):
-                #    raise ValueError(f"Requires numeric target (received {y.dtype}).")
             check_array(array=X,allow_nd=True,dtype="numeric")
             check_array(array=y,dtype="numeric")
         else:
             X, y = validate_data(
-                self, X, y,
+                self,
+                X=X,
+                y=y,
                 multi_output=True,
                 y_numeric=True,
                 dtype="numeric",
@@ -878,9 +892,10 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         if isinstance(X, np.ndarray) and X.ndim == 3:
             check_array(X,allow_nd=True,dtype="numeric")
             if X.shape[1] != self.n_features_in_:
-                raise ValueError(f"Expected {self.n_features_in_} but received {X.shape[1]} features")
+                raise ValueError(f"Expected {self.n_features_in_}"
+                    "but received {X.shape[1]} features")
         else:
-            X = validate_data(self, X, reset=False, dtype="numeric")
+            X = validate_data(self, X=X, reset=False, dtype="numeric")
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         newxx = None
         if X.ndim==2:
@@ -892,4 +907,6 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
             id_min = self.min_[i]
             beta = self.model_.model_[i][1][:, id_min]
             y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i]
+        if self.q_ == 1:
+            return y_hat.ravel()
         return y_hat
