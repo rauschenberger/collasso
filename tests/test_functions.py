@@ -8,9 +8,10 @@ Tests:
 
 import numpy as np
 import pytest
-#from sklearn.utils.estimator_checks import parametrize_with_checks
+from sklearn.utils.estimator_checks import parametrize_with_checks
 from scipy.stats import spearmanr
-from collasso import _calc_weights_slow, _calc_weights_fast, CoopLasso, CoopLassoCV, simulate
+from collasso import CoopLasso, CoopLassoCV, simulate
+from collasso import _spearmanr, _calc_weights_slow, _calc_weights_fast
 
 
 @pytest.fixture
@@ -99,6 +100,12 @@ def test_weight_calculation(data): # pylint: disable=redefined-outer-name
     assert np.allclose(w_pos0 + w_neg0,w_abs0), 'positive+negative=absolute'
     assert np.allclose(w_pos1 + w_neg1,w_abs1), 'positive+negative=absolute'
 
+def test_cor(data): # pylint: disable=redefined-outer-name
+    """reproduce spearman cor"""
+    x_train, _, _, _, _ = data
+    cor1 = spearmanr(x_train).statistic
+    cor2 = _spearmanr(x_train)
+    assert np.allclose(cor1,cor2), 'identical results'
 
 # CoopLassoCV under Z!=Null and q=1:
 #x_train, y_train, _, _ , _ = simulate(rho=0.9,prob_com=0.05,prob_sep=0.05)
@@ -113,12 +120,12 @@ def test_weight_calculation(data): # pylint: disable=redefined-outer-name
 #    # ...
 #}
 
-#@parametrize_with_checks([CoopLassoCV()])
-#def test_compatibility(estimator, check):
-#    """compatibility with scikit-learn"""
-#    #if check.func.__name__ in SKIP:
-#    #    pytest.skip("skipped")
-#    check(estimator)
+@parametrize_with_checks([CoopLassoCV()])
+def test_compatibility(estimator, check):
+    """compatibility with scikit-learn"""
+    #if check.func.__name__ in SKIP:
+    #    pytest.skip("skipped")
+    check(estimator)
 
 ## This requires examples in docstrings:
 #import doctest
