@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path, LassoCV
 from sklearn.model_selection import KFold
 from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 #--- test docrep ---
 
@@ -799,19 +799,30 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         self : CoopLassoCV
             fitted model
         """
-        if y is None or y.ndim==0:
-            raise ValueError("Requires target matrix y."
-                "(requires y to be passed, but the target y is None)")
-        if X is None or X.ndim==0:
-            raise ValueError("Requires feature matrix X.")
-        #X = np.asarray(X,dtype=float)
-        #y = np.asarray(y,dtype=float)
-        if y.ndim==1:
-            y = y.reshape(-1,1)
-        #if not np.issubdtype(y.dtype, np.floating) and not np.issubdtype(y.dtype, np.integer):
-        #    raise ValueError(f"Requires numeric target (received {y.dtype}).")
-        check_array(array=X,allow_nd=True,dtype="numeric")
-        check_array(array=y,dtype="numeric")
+        if isinstance(X, np.ndarray) and X.ndim == 3:
+            #if y is None or y.ndim==0:
+            #    raise ValueError("Requires target matrix y."
+            #        "(requires y to be passed, but the target y is None)")
+            #if X is None or X.ndim==0:
+            #    raise ValueError("Requires feature matrix X.")
+            #X = np.asarray(X,dtype=float)
+            #y = np.asarray(y,dtype=float)
+            if y.ndim==1:
+                y = y.reshape(-1,1)
+                #if not np.issubdtype(y.dtype, np.floating) and not np.issubdtype(y.dtype, np.integer):
+                #    raise ValueError(f"Requires numeric target (received {y.dtype}).")
+            check_array(array=X,allow_nd=True,dtype="numeric")
+            check_array(array=y,dtype="numeric")
+        else:
+            X, y = validate_data(
+                self, X, y,
+                multi_output=True,
+                y_numeric=True,
+                dtype="numeric",
+                allow_nd=True,
+            )
+            if y.ndim==1:
+                y = y.reshape(-1,1)
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         self.model_ = CoopLasso(
@@ -864,9 +875,12 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         
         """
         check_is_fitted(self,attributes=['coef_'])
-        check_array(X,allow_nd=True,dtype="numeric")
-        if X.shape[1] != self.n_features_in_:
-            raise ValueError(f"Expected {self.n_features_in_} but received {X.shape[1]} features")
+        if isinstance(X, np.ndarray) and X.ndim == 3:
+            check_array(X,allow_nd=True,dtype="numeric")
+            if X.shape[1] != self.n_features_in_:
+                raise ValueError(f"Expected {self.n_features_in_} but received {X.shape[1]} features")
+        else:
+            X = validate_data(self, X, reset=False, dtype="numeric")
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         newxx = None
         if X.ndim==2:
