@@ -142,10 +142,10 @@ def simulate(
     beta = _simulate_effects(p=p,q=q,prob_com=prob_com,prob_sep=prob_sep)
     y = _simulate_targets(n=n,q=q,x=x,beta=beta,common=common)
 
-    if common is False:
-        raise NotImplementedError("Returning multiple feature matrices is not implemented.")
-    x_train, y_train = x[fold==0], y[fold==0]
-    x_test, y_test = x[fold==1], y[fold==1]
+    #if common is False:
+    #   raise NotImplementedError("Returning multiple feature matrices is not implemented.")
+    x_train, y_train = x[fold==0,...], y[fold==0]
+    x_test, y_test = x[fold==1,...], y[fold==1]
     return x_train, y_train, x_test, y_test, beta
 
 def _simulate_features(*,n,p,q,rho,common):
@@ -169,9 +169,9 @@ def _simulate_features(*,n,p,q,rho,common):
     if common is True:
         x = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
     else:
-        x = []
-        for _ in range(q):
-            x.append(multivariate_normal.rvs(mean=mean,cov=sigma,size=n))
+        x = np.full((n,p,q),np.nan)
+        for k in range(q):
+            x[:,:,k] = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
     return x
 
 def _simulate_effects(*,p,q,prob_com,prob_sep):
@@ -213,7 +213,7 @@ def _simulate_targets(*,n,q,x,beta,common):
     else:
         eta = np.full((n,q),np.nan)
         for k in range(q):
-            eta[:,k] = x[k] @ beta[:,k]
+            eta[:,k] = x[:,:,k] @ beta[:,k]
     noise_sd = 0.5 * np.std(eta, axis = 0)
     y = eta + np.random.normal(size = eta.shape, scale = noise_sd)
     return y
