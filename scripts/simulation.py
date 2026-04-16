@@ -8,10 +8,10 @@ and the predictive performance between different methods.
 from itertools import product
 import numpy as np
 from scipy.stats import  ttest_rel
-from sklearn.linear_model import MultiTaskLassoCV
+from sklearn.linear_model import LassoCV, MultiTaskLassoCV
 from sklearn.metrics import mean_squared_error
+from sklearn.multioutput import MultiOutputRegressor
 from sklearn.preprocessing import StandardScaler
-
 from collasso import simulate, SingleTaskLassoCV, CoopLassoCV
 
 # Consider decreasing q from 10 to 3 (faster and more realistic).
@@ -43,11 +43,16 @@ for i,_ in enumerate(grid):
     # prediction by the mean
     coef_mean = np.zeros(beta.T.shape)
     pred_mean = np.tile(np.mean(y_train,axis=0),(y_test.shape[0],1))
-    # separate lasso regressions
+    # separate lasso regressions (also if separate X)
     model = SingleTaskLassoCV(alphas=100,cv=5)
     model.fit(X=x_train_scaled,y=y_train)
     coef_single = model.coef_
     pred_single = model.predict(X=x_test_scaled)
+    # separate lasso regression (only if common X)
+    model = MultiOutputRegressor(LassoCV(alphas=100,cv=5))
+    model.fit(X=x_train_scaled,y=y_train)
+    coef_single2 = np.array([est.coef_ for est in model.estimators_])
+    pred_single2 = model.predict(X=x_test_scaled)
     # multi-task lasso regression
     model = MultiTaskLassoCV(alphas=100,cv=5)
     model.fit(X=x_train_scaled,y=y_train)
