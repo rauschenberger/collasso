@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mypy scipy-stubs
+          pip install mypy --install-types scipy-stubs
           pip install ".[test]"
       - name: Analysing the code with mypy
         run: |
