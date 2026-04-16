@@ -8,11 +8,12 @@ Tests:
 
 import numpy as np
 import pytest
+from sklearn.linear_model import LassoCV
+from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from scipy.stats import spearmanr
-from collasso import CoopLasso, CoopLassoCV, simulate
+from collasso import CoopLasso, CoopLassoCV, SingleTaskLassoCV, simulate
 from collasso import _spearmanr, _calc_weights_slow, _calc_weights_fast
-
 
 @pytest.fixture
 def data():
@@ -23,6 +24,20 @@ def data():
         prob_sep=0.05
     )
     return x_train, y_train, x_test, y_test, beta
+
+def test_wrapper(data): # pylint: disable=redefined-outer-name
+    """Equivalence given common feature matrix"""
+    x_train, y_train, x_test, _, _ = data
+    model = SingleTaskLassoCV(alphas=100,cv=5)
+    model.fit(X=x_train,y=y_train)
+    coef0 = model.coef_
+    pred0 = model.predict(X=x_test)
+    model = MultiOutputRegressor(LassoCV(alphas=100,cv=5))
+    model.fit(X=x_train,y=y_train)
+    coef1 = np.array([est.coef_ for est in model.estimators_])
+    pred1 = model.predict(X=x_test)
+    assert np.allclose(coef0,coef1), 'coefficients should be the same'
+    assert np.allclose(pred0,pred1), 'predictions should be the same'
 
 def test_broadcasting(data): # pylint: disable=redefined-outer-name
     """CoopLassoCV can use matrix or array during training or testing."""
