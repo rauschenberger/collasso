@@ -30,7 +30,7 @@ addopts = "--doctest-modules"
 docs = "pdoc --docformat numpy src/functions.py -o docs/"
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*"]
+module = ["sklearn.*", "openml.*"]
 ignore_missing_imports = true
 
 [tool.coverage.report]
