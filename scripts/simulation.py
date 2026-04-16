@@ -8,9 +8,8 @@ and the predictive performance between different methods.
 from itertools import product
 import numpy as np
 from scipy.stats import  ttest_rel
-from sklearn.linear_model import LassoCV, MultiTaskLassoCV
+from sklearn.linear_model import MultiTaskLassoCV
 from sklearn.metrics import mean_squared_error
-from sklearn.multioutput import MultiOutputRegressor
 from sklearn.preprocessing import StandardScaler
 from collasso import simulate, SingleTaskLassoCV, CoopLassoCV
 
@@ -31,7 +30,7 @@ for i,_ in enumerate(grid):
     np.random.seed(i)
     # Try with common feature matrix (common=True)
     # and with separate feature matrices (common=False).
-    common = False 
+    common = True
     x_train, y_train, x_test, y_test, beta = simulate(
         rho=grid[i,0],
         prob_com=grid[i,1],
