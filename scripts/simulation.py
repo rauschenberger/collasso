@@ -29,17 +29,25 @@ prederror = np.full((len(grid),4),np.nan)
 
 for i,_ in enumerate(grid):
     np.random.seed(i)
+    # Try with common feature matrix (common=True)
+    # and with separate feature matrices (common=False).
+    common = False 
     x_train, y_train, x_test, y_test, beta = simulate(
         rho=grid[i,0],
         prob_com=grid[i,1],
-        prob_sep=grid[i,2]
+        prob_sep=grid[i,2],
+        common = common
     )
-    #X, y = x_train, y_train # temporary
-    scaler = StandardScaler()
-    x_train_scaled = scaler.fit_transform(x_train)
-    x_train_scaled_repeated = np.repeat(x_train_scaled[None,:,:],repeats=y_train.shape[1],axis=0)
-    x_test_scaled = scaler.transform(x_test)
-    x_test_scaled_repeated = np.repeat(x_test_scaled[None,:,:],repeats=y_test.shape[1],axis=0)
+    if common:
+        scaler = StandardScaler()
+        x_train_scaled = scaler.fit_transform(x_train)
+        x_test_scaled = scaler.transform(x_test)
+    else:
+        x_train_scaled = x_train*np.nan
+        for k in range(x_train.shape[2]):
+            scaler = StandardScaler()
+            x_train_scaled[:,:,k] = scaler.fit_transform(x_train[:,:,k])
+            x_test_scaled[:,:,k] = scaler.transform(x_test[:,:,k])
     # prediction by the mean
     #coef_mean = np.zeros(beta.T.shape)
     coef_mean = np.zeros((y_train.shape[1],x_train.shape[1]))
@@ -49,16 +57,15 @@ for i,_ in enumerate(grid):
     model.fit(X=x_train_scaled,y=y_train)
     coef_single = model.coef_
     pred_single = model.predict(X=x_test_scaled)
-    # separate lasso regression (only if common X)
-    model = MultiOutputRegressor(LassoCV(alphas=100,cv=5))
-    model.fit(X=x_train_scaled,y=y_train)
-    coef_single2 = np.array([est.coef_ for est in model.estimators_])
-    pred_single2 = model.predict(X=x_test_scaled)
-    # multi-task lasso regression
-    model = MultiTaskLassoCV(alphas=100,cv=5)
-    model.fit(X=x_train_scaled,y=y_train)
-    coef_multi = model.coef_
-    pred_multi = model.predict(X=x_test_scaled)
+    if common:
+        # multi-task lasso regression
+        model = MultiTaskLassoCV(alphas=100,cv=5)
+        model.fit(X=x_train_scaled,y=y_train)
+        coef_multi = model.coef_
+        pred_multi = model.predict(X=x_test_scaled)
+    else:
+        coef_multi = np.full((y_train.shape[1],x_train.shape[1]),np.nan)
+        pred_multi = np.full((y_test.shape[0],y_test.shape[1]),np.nan)
     # cooperative lasso regression
     model = CoopLassoCV(n_alphas=100,cv=5,l1_ratio=0.5)
     model.fit(X=x_train_scaled,y=y_train)
@@ -66,6 +73,8 @@ for i,_ in enumerate(grid):
     pred_coop = model.predict(X=x_test_scaled)
 
     # mutar (add internal cross-validation)
+    #x_train_scaled_repeated = np.repeat(x_train_scaled[None,:,:],repeats=y_train.shape[1],axis=0)
+    #x_test_scaled_repeated = np.repeat(x_test_scaled[None,:,:],repeats=y_test.shape[1],axis=0)
     #
     #model = GroupLasso()
     #model.fit(x_train_scaled_repeated,y_train.T)
@@ -83,8 +92,12 @@ for i,_ in enumerate(grid):
     #pred_level = model.predict(x_test_scaled_repeated).T
 
     # comparison
-    coef = np.stack([coef_mean,coef_single,coef_multi,coef_coop])
-    pred = np.stack([pred_mean,pred_single,pred_multi,pred_coop])
+    if common:
+        coef = np.stack([coef_mean,coef_single,coef_multi,coef_coop])
+        pred = np.stack([pred_mean,pred_single,pred_multi,pred_coop])
+    else:
+        coef = np.stack([coef_mean,coef_single,coef_coop])
+        pred = np.stack([pred_mean,pred_single,pred_coop])
     for j,_ in enumerate(coef):
         propnzero[i,j] = np.mean(coef[j]!=0)
         if np.sum(coef[j])==0:
