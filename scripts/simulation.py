@@ -41,7 +41,8 @@ for i,_ in enumerate(grid):
     x_test_scaled = scaler.transform(x_test)
     x_test_scaled_repeated = np.repeat(x_test_scaled[None,:,:],repeats=y_test.shape[1],axis=0)
     # prediction by the mean
-    coef_mean = np.zeros(beta.T.shape)
+    #coef_mean = np.zeros(beta.T.shape)
+    coef_mean = np.zeros((y_train.shape[1],x_train.shape[1]))
     pred_mean = np.tile(np.mean(y_train,axis=0),(y_test.shape[0],1))
     # separate lasso regressions (also if separate X)
     model = SingleTaskLassoCV(alphas=100,cv=5)
@@ -91,7 +92,6 @@ for i,_ in enumerate(grid):
         else:
             precision[i,j] = np.sum((beta.T!=0) & (coef[j]!=0))/np.sum(coef[j]!=0)
         prederror[i,j] = mean_squared_error(y_test,pred[j],multioutput='uniform_average')
-
 
 # summary
 np.mean(propnzero,axis=0)
