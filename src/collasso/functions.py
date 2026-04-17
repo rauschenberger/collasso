@@ -77,7 +77,7 @@ def simulate(
     rho=0.90,
     prob_com=0.05,
     prob_sep=0.05,
-    common=True,
+    kappa=1.00,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # pylint: disable=too-many-arguments,too-many-locals
     """
@@ -100,6 +100,8 @@ def simulate(
         number of targets
     rho : float, default=0.90
         correlation coefficient, `0<=rho<=1`
+    kappa : float, default=1.00
+        correlation coefficient, `0<=kappa<=1`
     prob_com : float, default=0.05
         probability of common effects for all targets, 0<=prob_com<=1
     prob_sep : float, default=0.05
@@ -107,12 +109,12 @@ def simulate(
       
     Returns
     -------
-    x_train : ndarray of shape (n0_samples,p_features)
-        training feature matrix
+    x_train : ndarray of shape (n0_samples,p_features) or (n0_samples,p_features,q_targets)
+        training feature matrix (kappa=1) or matrices (kappa<1)
     y_train : ndarray of shape (n0_samples,q_targets)
         training target matrix
-    x_test : ndarray of shape (n1_samples,p_features)
-        test feature matrix
+    x_test : ndarray of shape (n1_samples,p_features) or (n1_samples,p_features,q_targets)
+        test feature matrix (kappa=1) or matrices (kappa<1)
     y_test : ndarray of shape (n1_samples,q_targets)
         test target matrix
     beta : ndarray of shape (p_features,q_targets)
@@ -129,26 +131,22 @@ def simulate(
         raise ValueError(f"Use q>=2 (not q={q})")
     if not 0 <= rho <= 1:
         raise ValueError(f"Use rho in [0, 1] (not rho={rho})")
+    if not 0 <= kappa <= 1:
+        raise ValueError(f"Use kappa in [0, 1] (not kappa={kappa})")
     if not 0 <= prob_com <= 1:
         raise ValueError(f"Use prob_com in [0, 1] (not prob_com={prob_com})")
     if not 0 <= prob_sep <= 1:
         raise ValueError(f"Use prob_sep in [0, 1] (not prob_sep={prob_sep})")
-
-    # parameters
     n = n0 + n1
     fold = np.array([0]*n0+[1]*n1)
-
-    x = _simulate_features(n=n,p=p,q=q,rho=rho,common=common)
+    x = _simulate_features(n=n,p=p,q=q,rho=rho,kappa=kappa)
     beta = _simulate_effects(p=p,q=q,prob_com=prob_com,prob_sep=prob_sep)
-    y = _simulate_targets(n=n,q=q,x=x,beta=beta,common=common)
-
-    #if common is False:
-    #   raise NotImplementedError("Returning multiple feature matrices is not implemented.")
+    y = _simulate_targets(n=n,q=q,x=x,beta=beta)
     x_train, y_train = x[fold==0,...], y[fold==0]
     x_test, y_test = x[fold==1,...], y[fold==1]
     return x_train, y_train, x_test, y_test, beta
 
-def _simulate_features(*,n,p,q,rho,common):
+def _simulate_features(*,n,p,q,rho,kappa):
     """
     Simulate Features
     
@@ -166,12 +164,14 @@ def _simulate_features(*,n,p,q,rho,common):
     idx = np.arange(p)
     row_idx, col_idx = np.meshgrid(idx, idx)
     sigma = rho ** np.abs(col_idx - row_idx)
-    if common is True:
-        x = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
+    x_base = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
+    if kappa==1:
+        x = x_base
     else:
         x = np.full((n,p,q),np.nan)
         for k in range(q):
-            x[:,:,k] = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
+            noise = multivariate_normal.rvs(mean=mean,cov=sigma,size=n)
+            x[:,:,k] = np.sqrt(kappa)*x_base + np.sqrt(1-kappa)*noise
     return x
 
 def _simulate_effects(*,p,q,prob_com,prob_sep):
@@ -196,7 +196,7 @@ def _simulate_effects(*,p,q,prob_com,prob_sep):
     beta = beta_com[:, np.newaxis] + beta_sep
     return beta
 
-def _simulate_targets(*,n,q,x,beta,common):
+def _simulate_targets(*,n,q,x,beta):
     """
     Simulate Targets
     
@@ -208,7 +208,7 @@ def _simulate_targets(*,n,q,x,beta,common):
     y : ndarray of shape (n_samples,q_targets)
 
     """
-    if common is True:
+    if x.ndim==2:
         eta = x @ beta
     else:
         eta = np.full((n,q),np.nan)
