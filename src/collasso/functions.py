@@ -110,11 +110,15 @@ def simulate(
     Returns
     -------
     x_train : ndarray of shape (n0_samples,p_features) or (n0_samples,p_features,q_targets)
-        training feature matrix (kappa=1) or matrices (kappa<1)
+        training feature matrix or matrices,
+        common matrix for all targets (if kappa=1)
+        or separate matrix for each target (if 0<=kappa<1)
     y_train : ndarray of shape (n0_samples,q_targets)
         training target matrix
     x_test : ndarray of shape (n1_samples,p_features) or (n1_samples,p_features,q_targets)
-        test feature matrix (kappa=1) or matrices (kappa<1)
+        test feature matrix or matrices,
+        common matrix for all targets (if kappa=1)
+        or separate matrix for each target (if 0<=kappa<1)
     y_test : ndarray of shape (n1_samples,q_targets)
         test target matrix
     beta : ndarray of shape (p_features,q_targets)
@@ -146,7 +150,7 @@ def simulate(
     x_test, y_test = x[fold==1,...], y[fold==1]
     return x_train, y_train, x_test, y_test, beta
 
-def _simulate_features(*,n,p,q,rho,kappa):
+def _simulate_features(*,n,p,q,rho,kappa) -> np.ndarray:
     """
     Simulate Features
     
@@ -154,11 +158,12 @@ def _simulate_features(*,n,p,q,rho,kappa):
     ----------
     n : int
         number of samples
+    others: see simulate
       
     Returns
     -------
-    x : ndarray of shape (n_samples, q_features) or
-        list of q_targets ndarrays of shape (n_samples, q_features)
+    x : ndarray of shape (n_samples, p_features) if kappa=1
+        or (n_samples, p_features, q_targets) if 0<=kappa<1
     """
     mean = np.zeros(p)
     idx = np.arange(p)
@@ -174,12 +179,13 @@ def _simulate_features(*,n,p,q,rho,kappa):
             x[:,:,k] = np.sqrt(kappa)*x_base + np.sqrt(1-kappa)*noise
     return x
 
-def _simulate_effects(*,p,q,prob_com,prob_sep):
+def _simulate_effects(*,p,q,prob_com,prob_sep) -> np.ndarray:
     """
     Simulate Effects
     
     Parameters
     ----------
+    see simulate
     
     Returns
     -------
@@ -206,7 +212,6 @@ def _simulate_targets(*,n,q,x,beta):
     Returns
     -------
     y : ndarray of shape (n_samples,q_targets)
-
     """
     if x.ndim==2:
         eta = x @ beta
@@ -400,6 +405,11 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,in
     return n, p, q
 
 def _spearmanr(x:np.ndarray) -> np.ndarray:
+    """
+    Spearman correlation coefficients
+    
+    Returns a matrix also in degenerate cases (one or two features).
+    """
     if x.shape[1]==1:
         cor = np.ones((1,1))
     else:
@@ -415,6 +425,11 @@ def _spearmanr(x:np.ndarray) -> np.ndarray:
     return cor
 
 def _calc_cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
+    """
+    Feature correlation per target
+    
+    Calculates the Spearman correlation matrix between features for each target
+    """
     if x.ndim==2:
         #cor = spearmanr(x).statistic
         cor = _spearmanr(x)
@@ -437,6 +452,11 @@ def _calc_weights_slow(
     exp_y:float,
     exp_x:float
     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+    """
+    Adaptive weights
+    
+    
+    """
     p_ = coef.shape[0]
     link_y = np.sign(cor_y)*(np.abs(cor_y)**exp_y)
     w_pos = np.full(p_,np.nan)
@@ -458,6 +478,13 @@ def _calc_weights_fast(
     exp_y:float,
     exp_x:float
     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+    """
+    Adaptive weights
+    
+    Calculates adaptive weights to share information
+    on feature-target effects
+    between correlated features and correlated targets.
+    """
     link_y = np.sign(cor_y)*np.abs(cor_y)**exp_y
     link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
     cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
@@ -753,6 +780,16 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         indices of regularisation parameters corresponding to the lowest mean squared error
     coef_ : ndarray of shape (q_targets, p_features)
         estimated effects (of the feature in the column on the target in the row)
+
+    Examples
+    --------
+    >>> from sklearn.datasets import load_linnerud
+    >>> from collasso import CoopLassoCV
+    >>> x, y = load_linnerud(return_X_y=True)
+    >>> model = CoopLassoCV()
+    >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
+    >>> model.coef_ # q_targets x p_features
+    >>> y_pred = model.predict(x) # n_samples x q_targets
     """
     def __init__(self, *, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state = None):
         # pylint: disable=too-many-arguments
