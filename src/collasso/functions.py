@@ -24,50 +24,14 @@ from sklearn.model_selection import KFold
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.exceptions import ConvergenceWarning, DataConversionWarning
+from docrep import DocstringProcessor
 
-#--- test docrep ---
-
-# import docrep
-# docstrings = docrep.DocstringProcessor()
-#
-# @docstrings.dedent
-# @docstrings.get_sections(base='do_something')
-# def do_something(a, b):
-#     """
-#     Add two numbers
-#
-#     Parameters
-#     ----------
-#     a: int
-#        The first number
-#     b: int
-#        The second number
-#
-#     Returns
-#     -------
-#     int
-#         `a` + `b`
-#     """
-#     return a + b
-#
-# @docstrings.dedent
-# def do_more(*args, **kwargs):
-#     """
-#     Add two numbers and multiply it by 2
-#
-#     Parameters
-#     ----------
-#     %(do_something.parameters)s
-#
-#     Returns
-#     -------
-#     int
-#         (`a` + `b`) *
-#     """
-#     return do_something(*args, **kwargs) * 2
+docstrings = DocstringProcessor()
 
 #--- simulate data ---
 
+@docstrings.get_sections(base='simulate',sections=['Parameters'])
+@docstrings.dedent
 def simulate(
     *,
     n0:int=100,
@@ -154,6 +118,9 @@ def simulate(
     x_test, y_test = x[fold==1,...], y[fold==1]
     return x_train, y_train, x_test, y_test, beta
 
+docstrings.keep_params('simulate.parameters', 'p', 'q', 'rho', 'kappa')
+
+@docstrings.dedent
 def _simulate_features(*,n:int,p:int,q:int,rho:float,kappa:float) -> np.ndarray:
     """
     Simulate Features
@@ -162,7 +129,7 @@ def _simulate_features(*,n:int,p:int,q:int,rho:float,kappa:float) -> np.ndarray:
     ----------
     n : int
         number of samples
-    others: see simulate
+    %(simulate.parameters.p|q|rho|kappa)s
       
     Returns
     -------
@@ -183,13 +150,16 @@ def _simulate_features(*,n:int,p:int,q:int,rho:float,kappa:float) -> np.ndarray:
             x[:,:,k] = np.sqrt(kappa)*x_base + np.sqrt(1-kappa)*noise
     return x
 
+docstrings.keep_params('simulate.parameters', 'p', 'q', 'prob_com', 'prob_sep')
+
+@docstrings.dedent
 def _simulate_effects(*,p:int,q:int,prob_com:float,prob_sep:float) -> np.ndarray:
     """
     Simulate Effects
     
     Parameters
     ----------
-    see simulate
+    %(simulate.parameters.p|q|prob_com|prob_sep)s
     
     Returns
     -------
@@ -206,12 +176,20 @@ def _simulate_effects(*,p:int,q:int,prob_com:float,prob_sep:float) -> np.ndarray
     beta = beta_com[:, np.newaxis] + beta_sep
     return beta
 
+docstrings.keep_params('simulate.parameters', 'n', 'q')
+
+@docstrings.dedent
 def _simulate_targets(*,n:int,q:int,x:np.ndarray,beta:np.ndarray):
     """
     Simulate Targets
     
     Parameters
     ----------
+    x : np.ndarray of shape (n_samples,p_features) or (n_samples,p_features,q_targets)
+        common feature matrix or separate feature matrices
+    beta: np.ndarray of shape (p_features,q_targets)
+        effect matrix
+    %(simulate.parameters.n|q)s
     
     Returns
     -------

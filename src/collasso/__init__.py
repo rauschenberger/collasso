@@ -4,6 +4,9 @@ __version__ = "0.0.1"
 __docformat__ = "numpy"
 
 from .functions import (
+    _simulate_features,
+    _simulate_effects,
+    _simulate_targets,
     simulate,
     SingleTaskLassoCV,
     CoopLasso,
@@ -14,6 +17,9 @@ from .functions import (
 )
 
 __all__ = [
+    "_simulate_features",
+    "_simulate_effects",
+    "_simulate_targets",
     "simulate",
     "SingleTaskLassoCV",
     "CoopLasso",
