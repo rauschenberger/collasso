@@ -70,14 +70,14 @@ from sklearn.exceptions import ConvergenceWarning, DataConversionWarning
 
 def simulate(
     *,
-    n0=100,
-    n1=10000,
-    p=200,
-    q=10,
-    rho=0.90,
-    prob_com=0.05,
-    prob_sep=0.05,
-    kappa=1.00,
+    n0:int=100,
+    n1:int=10000,
+    p:int=200,
+    q:int=10,
+    rho:float=0.90,
+    kappa:float=1.00,
+    prob_com:float=0.05,
+    prob_sep:float=0.05,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # pylint: disable=too-many-arguments,too-many-locals
     """
@@ -106,6 +106,10 @@ def simulate(
         probability of common effects for all targets, 0<=prob_com<=1
     prob_sep : float, default=0.05
         probability of separate effects for each target
+        
+    Raises
+    ------
+    ValueError
       
     Returns
     -------
@@ -150,7 +154,7 @@ def simulate(
     x_test, y_test = x[fold==1,...], y[fold==1]
     return x_train, y_train, x_test, y_test, beta
 
-def _simulate_features(*,n,p,q,rho,kappa) -> np.ndarray:
+def _simulate_features(*,n:int,p:int,q:int,rho:float,kappa:float) -> np.ndarray:
     """
     Simulate Features
     
@@ -179,7 +183,7 @@ def _simulate_features(*,n,p,q,rho,kappa) -> np.ndarray:
             x[:,:,k] = np.sqrt(kappa)*x_base + np.sqrt(1-kappa)*noise
     return x
 
-def _simulate_effects(*,p,q,prob_com,prob_sep) -> np.ndarray:
+def _simulate_effects(*,p:int,q:int,prob_com:float,prob_sep:float) -> np.ndarray:
     """
     Simulate Effects
     
@@ -202,7 +206,7 @@ def _simulate_effects(*,p,q,prob_com,prob_sep) -> np.ndarray:
     beta = beta_com[:, np.newaxis] + beta_sep
     return beta
 
-def _simulate_targets(*,n,q,x,beta):
+def _simulate_targets(*,n:int,q:int,x:np.ndarray,beta:np.ndarray):
     """
     Simulate Targets
     
@@ -352,12 +356,25 @@ def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,in
     
     Parameters
     ----------
-    X : np.ndarray
+    X : np.ndarray of shape (n_samples,p_features) or (n_samples,p_features,q_targets)
         feature matrix
-    y : np.ndarray
+    y : np.ndarray of shape (n_samples,p_targets)
         target matrix
-    Z : np.ndarray or None
+    Z : np.ndarray of shape (p_features) or (p_features,q_targets) or None
         indicator matrix (0=auxiliary, 1=primary)
+        
+    Raises
+    ------
+    ValueError
+        
+    Returns
+    -------
+    n : int
+        number of samples
+    p : int
+        number of features
+    q : int
+        number of targets
     """
     #--- targets ---
     if y.ndim!=2:
