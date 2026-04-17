@@ -13,9 +13,6 @@ import pandas as pd
 import openml
 from collasso import SingleTaskLassoCV, CoopLassoCV
 
-#from sklearn.datasets import load_linnerud # move to examples
-#x, y = load_linnerud(return_X_y=True) # move to examples
-
 # scm1d
 dataset = openml.datasets.get_dataset(dataset_id=41485,version=2)
 data = dataset.get_data()
