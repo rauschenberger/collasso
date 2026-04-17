@@ -879,8 +879,8 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
             self.mse_.append(mse)
             id_min = np.argmin(mse)
             self.min_.append(id_min)
-            temp = self.model_.model_[j][1][:,id_min]
-            self.coef_[j,:] = temp[0:self.p_] - temp[self.p_:2*self.p_]
+            temp = self.model_.model_[j][1][:,id_min] * self.model_.weight_[j]
+            self.coef_[j,:] = (temp[0:self.p_] - temp[self.p_:2*self.p_]) * self.model_.sd_y_[j]
         return self
     def predict(self,X:np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
         """
