@@ -4,6 +4,7 @@
 ![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yml/badge.svg)
 ![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yml/badge.svg)
 ![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
+![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yml/badge.svg)
 ![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
 
 
