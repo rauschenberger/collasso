@@ -38,12 +38,11 @@ def test_wrapper(data): # pylint: disable=redefined-outer-name
     pred1 = model.predict(X=x_test)
     assert np.allclose(coef0,coef1), 'coefficients should be the same'
     assert np.allclose(pred0,pred1), 'predictions should be the same'
-    
+
 def test_singletask(data): # pylint: disable=redefined-outer-name
     """Single-task learning using multi-task learner"""
     x_train, y_train, x_test, _, _ = data
     y_train = np.column_stack((y_train[:,0],y_train[:,0]))
-    y_test = np.column_stack((y_test[:,0],y_test[:,0]))
     # Explore exp=0 (duplicate problem) and exp=np.inf (problem with EPS)!
     model = CoopLassoCV(exp_y=0,exp_x=0,random_state=1)
     model.fit(X=x_train,y=y_train)
@@ -54,18 +53,19 @@ def test_singletask(data): # pylint: disable=redefined-outer-name
     model.fit(X=x_train,y=y_train[:,0])
     coef1 = model.coef_
     pred1 = model.predict(X=x_test)
-    assert np.allclose(2*coef0[0,:],coef1) # THIS IS STRANGE!
+    assert np.allclose(coef0[0,:],coef1)
     assert np.allclose(pred0[:,0],pred1)
-    
+
 def test_reconstruct_preds(data): # pylint: disable=redefined-outer-name
+    """Reconstruct predictions from coefficients"""
     x_train, y_train, x_test, _, _ = data
     model = CoopLassoCV()
     model.fit(X=x_train,y=y_train)
     coef = model.coef_
     pred0 = model.predict(X=x_test)
-    pred1 = x_test @ coef.T
+    pred1 = x_test @ coef.T + model.model_.mu_y_
     assert np.allclose(pred0,pred1), "same predictions" # fix this
-    
+
 def test_broadcasting(data): # pylint: disable=redefined-outer-name
     """CoopLassoCV can use matrix or array during training or testing."""
     x_train, y_train, x_test, y_test, _ = data
