@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.14"
       - name: Install dependencies
-        run: pip install pdoc numpy scipy scikit-learn
+        run: pip install pdoc numpy scipy scikit-learn docrep
       - name: Build docs
         run: |
           pdoc src/collasso/functions.py -o docs/ --no-show-source --docformat numpy

@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint pandas openml
+        pip install pylint pandas openml docrep
         pip install ".[test]"
     - name: Analysing the code with pylint
       run: |
