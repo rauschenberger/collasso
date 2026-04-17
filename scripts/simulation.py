@@ -28,16 +28,16 @@ prederror = np.full((len(grid),4),np.nan)
 
 for i,_ in enumerate(grid):
     np.random.seed(i)
-    # Try with common feature matrix (common=True)
-    # and with separate feature matrices (common=False).
-    common = True
+    # Try with common feature matrix (kappa=1)
+    # and with separate feature matrices (0<=kappa<1).
+    kappa = 0.5
     x_train, y_train, x_test, y_test, beta = simulate(
         rho=grid[i,0],
         prob_com=grid[i,1],
         prob_sep=grid[i,2],
-        common = common
+        kappa = kappa
     )
-    if common:
+    if kappa ==1:
         scaler = StandardScaler()
         x_train_scaled = scaler.fit_transform(x_train)
         x_test_scaled = scaler.transform(x_test)
@@ -56,7 +56,7 @@ for i,_ in enumerate(grid):
     model.fit(X=x_train_scaled,y=y_train)
     coef_single = model.coef_
     pred_single = model.predict(X=x_test_scaled)
-    if common:
+    if kappa ==1:
         # multi-task lasso regression
         model = MultiTaskLassoCV(alphas=100,cv=5)
         model.fit(X=x_train_scaled,y=y_train)
@@ -91,7 +91,7 @@ for i,_ in enumerate(grid):
     #pred_level = model.predict(x_test_scaled_repeated).T
 
     # comparison
-    if common:
+    if kappa ==1:
         coef = np.stack([coef_mean,coef_single,coef_multi,coef_coop])
         pred = np.stack([pred_mean,pred_single,pred_multi,pred_coop])
     else:
