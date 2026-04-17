@@ -1,4 +1,5 @@
-"""Unit tests
+"""
+Unit tests
 
 Tests:
     test_broadcasting: matrix/array during training/testing
@@ -18,12 +19,14 @@ from collasso import _spearmanr, _calc_weights_slow, _calc_weights_fast
 @pytest.fixture
 def data():
     """Simulating data for unit tests"""
-    x_train, y_train, x_test, y_test, beta = simulate(
-        rho=0.9,
-        prob_com=0.05,
-        prob_sep=0.05
-    )
-    return x_train, y_train, x_test, y_test, beta
+    x_train0, y_train0, x_test0, y_test0, beta0 = simulate(kappa=1)
+    x_train1, y_train1, x_test1, y_test1, beta1 = simulate(kappa=0.5)
+    assert beta0.shape==beta1.shape, 'coef has same shape'
+    assert y_train0.shape==y_train1.shape, 'y_train has same shape'
+    assert y_test0.shape==y_test1.shape, 'y_test has same shape'
+    assert x_train0.shape==x_train1[:,:,0].shape, 'x_train is one slice'
+    assert x_test0.shape==x_test1[:,:,0].shape, 'x_test is one slice'
+    return x_train0, y_train0, x_test0, y_test0, beta0
 
 def test_wrapper(data): # pylint: disable=redefined-outer-name
     """Equivalence given common feature matrix"""
@@ -49,12 +52,12 @@ def test_singletask(data): # pylint: disable=redefined-outer-name
     coef0 = model.coef_
     pred0 = model.predict(X=x_test)
     assert np.allclose(coef0[0,:],coef0[1,:]), 'same coefficients'
-    assert np.allclose(pred0[:,0],pred0[:,1]), 'same coefficients'
+    assert np.allclose(pred0[:,0],pred0[:,1]), 'same predictions'
     model.fit(X=x_train,y=y_train[:,0])
     coef1 = model.coef_
     pred1 = model.predict(X=x_test)
-    assert np.allclose(coef0[0,:],coef1)
-    assert np.allclose(pred0[:,0],pred1)
+    assert np.allclose(coef0[0,:],coef1), 'same coefficients'
+    assert np.allclose(pred0[:,0],pred1), 'same predictions'
 
 def test_reconstruct_preds(data): # pylint: disable=redefined-outer-name
     """Reconstruct predictions from coefficients"""
@@ -110,12 +113,14 @@ def test_privileged_information(data): # pylint: disable=redefined-outer-name
     model = CoopLassoCV(random_state=1)
     model.fit(x_train,y_train,z)
     beta_hat = model.coef_[:,z==0]
-    assert np.count_nonzero(beta_hat)==0
+    assert np.count_nonzero(beta_hat)==0, 'LUPI works under matrix y and vector z'
+    model.fit(x_train,y_train[:,0],z)
+    beta_hat = model.coef_[:,z==0]
+    assert np.count_nonzero(beta_hat)==0, 'LUPI works under vectors y and z'
     z = np.random.binomial(n=1,p=0.5,size=(p,q))
-    model = CoopLassoCV(random_state=1)
     model.fit(x_train,y_train,z)
     beta_hat = model.coef_[z.T==0]
-    assert np.count_nonzero(beta_hat)==0
+    assert np.count_nonzero(beta_hat)==0, 'LUPI works under matrices y and z'
 
 def test_weight_calculation(data): # pylint: disable=redefined-outer-name
     """Weight calculation with loop or vector is the same"""
@@ -148,14 +153,6 @@ def test_cor(data): # pylint: disable=redefined-outer-name
     cor1 = spearmanr(x_train).statistic
     cor2 = _spearmanr(x_train)
     assert np.allclose(cor1,cor2), 'identical results'
-
-# CoopLassoCV under Z!=Null and q=1:
-#x_train, y_train, _, _ , _ = simulate(rho=0.9,prob_com=0.05,prob_sep=0.05)
-#y_train = y_train[:,0]
-#z = np.random.binomial(n=1,p=0.5,size=x_train.shape[1])
-#model = CoopLassoCV(random_state=1)
-#model.fit(x_train,y_train,z)
-
 
 #SKIP = {
 #    "",
