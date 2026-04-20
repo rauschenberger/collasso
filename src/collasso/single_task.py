@@ -1,0 +1,118 @@
+"""
+Sparse linear multi-task regression 
+with correlation-based information sharing
+
+Classes:
+    SingleTaskLassoCV: Modelling multiple targets separately
+    CoopLassoCV: Modelling multiple targets together
+
+Example:
+    # from collasso import CoopLassoCV
+    # x_train, y_train, x_test, y_test, beta = simulate()
+    # model = CoopLassoCV()
+    # model.fit(x_train, y_train)
+    # model.predict(x_test)
+"""
+
+import numpy as np
+from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.linear_model import LassoCV
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted
+from collasso._helpers import _check_dims
+
+#--- single-task lasso regressions ---
+
+class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
+    """
+    Single-Task Lasso Regression For Multiple Targets
+    
+    Fits single-task lasso regression separately to multiple targets,
+    optimising the regularisation parameters by cross-validation.
+
+    Attributes
+    ----------
+    n_ : int
+        number of training samples
+    p_ : int
+        number of features
+    q_ : int
+        number of targets
+    model_ : list of length q_targets
+        fitted models from LassoCV (one for each target)   
+    coef_ : ndarray of shape (q_targets, p_features)
+        estimated coefficients
+        (of the feature in the column on the target in the row)
+    """
+    def __init__(self,*,cv=10,alphas=100):
+        """
+        Parameters
+        ----------
+        cv : int, default=10
+            number of cross-validation folds
+        alphas : int, default=100
+            number of candidate values for the regularisation parameter
+        """
+        self.cv = cv
+        self.alphas = alphas
+        self.n_ : int
+        self.p_ : int
+        self.q_ : int
+        self.model_ : list
+        self.coef_ : np.ndarray
+    def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV": # pylint: disable=invalid-name
+        """
+        Fit SingleTaskLassoCV
+        
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets or
+            a separate feature matrix for each target
+        y : ndarray of shape (n_samples, q_targets)
+            target matrix
+          
+        Returns
+        -------
+        
+        self: SingleTaskLassoCV
+            fitted model
+        """
+        if y.ndim==1:
+            y = y.reshape(-1,1)
+        check_array(array=X,allow_nd=True,dtype="numeric")
+        check_array(array=y,dtype="numeric")
+        if X.ndim==2:
+            X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
+        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=None)
+        self.model_ = []
+        self.coef_ = np.full((self.q_,self.p_), np.nan)
+        for i in range(self.q_):
+            model = LassoCV(alphas=self.alphas,cv=self.cv)
+            model.fit(X[:, :, i],y[:, i])
+            self.model_.append(model)
+            self.coef_[i,:] = model.coef_
+        return self
+    def predict(self,X:np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
+        """
+        Make predictions
+  
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+            common feature matrix for all targets,
+            or a separate feature matrix for each target
+        
+        Returns
+        -------
+        y_hat : ndarray of shape (n_samples, q_targets)
+            matrix of predicted values
+        """
+        if X.ndim==2:
+            X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
+        check_is_fitted(self,attributes=['coef_'])
+        check_array(X,allow_nd=True,dtype="numeric")
+        y_hat = np.full((X.shape[0],self.q_), np.nan)
+        for i in range(self.q_):
+            y_hat[:, i] = self.model_[i].predict(X[:,:,i])
+        return y_hat

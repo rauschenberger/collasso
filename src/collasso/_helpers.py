@@ -1,0 +1,109 @@
+"""
+Sparse linear multi-task regression 
+with correlation-based information sharing
+
+Classes:
+    SingleTaskLassoCV: Modelling multiple targets separately
+    CoopLassoCV: Modelling multiple targets together
+
+Example:
+    # from collasso import CoopLassoCV
+    # x_train, y_train, x_test, y_test, beta = simulate()
+    # model = CoopLassoCV()
+    # model.fit(x_train, y_train)
+    # model.predict(x_test)
+"""
+
+import numpy as np
+from scipy.stats import rankdata
+
+def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,int]: # pylint: disable=invalid-name
+    """
+    Check dimensionality of inputs
+    
+    Parameters
+    ----------
+    X : np.ndarray of shape (n_samples,p_features) or (n_samples,p_features,q_targets)
+        feature matrix
+    y : np.ndarray of shape (n_samples,p_targets)
+        target matrix
+    Z : np.ndarray of shape (p_features) or (p_features,q_targets) or None
+        indicator matrix (0=auxiliary, 1=primary)
+        
+    Raises
+    ------
+    ValueError
+        
+    Returns
+    -------
+    n : int
+        number of samples
+    p : int
+        number of features
+    q : int
+        number of targets
+    """
+    #--- targets ---
+    if y.ndim!=2:
+        raise ValueError("'y' should be an 'n x q' matrix")
+    n, q = y.shape
+
+    #--- features ---
+    if X.ndim not in (2,3):
+        raise ValueError("'X' should be an 'n x p' matrix or an 'n x p x q' array")
+    if X.shape[0]!=n:
+        raise ValueError(
+            "'y' and 'X' should have the same number of samples"
+            "(first dimension in 'y' and 'X')"
+        )
+    if X.ndim==3 and X.shape[2]!=q:
+        raise ValueError(
+            "'y' and 'X' should have the same number of targets"
+            "(second dimension in 'y', third dimension in 'X')"
+        )
+    p = X.shape[1]
+
+    #--- indicators ---
+    if Z is not None:
+        if Z.ndim not in (1,2):
+            raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
+        if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[0]!=p):
+            raise ValueError(
+                "'X' and 'Z' should have the same number of features"
+                "(second dimension in 'X', first dimension in 'Z')"
+            )
+        if Z.ndim==2 and Z.shape[1]!=q:
+            raise ValueError(
+                "'y' and 'Z' should have the same number of targets"
+                "(second dimension in 'y' and 'Z')"
+            )
+
+    #--- edge cases ---
+    if n < 2:
+        raise ValueError(f"Requires more than 1 sample (now: n={n}).")
+    if p < 2:
+        raise ValueError(f"Requires at least 2 features (now: p={p}, n_features = 1).")
+    if q < 1:
+        raise ValueError(f"Requires at least 1 target (now: q={q}).")
+
+    return n, p, q
+
+def _spearmanr(x:np.ndarray) -> np.ndarray:
+    """
+    Spearman correlation coefficients
+    
+    Returns a matrix also in degenerate cases (one or two features).
+    """
+    if x.shape[1]==1:
+        cor = np.ones((1,1))
+    else:
+        cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0),rowvar=False))
+        cor = np.where(np.isnan(cor), np.eye(cor.shape[0]), cor)
+        #cor = np.asarray(cor, dtype=float)
+        #cor[np.isnan(cor)] = 0.0
+        #np.fill_diagonal(cor, 1.0)
+        #cor[np.arange(cor.shape[0]), np.arange(cor.shape[0])] = 1.0
+        cor = np.atleast_2d(np.asarray(cor))
+        #nan_mask = np.isnan(cor)
+        #cor[nan_mask] = np.eye(cor.shape[0])[nan_mask]
+    return cor
