@@ -30,7 +30,7 @@ docstrings = DocstringProcessor()
 
 #--- simulate data ---
 
-@docstrings.get_sections(base='simulate',sections=['Parameters'])
+@docstrings.get_sections(base='simulate',sections=['Parameters']) # pylint: disable=no-value-for-parameter
 @docstrings.dedent
 def simulate(
     *,
@@ -43,7 +43,7 @@ def simulate(
     prob_com:float=0.05,
     prob_sep:float=0.05,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    # pylint: disable=too-many-arguments,too-many-locals,no-value-for-parameter
+    # pylint: disable=too-many-arguments,too-many-locals
     """
     Simulate Data for Linear Multi-Task Regression
     
