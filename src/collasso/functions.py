@@ -800,10 +800,6 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
             with `0<=l1_ratio<=1`,
             where `l1_ratio=0` leads to L2 (ridge)
             and `l1_ratio=1` leads to L1 (lasso) penalisation
-        alpha_init : ndarray of shape (q_targets,) or None, default=None    
-            regularisation parameters for the initial regressions,
-            one non-negative number for each target
-            (if `None`: optimisation by cross-validation)
         exp_y : float, default=1.0
             non-negative number for exponentiating
             the target-target correlation coefficients
