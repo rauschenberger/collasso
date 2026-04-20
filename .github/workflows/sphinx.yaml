@@ -15,7 +15,9 @@ jobs:
           python-version: '3.14'
 
       - name: Install dependencies
-        run: pip install sphinx collasso pydata-sphinx-theme
+        run: |
+          pip install -e .
+          pip install sphinx pydata-sphinx-theme
 
       - name: Run sphinx-apidoc
         run: sphinx-apidoc -o docs/source src/collasso --separate
