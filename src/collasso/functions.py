@@ -15,6 +15,7 @@ Example:
 """
 
 import warnings
+from typing import Union
 import numpy as np
 from scipy.interpolate import interp1d # switch to np.interp
 from scipy.stats import multivariate_normal, rankdata #, spearmanr
@@ -647,6 +648,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         else:
             self.alpha_init_ = self.alpha_init
         for j in range(self.q_):
+            enet: Union[ElasticNetCV,ElasticNet]
             if self.alpha_init is None:
                 enet = ElasticNetCV(l1_ratio=self.l1_ratio)
             else:
