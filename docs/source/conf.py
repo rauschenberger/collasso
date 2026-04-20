@@ -1,21 +1,20 @@
 # sphinx - configuration file
+import sys
+import os
 
 project = 'collasso'
 copyright = '2026, Armin Rauschenberger'
 author = 'Armin Rauschenberger'
 release = '0.1.0'
 
-import sys, os
 sys.path.insert(0, os.path.abspath("../../src"))
 
-extensions = ["sphinx.ext.autodoc",  "numpydoc", "myst_parser"] # "sphinx.ext.autosummary",
+extensions = ["sphinx.ext.autodoc",  "numpydoc", "myst_parser"]
 source_suffix = ['.rst', '.md']
 
-#autosummary_generate = True
 numpydoc_show_class_members = False
 
 templates_path = ['_templates']
-exclude_patterns = []
 
 html_theme = 'pydata_sphinx_theme'
 
