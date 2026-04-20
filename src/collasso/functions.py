@@ -659,7 +659,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
                 enet.fit(X[:,:,j],y[:,j])
             coef[:,j] = enet.coef_
             if self.alpha_init is None:
-                assert isinstance(enet, ElasticNetCV) 
+                assert isinstance(enet, ElasticNetCV)
                 self.alpha_init_[j] = enet.alpha_
             # Alternative with multivariate initialisation:
             # enet = MultiTaskElasticNetCV(l1_ratio=l1_ratio)
