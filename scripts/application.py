@@ -33,17 +33,17 @@ for train_id, test_id in folds.split(X=x,y=y):
     # prediction by the mean
     pred[test_id,:,0] = np.mean(y[train_id,:],axis=0)
     # single-task lasso regression
-    model = SingleTaskLassoCV(alphas=100,cv=5)
-    model.fit(X=x_train,y=y_train)
-    pred[test_id,:,1] = model.predict(X=x_test)
+    model_single = SingleTaskLassoCV(alphas=100,cv=5)
+    model_single.fit(X=x_train,y=y_train)
+    pred[test_id,:,1] = model_single.predict(X=x_test)
     # multi-task lasso regression
-    model = MultiTaskLassoCV(alphas=100,cv=5)
-    model.fit(X=x_train,y=y_train)
-    pred[test_id,:,2] = model.predict(X=x_test)
+    model_multi = MultiTaskLassoCV(alphas=100,cv=5)
+    model_multi.fit(X=x_train,y=y_train)
+    pred[test_id,:,2] = model_multi.predict(X=x_test)
     # cooperative lasso regression
-    model = CoopLassoCV(n_alphas=100,cv=5,l1_ratio=0.5)
-    model.fit(X=x_train,y=y_train)
-    pred[test_id,:,3] = model.predict(X=x_test)
+    model_coop = CoopLassoCV(n_alphas=100,cv=5,l1_ratio=0.5)
+    model_coop.fit(X=x_train,y=y_train)
+    pred[test_id,:,3] = model_coop.predict(X=x_test)
 
 mse = np.mean((pred[:,:,:] - y[:,:,np.newaxis])**2, axis=0)
 #mean_squared_error(y,pred[:,:,3],multioutput='raw_values')
