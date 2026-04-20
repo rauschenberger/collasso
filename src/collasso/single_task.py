@@ -1,17 +1,19 @@
 """
-Sparse linear multi-task regression 
-with correlation-based information sharing
+Single-Task Learning (convenience functions)
 
-Classes:
-    SingleTaskLassoCV: Modelling multiple targets separately
-    CoopLassoCV: Modelling multiple targets together
+Class:
+    ``SingleTaskLassoCV`` - a wrapper function for ``sklearn.linear_model.LassoCV``
+    to model multiple targets based on a common feature matrix
+    or specific feature matrices (accepting the same API as ``CoopLassoCV``)
 
 Example:
-    # from collasso import CoopLassoCV
-    # x_train, y_train, x_test, y_test, beta = simulate()
-    # model = CoopLassoCV()
-    # model.fit(x_train, y_train)
-    # model.predict(x_test)
+    >>> from sklearn.datasets import load_linnerud
+    >>> from collasso import CoopLassoCV
+    >>> x, y = load_linnerud(return_X_y=True)
+    >>> model = SingleTaskLassoCV()
+    >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
+    >>> model.coef_ # q_targets x p_features
+    >>> y_pred = model.predict(x) # n_samples x q_targets
 """
 
 import numpy as np
