@@ -1,4 +1,5 @@
 name: docs
+
 on:
   push:
     branches: [main]
@@ -9,18 +10,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
       - name: Install dependencies
         run: pip install pdoc numpy scipy scikit-learn docrep
       - name: Build docs
         run: |
-          pdoc src/collasso/functions.py -o docs/ --no-show-source --docformat numpy
-          #pdoc collasso --no-show-source --docformat numpy -o docs/
+          pdoc src/collasso -o docs/ --no-show-source --docformat numpy
           touch docs/.nojekyll
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
