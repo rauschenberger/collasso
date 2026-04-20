@@ -1,10 +1,10 @@
 
-![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yml/badge.svg)
+![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/rauschenberger/collasso/graph/badge.svg?token=7E6GSQ32F5)](https://codecov.io/gh/rauschenberger/collasso)
-![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yml/badge.svg)
-![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yml/badge.svg)
-![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yml/badge.svg)
-![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yml/badge.svg)
+![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yaml/badge.svg)
+![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yaml/badge.svg)
+![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yaml/badge.svg)
+![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yaml/badge.svg)
 ![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
 
 
