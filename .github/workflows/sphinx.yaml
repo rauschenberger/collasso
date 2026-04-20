@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e .
-          pip install sphinx pydata-sphinx-theme numpydoc
+          pip install sphinx pydata-sphinx-theme numpydoc myst_parser
 
       - name: Run sphinx-apidoc
         run: sphinx-apidoc -o docs/source src/collasso --separate
