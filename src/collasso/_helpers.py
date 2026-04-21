@@ -14,10 +14,14 @@ Example:
     # model.predict(x_test)
 """
 
+import warnings
 import numpy as np
 from scipy.stats import rankdata
+from sklearn.exceptions import DataConversionWarning
+from sklearn.utils import check_array
+from sklearn.utils.validation import validate_data
 
-def _check_dims(X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,int]: # pylint: disable=invalid-name
+def _check_dims(*,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,int]: # pylint: disable=invalid-name
     """
     Check dimensionality of inputs
     
@@ -107,3 +111,52 @@ def _spearmanr(x:np.ndarray) -> np.ndarray:
         #nan_mask = np.isnan(cor)
         #cor[nan_mask] = np.eye(cor.shape[0])[nan_mask]
     return cor
+
+def _validate_train_data(self,*,X:np.ndarray,y:np.ndarray) -> tuple[np.ndarray,np.ndarray]:
+    """
+    Validate training data when y is a vector or matrix and X is a matrix or array
+    """
+    if y is None:
+        raise ValueError(
+            "Requires target matrix y."
+            "(requires y to be passed, but the target y is None)"
+        )
+    y = np.asarray(y)
+    if y.ndim == 2 and y.shape[1] == 1:
+        warnings.warn(
+            "A column-vector y was passed when a 1d array was expected.",
+            DataConversionWarning,
+            stacklevel=2,
+        )
+        y = y.ravel()
+    if isinstance(X, np.ndarray) and X.ndim == 3:
+        if y.ndim==1:
+            y = y.reshape(-1,1)
+        check_array(array=X,allow_nd=True,dtype="numeric")
+        check_array(array=y,dtype="numeric")
+    else:
+        X, y = validate_data(
+            self,
+            X=X,
+             y=y,
+            multi_output=True,
+            y_numeric=True,
+            dtype="numeric",
+            allow_nd=True,
+        )
+        if y.ndim==1:
+            y = y.reshape(-1,1)
+    return X, y
+
+def _validate_test_data(self,*,X:np.ndarray) -> np.ndarray:
+    """
+    Validate testing data X is a matrix or array
+    """
+    if isinstance(X, np.ndarray) and X.ndim == 3:
+        check_array(X,allow_nd=True,dtype="numeric")
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(f"Expected {self.n_features_in_}"
+                "but received {X.shape[1]} features")
+    else:
+        X = validate_data(self, X=X, reset=False, dtype="numeric")
+    return X

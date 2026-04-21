@@ -4,7 +4,7 @@ Single-Task Learning (convenience functions)
 Class:
     ``SingleTaskLassoCV`` - a wrapper function for ``sklearn.linear_model.LassoCV``
     to model multiple targets based on a common feature matrix
-    or specific feature matrices (accepting the same API as ``CoopLassoCV``)
+    or specific feature matrices (using the same API as ``CoopLassoCV``)
 
 Example:
     >>> from sklearn.datasets import load_linnerud
@@ -21,11 +21,12 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LassoCV
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-from collasso._helpers import _check_dims
+from collasso._helpers import _check_dims, _validate_train_data, _validate_test_data
 
 #--- single-task lasso regressions ---
 
 class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
+    # pylint: disable=too-many-instance-attributes
     """
     Single-Task Lasso Regression For Multiple Targets
     
@@ -60,6 +61,7 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
         self.n_ : int
         self.p_ : int
         self.q_ : int
+        self.n_features_in_ : int
         self.model_ : list
         self.coef_ : np.ndarray
     def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV": # pylint: disable=invalid-name
@@ -80,13 +82,13 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
         self: SingleTaskLassoCV
             fitted model
         """
-        if y.ndim==1:
-            y = y.reshape(-1,1)
+        X, y = _validate_train_data(self=self,X=X,y=y)
         check_array(array=X,allow_nd=True,dtype="numeric")
         check_array(array=y,dtype="numeric")
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=None)
+        self.n_features_in_ = self.p_
         self.model_ = []
         self.coef_ = np.full((self.q_,self.p_), np.nan)
         for i in range(self.q_):
@@ -110,11 +112,13 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
         y_hat : ndarray of shape (n_samples, q_targets)
             matrix of predicted values
         """
+        check_is_fitted(self,attributes=['coef_'])
+        X = _validate_test_data(self=self,X=X)
         if X.ndim==2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
-        check_is_fitted(self,attributes=['coef_'])
-        check_array(X,allow_nd=True,dtype="numeric")
         y_hat = np.full((X.shape[0],self.q_), np.nan)
         for i in range(self.q_):
             y_hat[:, i] = self.model_[i].predict(X[:,:,i])
+        if self.q_ == 1:
+            return y_hat.ravel()
         return y_hat

@@ -18,14 +18,18 @@ import warnings
 from typing import Union
 import numpy as np
 from scipy.interpolate import interp1d # switch to np.interp
-#from scipy.stats import rankdata
 from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path
 from sklearn.model_selection import KFold
 from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted, validate_data
-from sklearn.exceptions import ConvergenceWarning, DataConversionWarning
-from collasso._helpers import _check_dims, _spearmanr
+from sklearn.utils.validation import check_is_fitted
+from collasso._helpers import (
+    _check_dims,
+    _spearmanr,
+    _validate_train_data,
+    _validate_test_data,
+    )
 
 #--- multi-task lasso regression ---
 
@@ -480,36 +484,7 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         self : CoopLassoCV
             fitted model
         """
-        if y is None:
-            raise ValueError(
-                "Requires target matrix y."
-                "(requires y to be passed, but the target y is None)"
-            )
-        y = np.asarray(y)
-        if y.ndim == 2 and y.shape[1] == 1:
-            warnings.warn(
-                "A column-vector y was passed when a 1d array was expected.",
-                DataConversionWarning,
-                stacklevel=2,
-            )
-            y = y.ravel()
-        if isinstance(X, np.ndarray) and X.ndim == 3:
-            if y.ndim==1:
-                y = y.reshape(-1,1)
-            check_array(array=X,allow_nd=True,dtype="numeric")
-            check_array(array=y,dtype="numeric")
-        else:
-            X, y = validate_data(
-                self,
-                X=X,
-                y=y,
-                multi_output=True,
-                y_numeric=True,
-                dtype="numeric",
-                allow_nd=True,
-            )
-            if y.ndim==1:
-                y = y.reshape(-1,1)
+        X, y = _validate_train_data(self=self,X=X,y=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
         self.n_features_in_ = self.p_
         self.model_ = CoopLasso(
@@ -562,13 +537,7 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         
         """
         check_is_fitted(self,attributes=['coef_'])
-        if isinstance(X, np.ndarray) and X.ndim == 3:
-            check_array(X,allow_nd=True,dtype="numeric")
-            if X.shape[1] != self.n_features_in_:
-                raise ValueError(f"Expected {self.n_features_in_}"
-                    "but received {X.shape[1]} features")
-        else:
-            X = validate_data(self, X=X, reset=False, dtype="numeric")
+        X = _validate_test_data(self=self,X=X)
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         newxx = None
         if X.ndim==2:

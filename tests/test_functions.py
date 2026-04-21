@@ -13,8 +13,15 @@ from sklearn.linear_model import LassoCV
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from scipy.stats import spearmanr
-from collasso import CoopLasso, CoopLassoCV, SingleTaskLassoCV, simulate
-from collasso import _spearmanr, _calc_weights_slow, _calc_weights_fast
+from collasso import (
+    CoopLasso,
+    CoopLassoCV,
+    SingleTaskLassoCV,
+    simulate,
+    _spearmanr,
+    _calc_weights_slow,
+    _calc_weights_fast,
+    )
 
 @pytest.fixture
 def data():
@@ -159,7 +166,7 @@ def test_cor(data): # pylint: disable=redefined-outer-name
 #    # ...
 #}
 
-@parametrize_with_checks([CoopLassoCV()])
+@parametrize_with_checks([CoopLassoCV(),SingleTaskLassoCV()])
 def test_compatibility(estimator, check):
     """compatibility with scikit-learn"""
     #if check.func.__name__ in SKIP:
