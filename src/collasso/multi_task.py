@@ -17,7 +17,7 @@ Example:
 import warnings
 from typing import Union
 import numpy as np
-from scipy.interpolate import interp1d # switch to np.interp
+from scipy.interpolate import interp1d  # switch to np.interp
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path
@@ -29,9 +29,9 @@ from collasso._helpers import (
     _spearmanr,
     _validate_train_data,
     _validate_test_data,
-    )
+)
 
-#--- multi-task lasso regression ---
+# --- multi-task lasso regression ---
 
 # def _construct_weights(self,*,coef,cor_y,cor_x,exp_y,exp_x,Z):
 #     temp = (
@@ -57,74 +57,72 @@ from collasso._helpers import (
 #     weight = np.append(w_pos+self._EPS,w_neg+self._EPS)
 # return weight
 
-def _calc_cor(*,x:np.ndarray,q:int) -> list[np.ndarray]:
+
+def _calc_cor(*, x: np.ndarray, q: int) -> list[np.ndarray]:
     """
     Feature correlation per target
-    
+
     Calculates the Spearman correlation matrix between features for each target
     """
-    if x.ndim==2:
-        #cor = spearmanr(x).statistic
+    if x.ndim == 2:
         cor = _spearmanr(x)
-        #cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
         cor_x = [cor] * q
-    elif x.ndim==3:
+    elif x.ndim == 3:
         cor_x = []
         for j in range(q):
-            #cor = spearmanr(x[:,:,j]).statistic
-            cor = _spearmanr(x[:,:,j])
-            #cor = np.atleast_2d(np.asarray(np.nan_to_num(cor,nan=0)))
+            cor = _spearmanr(x[:, :, j])
             cor_x.append(cor)
     return cor_x
 
+
 def _calc_weights_slow(
     *,
-    cor_y:np.ndarray,
-    cor_x:np.ndarray,
-    coef:np.ndarray,
-    exp_y:float,
-    exp_x:float
-    ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+    cor_y: np.ndarray,
+    cor_x: np.ndarray,
+    coef: np.ndarray,
+    exp_y: float,
+    exp_x: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Adaptive weights
-    
-    
     """
     p_ = coef.shape[0]
-    link_y = np.sign(cor_y)*(np.abs(cor_y)**exp_y)
-    w_pos = np.full(p_,np.nan)
-    w_neg = np.full(p_,np.nan)
-    w_abs = np.full(p_,np.nan)
+    link_y = np.sign(cor_y) * (np.abs(cor_y) ** exp_y)
+    w_pos = np.full(p_, np.nan)
+    w_neg = np.full(p_, np.nan)
+    w_abs = np.full(p_, np.nan)
     for j in range(p_):
-        link_x = (np.sign(cor_x[:,j])*(np.abs(cor_x[:,j])**exp_x))
-        cont = (coef * link_y * link_x[:, np.newaxis])
+        link_x = np.sign(cor_x[:, j]) * (np.abs(cor_x[:, j]) ** exp_x)
+        cont = coef * link_y * link_x[:, np.newaxis]
         w_pos[j] = np.sum(np.maximum(cont, 0))
         w_neg[j] = np.sum(np.maximum(-cont, 0))
         w_abs[j] = np.sum(np.abs(cont))
     return w_pos, w_neg, w_abs
 
+
 def _calc_weights_fast(
     *,
-    cor_y:np.ndarray,
-    cor_x:np.ndarray,
-    coef:np.ndarray,
-    exp_y:float,
-    exp_x:float
-    ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
+    cor_y: np.ndarray,
+    cor_x: np.ndarray,
+    coef: np.ndarray,
+    exp_y: float,
+    exp_x: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Adaptive weights
-    
+
     Calculates adaptive weights to share information
     on feature-target effects
     between correlated features and correlated targets.
     """
-    link_y = np.sign(cor_y)*np.abs(cor_y)**exp_y
-    link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
-    cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
-    w_pos = np.maximum(0,cont).sum(axis=(1,2))
-    w_neg = np.maximum(0,-cont).sum(axis=(1,2))
-    w_abs = np.abs(cont).sum(axis=(1,2))
+    link_y = np.sign(cor_y) * np.abs(cor_y) ** exp_y
+    link_x = np.sign(cor_x) * np.abs(cor_x) ** exp_x
+    cont = coef * link_y[np.newaxis, :] * link_x.T[:, :, np.newaxis]
+    w_pos = np.maximum(0, cont).sum(axis=(1, 2))
+    w_neg = np.maximum(0, -cont).sum(axis=(1, 2))
+    w_abs = np.abs(cont).sum(axis=(1, 2))
     return w_pos, w_neg, w_abs
+
 
 # def _calc_weights_matrix_slow(
 #     *,
@@ -169,13 +167,14 @@ def _calc_weights_fast(
 #         w_abs[:,j] = np.abs(cont).sum(axis=(1,2))
 #     return w_pos, w_neg, w_abs
 
-class CoopLasso(RegressorMixin,BaseEstimator):
+
+class CoopLasso(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
     Cooperative Multi-Task Lasso Regression
-  
+
     Fits cooperative multi-task lasso regression
-        
+
     Attributes
     ----------
     n_ : int
@@ -190,8 +189,12 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         with concatenated identity and inverse of feature matrix (X,-X)
         and non-negativity constraint (positive=True)
     """
+
     _EPS = 1e-09
-    def __init__(self,*,n_alphas=100,l1_ratio=0.5,alpha_init=None,exp_y=1,exp_x=1):
+
+    def __init__(
+        self, *, n_alphas=100, l1_ratio=0.5, alpha_init=None, exp_y=1, exp_x=1
+    ):
         # pylint: disable=too-many-arguments
         """
         Parameters
@@ -203,7 +206,7 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             with `0<=l1_ratio<=1`,
             where `l1_ratio=0` leads to L2 (ridge)
             and `l1_ratio=1` leads to L1 (lasso) penalisation
-        alpha_init : ndarray of shape (q_targets,) or None, default=None    
+        alpha_init : ndarray of shape (q_targets,) or None, default=None
             regularisation parameters for the initial regressions,
             one non-negative number for each target
             (if `None`: optimisation by cross-validation)
@@ -219,19 +222,23 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         self.alpha_init = alpha_init
         self.exp_y = exp_y
         self.exp_x = exp_x
-        self.n_ : int
-        self.p_ : int
-        self.q_ : int
-        self.n_features_in_ : int
-        self.mu_y_ : np.ndarray
-        self.sd_y_ : np.ndarray
-        self.alpha_init_ : np.ndarray
-        self.weight_ : list
-        self.model_ : list
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLasso": # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
+        self.n_: int
+        self.p_: int
+        self.q_: int
+        self.n_features_in_: int
+        self.mu_y_: np.ndarray
+        self.sd_y_: np.ndarray
+        self.alpha_init_: np.ndarray
+        self.weight_: list
+        self.model_: list
+
+    def fit(
+        self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
+    ) -> "CoopLasso":
+        # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
         """
         Fit CoopLasso
-        
+
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
@@ -243,58 +250,51 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             indicating primary (1, True)
             and auxiliary features (0, False)
             for all targets together or each target separately
-          
+
         Returns
         -------
-        
+
         self: CoopLasso
             fitted model
         """
-        if y.ndim==1:
-            y = y.reshape(-1,1)
-        check_array(array=X,allow_nd=True,dtype="numeric")
-        check_array(array=y,dtype="numeric")
-        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+        check_array(array=X, allow_nd=True, dtype="numeric")
+        check_array(array=y, dtype="numeric")
+        self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
         if Z is None:
-            Z = np.full((self.p_,self.q_),1)
-        elif Z.ndim==1:
-            Z = np.broadcast_to(Z[:,None],(self.p_,self.q_))
-        self.mu_y_ = np.mean(y,axis=0)
-        self.sd_y_ = np.std(y,axis=0)
-        y = (y - self.mu_y_)/self.sd_y_
-        #--- calculate correlation coefficients ---
-        #if y.shape[1]==1:
-        #    cor_y = np.ones((1,1))
-        #else:
-        #    cor_y = np.atleast_2d(np.corrcoef(rankdata(y, axis=0),rowvar=False))
-        ## This would not return a matrix under q=2:
-        ## cor_y = spearmanr(y).statistic
-        #cor_y = np.asarray(np.nan_to_num(cor_y,nan=0))
+            Z = np.full((self.p_, self.q_), 1)
+        elif Z.ndim == 1:
+            Z = np.broadcast_to(Z[:, None], (self.p_, self.q_))
+        self.mu_y_ = np.mean(y, axis=0)
+        self.sd_y_ = np.std(y, axis=0)
+        y = (y - self.mu_y_) / self.sd_y_
+        # --- calculate correlation coefficients ---
         cor_y = _spearmanr(y)
-        cor_x = _calc_cor(x=X,q=self.q_)
-        #--- estimate initial coefficients ---
+        cor_x = _calc_cor(x=X, q=self.q_)
+        # --- estimate initial coefficients ---
         coef = np.full((self.p_, self.q_), np.nan)
-        #if self.l1_ratio is None:
+        # if self.l1_ratio is None:
         #    raise NotImplementedError(
         #        "Initial correlation coefficients (l1_ratio=None)"
         #        "have not yet been implemented."
         #    )
         if self.alpha_init is None:
-            self.alpha_init_ = np.full(self.q_,np.nan)
+            self.alpha_init_ = np.full(self.q_, np.nan)
         else:
             self.alpha_init_ = self.alpha_init
         for j in range(self.q_):
-            enet: Union[ElasticNetCV,ElasticNet]
+            enet: Union[ElasticNetCV, ElasticNet]
             if self.alpha_init is None:
                 enet = ElasticNetCV(l1_ratio=self.l1_ratio)
             else:
-                enet = ElasticNet(alpha=self.alpha_init_[j],l1_ratio=self.l1_ratio)
-            if X.ndim==2:
-                enet.fit(X,y[:,j])
+                enet = ElasticNet(alpha=self.alpha_init_[j], l1_ratio=self.l1_ratio)
+            if X.ndim == 2:
+                enet.fit(X, y[:, j])
             else:
-                enet.fit(X[:,:,j],y[:,j])
-            coef[:,j] = enet.coef_
+                enet.fit(X[:, :, j], y[:, j])
+            coef[:, j] = enet.coef_
             if self.alpha_init is None:
                 assert isinstance(enet, ElasticNetCV)
                 self.alpha_init_[j] = enet.alpha_
@@ -307,25 +307,26 @@ class CoopLasso(RegressorMixin,BaseEstimator):
             # enet = MultiTaskElasticNet(alpha=alpha_init,l1_ratio=l1_ratio)
             # enet.fit(X,y)
             # coef = enet.coef_.T
-        #--- estimating final coefficients ---
+        # --- estimate final coefficients ---
         self.weight_ = []
         self.model_ = []
         xx = np.empty(0)
-        if X.ndim==2:
-            xx = np.hstack([X,-X])
+        if X.ndim == 2:
+            xx = np.hstack([X, -X])
         for i in range(self.q_):
-            if X.ndim==3:
-                xx = np.hstack([X[:,:,i],-X[:,:,i]])
+            if X.ndim == 3:
+                xx = np.hstack([X[:, :, i], -X[:, :, i]])
             w_pos, w_neg, _ = _calc_weights_fast(
-                cor_y=cor_y[:,i],
+                cor_y=cor_y[:, i],
                 cor_x=cor_x[i],
                 coef=coef,
                 exp_y=self.exp_y,
-                exp_x=self.exp_x)
-            exclude = (Z[:,i]==0)
+                exp_x=self.exp_x,
+            )
+            exclude = Z[:, i] == 0
             w_pos[exclude] = 0
             w_neg[exclude] = 0
-            weight = np.append(w_pos+self._EPS,w_neg+self._EPS)
+            weight = np.append(w_pos + self._EPS, w_neg + self._EPS)
             # This alternative does not need the non-negativity constraint:
             # weight = (w_abs + 1e-9)
             xx_scale = xx * weight
@@ -333,20 +334,24 @@ class CoopLasso(RegressorMixin,BaseEstimator):
                 warnings.filterwarnings("ignore", category=ConvergenceWarning)
                 model = lasso_path(
                     X=xx_scale,
-                    y=y[:,i],
+                    y=y[:, i],
                     n_alphas=self.n_alphas,
                     alphas=None,
-                    positive=True
+                    positive=True,
                 )
             # This alternative is computationally expensive:
             # lasso_path(X=xx_scale,y=y[:,i],alphas=self.alphas[i]['model'][0],positive=True)
             self.weight_.append(weight)
             self.model_.append(model)
         return self
-    def predict(self,X:np.ndarray,alpha:list[np.ndarray]|None=None) -> list[np.ndarray]: # pylint: disable=invalid-name
+
+    def predict(
+        self, X: np.ndarray, alpha: list[np.ndarray] | None = None
+    ) -> list[np.ndarray]:
+        # pylint: disable=invalid-name
         """
         Make predictions
-  
+
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
@@ -355,45 +360,44 @@ class CoopLasso(RegressorMixin,BaseEstimator):
         alpha : list of length q_targets or None, default=None
             one ndarray of non-negative regularisation parameters for each target;
             if None, predictions are returned for the fitted path
-        
+
         Returns
         -------
         y_hat : list of length q_targets
             one ndarray of shape (n_samples, n_alphas) for each target
-        
         """
-        check_is_fitted(self,attributes=['model_'])
-        check_array(X,allow_nd=True,dtype="numeric")
+        check_is_fitted(self, attributes=["model_"])
+        check_array(X, allow_nd=True, dtype="numeric")
         y_hat = []
         newxx = None
-        if X.ndim==2:
+        if X.ndim == 2:
             newxx = np.hstack([X, -X])
-        for i,_ in enumerate(self.model_):
-            if X.ndim==3:
-                newxx = np.hstack([X[:,:,i],-X[:,:,i]])
+        for i, _ in enumerate(self.model_):
+            if X.ndim == 3:
+                newxx = np.hstack([X[:, :, i], -X[:, :, i]])
             newx_scale = newxx * self.weight_[i]
             beta = self.model_[i][1]
             if alpha is None:
-                y_hat.append((newx_scale @ beta)*self.sd_y_[i] + self.mu_y_[i])
+                y_hat.append((newx_scale @ beta) * self.sd_y_[i] + self.mu_y_[i])
             else:
-                alpha_path = np.log(self.model_[i][0]+self._EPS)
+                alpha_path = np.log(self.model_[i][0] + self._EPS)
                 order_path = np.argsort(alpha_path)
                 alpha_path = alpha_path[order_path]
-                beta = beta[:,order_path]
-                alpha_full = np.log(alpha[i]+self._EPS)
+                beta = beta[:, order_path]
+                alpha_full = np.log(alpha[i] + self._EPS)
                 # This avoids extrapolation outside range of fitted path:
-                alpha_full = np.clip(alpha_full,alpha_path.min(),alpha_path.max())
-                increase = np.hstack([True,np.diff(alpha_path)!=0])
-                func_inter = interp1d(alpha_path[increase],beta[:,increase],axis=1)
+                alpha_full = np.clip(alpha_full, alpha_path.min(), alpha_path.max())
+                increase = np.hstack([True, np.diff(alpha_path) != 0])
+                func_inter = interp1d(alpha_path[increase], beta[:, increase], axis=1)
                 beta_inter = func_inter(alpha_full)
-                y_hat.append((newx_scale @ beta_inter)*self.sd_y_[i] + self.mu_y_[i])
+                y_hat.append((newx_scale @ beta_inter) * self.sd_y_[i] + self.mu_y_[i])
         return y_hat
 
-class CoopLassoCV(RegressorMixin,BaseEstimator):
+class CoopLassoCV(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
     Cross-Validated Cooperative Multi-Task Lasso Regression
-    
+
     Fits cooperative multi-task lasso regression,
     optimising the regularisation parameters by cross-validation.
 
@@ -426,7 +430,9 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
     >>> model.coef_ # q_targets x p_features
     >>> y_pred = model.predict(x) # n_samples x q_targets
     """
-    def __init__(self, *, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state = None):
+    def __init__(
+        self, *, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state=None
+    ):
         # pylint: disable=too-many-arguments
         """
         Parameters
@@ -455,16 +461,19 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         self.exp_y = exp_y
         self.exp_x = exp_x
         self.random_state = random_state
-        self.n_ : int
-        self.p_ : int
-        self.q_ : int
-        self.n_features_in_ : int
-        self.alpha_ : list
-        self.mse_ : list
-        self.min_ : list
-        self.model_ : CoopLasso
-        self.coef_ : np.ndarray
-    def fit(self,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None=None) -> "CoopLassoCV": # pylint: disable=invalid-name
+        self.n_: int
+        self.p_: int
+        self.q_: int
+        self.n_features_in_: int
+        self.alpha_: list
+        self.mse_: list
+        self.min_: list
+        self.model_: CoopLasso
+        self.coef_: np.ndarray
+    def fit(
+        self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
+    ) -> "CoopLassoCV":
+        # pylint: disable=invalid-name
         """
         Fit CoopLassoCV
         
@@ -484,71 +493,77 @@ class CoopLassoCV(RegressorMixin,BaseEstimator):
         self : CoopLassoCV
             fitted model
         """
-        X, y = _validate_train_data(self=self,X=X,y=y)
-        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=Z)
+        X, y = _validate_train_data(self=self, X=X, y=y)
+        self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
         self.model_ = CoopLasso(
             l1_ratio=self.l1_ratio,
             n_alphas=self.n_alphas,
             alpha_init=None,
             exp_y=self.exp_y,
-            exp_x=self.exp_x)
-        self.model_.fit(X=X,y=y,Z=Z)
+            exp_x=self.exp_x,
+        )
+        self.model_.fit(X=X, y=y, Z=Z)
         self.alpha_ = []
         for i in range(self.q_):
             self.alpha_.append(self.model_.model_[i][0])
-        y_hat = np.full((self.n_,self.q_,self.n_alphas),np.nan)
-        folds = KFold(n_splits=self.cv,shuffle=True,random_state=self.random_state)
-        for train_id, test_id in folds.split(X=X,y=y):
+        y_hat = np.full((self.n_, self.q_, self.n_alphas), np.nan)
+        folds = KFold(n_splits=self.cv, shuffle=True, random_state=self.random_state)
+        for train_id, test_id in folds.split(X=X, y=y):
             sub = CoopLasso(
                 n_alphas=self.n_alphas,
                 l1_ratio=self.l1_ratio,
                 alpha_init=self.model_.alpha_init_,
                 exp_y=self.exp_y,
-                exp_x=self.exp_x)
-            sub.fit(X=X[train_id,...], y=y[train_id,:], Z=Z)
-            temp = sub.predict(X=X[test_id,...],alpha=self.alpha_)
-            for j,_ in enumerate(temp):
-                y_hat[test_id,j,:] = temp[j]
+                exp_x=self.exp_x,
+            )
+            sub.fit(X=X[train_id, ...], y=y[train_id, :], Z=Z)
+            temp = sub.predict(X=X[test_id, ...], alpha=self.alpha_)
+            for j, _ in enumerate(temp):
+                y_hat[test_id, j, :] = temp[j]
         self.mse_ = []
         self.min_ = []
-        self.coef_ = np.full((self.q_,self.p_),np.nan)
+        self.coef_ = np.full((self.q_, self.p_), np.nan)
         for j in range(self.q_):
-            mse = np.mean((y_hat[:,j,:] - y[:,j,np.newaxis])**2, axis=0)
+            mse = np.mean((y_hat[:, j, :] - y[:, j, np.newaxis]) ** 2, axis=0)
             self.mse_.append(mse)
             id_min = np.argmin(mse)
             self.min_.append(id_min)
-            temp = self.model_.model_[j][1][:,id_min] * self.model_.weight_[j]
-            self.coef_[j,:] = (temp[0:self.p_] - temp[self.p_:2*self.p_]) * self.model_.sd_y_[j]
+            temp = self.model_.model_[j][1][:, id_min] * self.model_.weight_[j]
+            self.coef_[j, :] = (
+                temp[0 : self.p_] - temp[self.p_ : 2 * self.p_]
+            ) * self.model_.sd_y_[j]
         return self
-    def predict(self,X:np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        # pylint: disable=invalid-name
         """
         Make predictions
-  
+
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
             common feature matrix for all targets, or a separate feature matrix for each target
-        
+
         Returns
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
             matrix of predicted values (of the target in the column for the sample in the row)
-        
+
         """
-        check_is_fitted(self,attributes=['coef_'])
-        X = _validate_test_data(self=self,X=X)
+        check_is_fitted(self, attributes=["coef_"])
+        X = _validate_test_data(self=self, X=X)
         y_hat = np.full((X.shape[0], self.q_), np.nan)
         newxx = None
-        if X.ndim==2:
+        if X.ndim == 2:
             newxx = np.hstack([X, -X])
         for i in range(self.q_):
-            if X.ndim==3:
+            if X.ndim == 3:
                 newxx = np.hstack([X[:, :, i], -X[:, :, i]])
             newx_scale = newxx * self.model_.weight_[i]
             id_min = self.min_[i]
             beta = self.model_.model_[i][1][:, id_min]
-            y_hat[:,i] = (newx_scale @ beta)*self.model_.sd_y_[i] + self.model_.mu_y_[i]
+            y_hat[:, i] = (newx_scale @ beta) * self.model_.sd_y_[i] + self.model_.mu_y_[i]
         if self.q_ == 1:
             return y_hat.ravel()
         return y_hat

@@ -23,13 +23,12 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from collasso._helpers import _check_dims, _validate_train_data, _validate_test_data
 
-#--- single-task lasso regressions ---
 
-class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
+class SingleTaskLassoCV(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
     Single-Task Lasso Regression For Multiple Targets
-    
+
     Fits single-task lasso regression separately to multiple targets,
     optimising the regularisation parameters by cross-validation.
 
@@ -42,12 +41,13 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
     q_ : int
         number of targets
     model_ : list of length q_targets
-        fitted models from LassoCV (one for each target)   
+        fitted models from LassoCV (one for each target)
     coef_ : ndarray of shape (q_targets, p_features)
         estimated coefficients
         (of the feature in the column on the target in the row)
     """
-    def __init__(self,*,cv=10,alphas=100):
+
+    def __init__(self, *, cv=10, alphas=100):
         """
         Parameters
         ----------
@@ -58,16 +58,18 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
         """
         self.cv = cv
         self.alphas = alphas
-        self.n_ : int
-        self.p_ : int
-        self.q_ : int
-        self.n_features_in_ : int
-        self.model_ : list
-        self.coef_ : np.ndarray
-    def fit(self,X:np.ndarray,y:np.ndarray) -> "SingleTaskLassoCV": # pylint: disable=invalid-name
+        self.n_: int
+        self.p_: int
+        self.q_: int
+        self.n_features_in_: int
+        self.model_: list
+        self.coef_: np.ndarray
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "SingleTaskLassoCV":
+        # pylint: disable=invalid-name
         """
         Fit SingleTaskLassoCV
-        
+
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
@@ -75,50 +77,52 @@ class SingleTaskLassoCV(RegressorMixin,BaseEstimator):
             a separate feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
             target matrix
-          
+
         Returns
         -------
-        
+
         self: SingleTaskLassoCV
             fitted model
         """
-        X, y = _validate_train_data(self=self,X=X,y=y)
-        check_array(array=X,allow_nd=True,dtype="numeric")
-        check_array(array=y,dtype="numeric")
-        if X.ndim==2:
+        X, y = _validate_train_data(self=self, X=X, y=y)
+        check_array(array=X, allow_nd=True, dtype="numeric")
+        check_array(array=y, dtype="numeric")
+        if X.ndim == 2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
-        self.n_, self.p_, self.q_ = _check_dims(X=X,y=y,Z=None)
+        self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=None)
         self.n_features_in_ = self.p_
         self.model_ = []
-        self.coef_ = np.full((self.q_,self.p_), np.nan)
+        self.coef_ = np.full((self.q_, self.p_), np.nan)
         for i in range(self.q_):
-            model = LassoCV(alphas=self.alphas,cv=self.cv)
-            model.fit(X[:, :, i],y[:, i])
+            model = LassoCV(alphas=self.alphas, cv=self.cv)
+            model.fit(X[:, :, i], y[:, i])
             self.model_.append(model)
-            self.coef_[i,:] = model.coef_
+            self.coef_[i, :] = model.coef_
         return self
-    def predict(self,X:np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        # pylint: disable=invalid-name
         """
         Make predictions
-  
+
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
             common feature matrix for all targets,
             or a separate feature matrix for each target
-        
+
         Returns
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
             matrix of predicted values
         """
-        check_is_fitted(self,attributes=['coef_'])
-        X = _validate_test_data(self=self,X=X)
-        if X.ndim==2:
+        check_is_fitted(self, attributes=["coef_"])
+        X = _validate_test_data(self=self, X=X)
+        if X.ndim == 2:
             X = np.broadcast_to(X[:, :, None], (X.shape[0], self.p_, self.q_))
-        y_hat = np.full((X.shape[0],self.q_), np.nan)
+        y_hat = np.full((X.shape[0], self.q_), np.nan)
         for i in range(self.q_):
-            y_hat[:, i] = self.model_[i].predict(X[:,:,i])
+            y_hat[:, i] = self.model_[i].predict(X[:, :, i])
         if self.q_ == 1:
             return y_hat.ravel()
         return y_hat

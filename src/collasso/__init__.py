@@ -8,7 +8,7 @@ from collasso.simulate import (
     _simulate_features,
     _simulate_effects,
     _simulate_targets,
-    )
+)
 from collasso.single_task import SingleTaskLassoCV
 from collasso.multi_task import (
     CoopLasso,
@@ -16,7 +16,7 @@ from collasso.multi_task import (
     _spearmanr,
     _calc_weights_slow,
     _calc_weights_fast,
-    )
+)
 
 __all__ = [
     "simulate",

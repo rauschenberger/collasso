@@ -1,5 +1,5 @@
 """
-Sparse linear multi-task regression 
+Sparse linear multi-task regression
 with correlation-based information sharing
 
 Classes:
@@ -21,10 +21,14 @@ from sklearn.exceptions import DataConversionWarning
 from sklearn.utils import check_array
 from sklearn.utils.validation import validate_data
 
-def _check_dims(*,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,int]: # pylint: disable=invalid-name
+
+def _check_dims(
+    *, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None
+) -> tuple[int, int, int]:
+    # pylint: disable=invalid-name
     """
     Check dimensionality of inputs
-    
+
     Parameters
     ----------
     X : np.ndarray of shape (n_samples,p_features) or (n_samples,p_features,q_targets)
@@ -33,11 +37,11 @@ def _check_dims(*,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,
         target matrix
     Z : np.ndarray of shape (p_features) or (p_features,q_targets) or None
         indicator matrix (0=auxiliary, 1=primary)
-        
+
     Raises
     ------
     ValueError
-        
+
     Returns
     -------
     n : int
@@ -47,42 +51,42 @@ def _check_dims(*,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,
     q : int
         number of targets
     """
-    #--- targets ---
-    if y.ndim!=2:
+    # --- targets ---
+    if y.ndim != 2:
         raise ValueError("'y' should be an 'n x q' matrix")
     n, q = y.shape
 
-    #--- features ---
-    if X.ndim not in (2,3):
+    # --- features ---
+    if X.ndim not in (2, 3):
         raise ValueError("'X' should be an 'n x p' matrix or an 'n x p x q' array")
-    if X.shape[0]!=n:
+    if X.shape[0] != n:
         raise ValueError(
             "'y' and 'X' should have the same number of samples"
             "(first dimension in 'y' and 'X')"
         )
-    if X.ndim==3 and X.shape[2]!=q:
+    if X.ndim == 3 and X.shape[2] != q:
         raise ValueError(
             "'y' and 'X' should have the same number of targets"
             "(second dimension in 'y', third dimension in 'X')"
         )
     p = X.shape[1]
 
-    #--- indicators ---
+    # --- indicators ---
     if Z is not None:
-        if Z.ndim not in (1,2):
+        if Z.ndim not in (1, 2):
             raise ValueError("'Z' should be a 'p' vector or an 'p x q' matrix")
-        if (Z.ndim==1 and Z.shape[0]!=p) or (Z.ndim==2 and Z.shape[0]!=p):
+        if (Z.ndim == 1 and Z.shape[0] != p) or (Z.ndim == 2 and Z.shape[0] != p):
             raise ValueError(
                 "'X' and 'Z' should have the same number of features"
                 "(second dimension in 'X', first dimension in 'Z')"
             )
-        if Z.ndim==2 and Z.shape[1]!=q:
+        if Z.ndim == 2 and Z.shape[1] != q:
             raise ValueError(
                 "'y' and 'Z' should have the same number of targets"
                 "(second dimension in 'y' and 'Z')"
             )
 
-    #--- edge cases ---
+    # --- edge cases ---
     if n < 2:
         raise ValueError(f"Requires more than 1 sample (now: n={n}).")
     if p < 2:
@@ -92,27 +96,25 @@ def _check_dims(*,X:np.ndarray,y:np.ndarray,Z:np.ndarray|None) -> tuple[int,int,
 
     return n, p, q
 
-def _spearmanr(x:np.ndarray) -> np.ndarray:
+
+def _spearmanr(x: np.ndarray) -> np.ndarray:
     """
     Spearman correlation coefficients
-    
+
     Returns a matrix also in degenerate cases (one or two features).
     """
-    if x.shape[1]==1:
-        cor = np.ones((1,1))
+    if x.shape[1] == 1:
+        cor = np.ones((1, 1))
     else:
-        cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0),rowvar=False))
+        cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0), rowvar=False))
         cor = np.where(np.isnan(cor), np.eye(cor.shape[0]), cor)
-        #cor = np.asarray(cor, dtype=float)
-        #cor[np.isnan(cor)] = 0.0
-        #np.fill_diagonal(cor, 1.0)
-        #cor[np.arange(cor.shape[0]), np.arange(cor.shape[0])] = 1.0
         cor = np.atleast_2d(np.asarray(cor))
-        #nan_mask = np.isnan(cor)
-        #cor[nan_mask] = np.eye(cor.shape[0])[nan_mask]
     return cor
 
-def _validate_train_data(self,*,X:np.ndarray,y:np.ndarray) -> tuple[np.ndarray,np.ndarray]:
+
+def _validate_train_data(
+    self, *, X: np.ndarray, y: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Validate training data when y is a vector or matrix and X is a matrix or array
     """
@@ -130,33 +132,35 @@ def _validate_train_data(self,*,X:np.ndarray,y:np.ndarray) -> tuple[np.ndarray,n
         )
         y = y.ravel()
     if isinstance(X, np.ndarray) and X.ndim == 3:
-        if y.ndim==1:
-            y = y.reshape(-1,1)
-        check_array(array=X,allow_nd=True,dtype="numeric")
-        check_array(array=y,dtype="numeric")
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
+        check_array(array=X, allow_nd=True, dtype="numeric")
+        check_array(array=y, dtype="numeric")
     else:
         X, y = validate_data(
             self,
             X=X,
-             y=y,
+            y=y,
             multi_output=True,
             y_numeric=True,
             dtype="numeric",
             allow_nd=True,
         )
-        if y.ndim==1:
-            y = y.reshape(-1,1)
+        if y.ndim == 1:
+            y = y.reshape(-1, 1)
     return X, y
 
-def _validate_test_data(self,*,X:np.ndarray) -> np.ndarray:
+
+def _validate_test_data(self, *, X: np.ndarray) -> np.ndarray:
     """
     Validate testing data X is a matrix or array
     """
     if isinstance(X, np.ndarray) and X.ndim == 3:
-        check_array(X,allow_nd=True,dtype="numeric")
+        check_array(X, allow_nd=True, dtype="numeric")
         if X.shape[1] != self.n_features_in_:
-            raise ValueError(f"Expected {self.n_features_in_}"
-                "but received {X.shape[1]} features")
+            raise ValueError(
+                f"Expected {self.n_features_in_} but received {X.shape[1]} features"
+            )
     else:
         X = validate_data(self, X=X, reset=False, dtype="numeric")
     return X

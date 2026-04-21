@@ -24,7 +24,7 @@ Use the function `CoopLassoCV` to model a multivariate target ($n \times q$ matr
 ```python
 from collasso import CoopLassoCV
 model = CoopLassoCV()
-model.fit(X_train,y_train)
+model.fit(X_train, y_train)
 model.predict(y_test)
 ```
 
