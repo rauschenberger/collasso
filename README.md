@@ -7,10 +7,9 @@
 ![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yaml/badge.svg)
 ![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
 
-
 # Sparse Linear Multi-Task Regression
 
-This personal GitHub repository is mirrored at two institutional GitLab instances (see [LIH](https://git.lih.lu/arauschenberger/collasso) and [LCSB](https://gitlab.com/uniluxembourg/Personalfolders/armin.rauschenberger/collasso)). It contains a Python library that implements "Sparse linear multi-task regression with correlation-based information sharing". 
+The Python package `collasso` implements "Sparse linear multi-task regression with correlation-based information sharing". Please find the documentation on the [website](https://rauschenberger.github.io/collasso/). This personal GitHub repository is mirrored at two institutional GitLab instances (see [LIH](https://git.lih.lu/arauschenberger/collasso) and [LCSB](https://gitlab.com/uniluxembourg/Personalfolders/armin.rauschenberger/collasso)).
 
 ## Usage
 
@@ -39,10 +38,10 @@ _Manuscript in preparation._
 
 ## Disclosure
 
-Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for reviewing Python code and documentation as well as for creating or adapting configuration files (.toml and .yaml).
+Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for reviewing Python code and documentation as well as for creating or adapting configuration files (``.toml`` and ``.yaml``).
 
 ## Disclaimer
 
-The Python library `collasso` implements sparse linear multi-task regression with correlation-based information sharing (Rauschenberger, 2026).
+The Python package `collasso` implements sparse linear multi-task regression with correlation-based information sharing (*Rauschenberger*, 2026).
 
-**Copyright** &copy; 2026 Armin Rauschenberger; Luxembourg Institute of Health (LIH), Department of Medical Informatics (DMI), Bioinformatics and Artificial Intelligence (BioAI); University of Luxembourg, Luxembourg Centre for Systems Biomedicine (LCSB), Biomedical Data Science (BDS). **All Rights Reserved.** (NB: The Python library will have an open-source license at a later stage.)
+**Copyright** &copy; 2026 Armin Rauschenberger; Luxembourg Institute of Health (LIH), Department of Medical Informatics (DMI), Bioinformatics and Artificial Intelligence (BioAI); University of Luxembourg, Luxembourg Centre for Systems Biomedicine (LCSB), Biomedical Data Science (BDS). **All Rights Reserved.** (NB: The Python package will have an open-source license at a later stage.)
