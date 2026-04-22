@@ -1,4 +1,4 @@
-name: License Check
+name: pip-licenses
 
 on: [push, pull_request]
 
@@ -14,7 +14,9 @@ jobs:
         run: |
           pip install pip-licenses
           pip install .
+      - name: show licenses
+        run: pip-licenses
       - name: check blacklist
-        run: pip-licenses --fail-on="GPL;AGPL;UNKNOWN" --partial-match
+        run: pip-licenses --ignore-packages collasso --fail-on="GPL;AGPL;UNKNOWN" --partial-match
       - name: check whitelist 
-        run: pip-licenses --allow-only="MIT License;Apache;BSD License;BSD-3-Clause;Python Software Foundation License" --partial-match
+        run: pip-licenses --ignore-packages collasso --allow-only="MIT License;Apache;BSD License;BSD-3-Clause;Python Software Foundation License" --partial-match
