@@ -5,6 +5,7 @@
 ![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yaml/badge.svg)
 ![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yaml/badge.svg)
 ![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yaml/badge.svg)
+![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
 ![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
 
 # Sparse Linear Multi-Task Regression
@@ -38,7 +39,7 @@ _Manuscript in preparation._
 
 ## Disclosure
 
-Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for reviewing Python code and documentation as well as for creating or adapting configuration files (``.toml`` and ``.yaml``).
+Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used for reviewing Python code and documentation as well as for drafting or reviewing configuration files (``.toml`` and ``.yaml``).
 
 ## Disclaimer
 
