@@ -23,7 +23,7 @@ jobs:
       - name: Audit dependencies
         run: pip-audit
       - name: Run tests
-        run: pytest tests/ --cov=collasso --cov-report=xml
+        run: pytest tests/ --cov=collasso --cov-report=xml --cov-fail-under=95
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
         with:
