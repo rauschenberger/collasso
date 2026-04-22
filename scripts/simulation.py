@@ -12,7 +12,7 @@ from scipy.stats import ttest_rel
 from sklearn.linear_model import MultiTaskLassoCV
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
-from collasso import simulate, SingleTaskLassoCV, CoopLassoCV
+from collasso import simulate, IndepLassoCV, CoopLassoCV
 
 # Consider decreasing q from 10 to 3 (faster and more realistic).
 
@@ -52,7 +52,7 @@ for i, _ in enumerate(grid):
     coef_mean = np.zeros((y_train.shape[1], x_train.shape[1]))
     pred_mean = np.tile(np.mean(y_train, axis=0), (y_test.shape[0], 1))
     # separate lasso regressions (common or specific X)
-    model_single = SingleTaskLassoCV(alphas=100, cv=5)
+    model_single = IndepLassoCV(alphas=100, cv=5)
     model_single.fit(X=x_train_scaled, y=y_train)
     coef_single = model_single.coef_
     pred_single = model_single.predict(X=x_test_scaled)

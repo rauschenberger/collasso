@@ -2,17 +2,18 @@
 # --- initialisation ---
 
 import numpy as np
-from collasso import simulate, CoopLassoCV  # alternative: SingleTaskLassoCV
 from sklearn.metrics import mean_squared_error, precision_score
+from collasso import simulate, CoopLassoCV  # alternative: IndepLassoCV
 
-model = CoopLassoCV()  # alternative: model = SingleTaskLassoCV()
+
+model = CoopLassoCV()  # alternative: model = IndepLassoCV()
 
 
 # --- multi-task regression with a common feature matrix ---
 
 x_train, y_train, x_test, y_test, beta = simulate()
-y_train.shape  # features (n x p matrix)
-x_train.shape  # targets (n x q matrix)
+# y_train.shape  # features (n x p matrix)
+# x_train.shape  # targets (n x q matrix)
 
 model.fit(X=x_train, y=y_train)
 
@@ -26,8 +27,8 @@ precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 # --- multi-task regression with specific feature matrices ---
 
 x_train, y_train, x_test, y_test, beta = simulate(kappa=0.5)
-x_train.shape  # features (n x p x q array)
-y_train.shape
+# x_train.shape  # features (n x p x q array)
+# y_train.shape
 
 model.fit(X=x_train, y=y_train)
 

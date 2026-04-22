@@ -11,7 +11,7 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import openml
-from collasso import SingleTaskLassoCV, CoopLassoCV
+from collasso import IndepLassoCV, CoopLassoCV
 
 # scm1d
 dataset = openml.datasets.get_dataset(dataset_id=41485, version=2)
@@ -33,7 +33,7 @@ for train_id, test_id in folds.split(X=x, y=y):
     # prediction by the mean
     pred[test_id, :, 0] = np.mean(y[train_id, :], axis=0)
     # single-task lasso regression
-    model_single = SingleTaskLassoCV(alphas=100, cv=5)
+    model_single = IndepLassoCV(alphas=100, cv=5)
     model_single.fit(X=x_train, y=y_train)
     pred[test_id, :, 1] = model_single.predict(X=x_test)
     # multi-task lasso regression

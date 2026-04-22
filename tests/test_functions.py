@@ -16,7 +16,7 @@ from scipy.stats import spearmanr
 from collasso import (
     CoopLasso,
     CoopLassoCV,
-    SingleTaskLassoCV,
+    IndepLassoCV,
     simulate,
     _spearmanr,
     _calc_weights_slow,
@@ -41,7 +41,7 @@ def test_wrapper(data):
     # pylint: disable=redefined-outer-name
     """Equivalence given common feature matrix"""
     x_train, y_train, x_test, _, _ = data
-    model = SingleTaskLassoCV(alphas=100, cv=5)
+    model = IndepLassoCV(alphas=100, cv=5)
     model.fit(X=x_train, y=y_train)
     coef0 = model.coef_
     pred0 = model.predict(X=x_test)
@@ -176,7 +176,7 @@ def test_cor(data):
     assert np.allclose(cor1, cor2), "identical results"
 
 
-@parametrize_with_checks([CoopLassoCV(), SingleTaskLassoCV()])
+@parametrize_with_checks([CoopLassoCV(), IndepLassoCV()])
 def test_compatibility(estimator, check):
     """compatibility with scikit-learn"""
     check(estimator)

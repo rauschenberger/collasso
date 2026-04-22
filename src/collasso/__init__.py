@@ -9,7 +9,7 @@ from collasso.simulate import (
     _simulate_effects,
     _simulate_targets,
 )
-from collasso.single_task import SingleTaskLassoCV
+from collasso.single_task import IndepLassoCV
 from collasso.multi_task import (
     CoopLasso,
     CoopLassoCV,
@@ -23,7 +23,7 @@ __all__ = [
     "_simulate_features",
     "_simulate_effects",
     "_simulate_targets",
-    "SingleTaskLassoCV",
+    "IndepLassoCV",
     "CoopLassoCV",
     "CoopLasso",
     "_spearmanr",

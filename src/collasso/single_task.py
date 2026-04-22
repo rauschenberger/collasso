@@ -2,7 +2,7 @@
 Single-Task Learning (convenience functions)
 
 Class:
-    ``SingleTaskLassoCV`` - a wrapper function for ``sklearn.linear_model.LassoCV``
+    ``IndepLassoCV`` - a wrapper function for ``sklearn.linear_model.LassoCV``
     to model multiple targets based on a common feature matrix
     or specific feature matrices (using the same API as ``CoopLassoCV``)
 
@@ -10,7 +10,7 @@ Example:
     >>> from sklearn.datasets import load_linnerud
     >>> from collasso import CoopLassoCV
     >>> x, y = load_linnerud(return_X_y=True)
-    >>> model = SingleTaskLassoCV()
+    >>> model = IndepLassoCV()
     >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
     >>> model.coef_ # q_targets x p_features
     >>> y_pred = model.predict(x) # n_samples x q_targets
@@ -24,7 +24,7 @@ from sklearn.utils.validation import check_is_fitted
 from collasso._helpers import _check_dims, _validate_train_data, _validate_test_data
 
 
-class SingleTaskLassoCV(RegressorMixin, BaseEstimator):
+class IndepLassoCV(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
     Single-Task Lasso Regression For Multiple Targets
@@ -65,10 +65,10 @@ class SingleTaskLassoCV(RegressorMixin, BaseEstimator):
         self.model_: list
         self.coef_: np.ndarray
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> "SingleTaskLassoCV":
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "IndepLassoCV":
         # pylint: disable=invalid-name
         """
-        Fit SingleTaskLassoCV
+        Fit IndepLassoCV
 
         Parameters
         ----------
@@ -81,7 +81,7 @@ class SingleTaskLassoCV(RegressorMixin, BaseEstimator):
         Returns
         -------
 
-        self: SingleTaskLassoCV
+        self: IndepLassoCV
             fitted model
         """
         X, y = _validate_train_data(self=self, X=X, y=y)
