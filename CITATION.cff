@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this Python package, please cite it as below."
+title: collasso
+authors:
+  - family-names: Rauschenberger
+    given-names: Armin
+    orcid: https://orcid.org/0000-0001-6498-4801
+abstract: Sparse linear multi-task regression with correlation-based information sharing
+repository-code: https://github.com/rauschenberger/collasso
+url: https://rauschenberger.github.io/collasso/
+preferred-citation: Rauschenberger (2026). "Sparse linear multi-task regression with correlation-based information sharing". Manuscript in preparation.
