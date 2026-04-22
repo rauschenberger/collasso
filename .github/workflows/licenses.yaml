@@ -1,0 +1,20 @@
+name: License Check
+
+on: [push, pull_request]
+
+jobs:
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install runtime dependencies only
+        run: |
+          pip install pip-licenses
+          pip install .
+      - name: check blacklist
+        run: pip-licenses --fail-on="GPL;AGPL;UNKNOWN" --partial-match
+      - name: check whitelist 
+        run: pip-licenses --allow-only="MIT License;Apache;BSD License;BSD-3-Clause;Python Software Foundation License" --partial-match
