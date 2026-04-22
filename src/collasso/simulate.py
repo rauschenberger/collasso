@@ -40,7 +40,7 @@ def simulate(
     Simulates feature matrix and target matrix,
     with given probabilities of
     (i) common effects on all targets and
-    (ii) separate effects on each target.
+    (ii) specific effects on one target.
 
     Parameters
     ----------

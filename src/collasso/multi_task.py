@@ -242,7 +242,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets or a separate feature matrix for each target
+            common feature matrix for all targets or a specific feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
             target matrix
         Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
@@ -356,7 +356,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
             common feature matrix for all targets,
-            or a separate feature matrix for each target
+            or a specificfeature matrix for each target
         alpha : list of length q_targets or None, default=None
             one ndarray of non-negative regularisation parameters for each target;
             if None, predictions are returned for the fitted path
@@ -483,7 +483,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets or a separate feature matrix for each target
+            common feature matrix for all targets or a specific feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
             target matrix
         Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
@@ -546,7 +546,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets, or a separate feature matrix for each target
+            common feature matrix for all targets, or a specific feature matrix for each target
 
         Returns
         -------
