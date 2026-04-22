@@ -1,4 +1,4 @@
-name: Docstring Coverage
+name: docstr-coverage
 
 on: [push, pull_request]
 
