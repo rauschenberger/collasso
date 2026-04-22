@@ -393,6 +393,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
                 y_hat.append((newx_scale @ beta_inter) * self.sd_y_[i] + self.mu_y_[i])
         return y_hat
 
+
 class CoopLassoCV(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
@@ -430,6 +431,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     >>> model.coef_ # q_targets x p_features
     >>> y_pred = model.predict(x) # n_samples x q_targets
     """
+
     def __init__(
         self, *, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state=None
     ):
@@ -470,13 +472,14 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         self.min_: list
         self.model_: CoopLasso
         self.coef_: np.ndarray
+
     def fit(
         self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
     ) -> "CoopLassoCV":
         # pylint: disable=invalid-name
         """
         Fit CoopLassoCV
-        
+
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
@@ -487,7 +490,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
             logical vector or matrix
             indicating primary (1, True) and auxiliary features (0, False)
             for all targets or each target
-          
+
         Returns
         -------
         self : CoopLassoCV
@@ -563,7 +566,9 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
             newx_scale = newxx * self.model_.weight_[i]
             id_min = self.min_[i]
             beta = self.model_.model_[i][1][:, id_min]
+            # fmt: off
             y_hat[:, i] = (newx_scale @ beta) * self.model_.sd_y_[i] + self.model_.mu_y_[i]
+            # fmt: on
         if self.q_ == 1:
             return y_hat.ravel()
         return y_hat

@@ -104,9 +104,11 @@ for i, _ in enumerate(grid):
         if np.sum(coef[j]) == 0:
             precision[i, j] = np.nan
         else:
+            # fmt: off
             precision[i, j] = (
                 np.sum((beta.T != 0) & (coef[j] != 0))/np.sum(coef[j] != 0)
             )
+            # fmt: on
         prederror[i, j] = mean_squared_error(
             y_test, pred[j], multioutput="uniform_average"
         )

@@ -19,6 +19,7 @@ from docrep import DocstringProcessor
 docstrings = DocstringProcessor()
 # docstrings['parameters'] = """x"""
 
+
 @docstrings.get_sections(base="simulate", sections=["Parameters"])  # pylint: disable=no-value-for-parameter
 @docstrings.dedent
 def simulate(
@@ -162,6 +163,7 @@ def _simulate_effects(
     -------
     beta : ndarray of shape (p_features, q_targets)
     """
+    # fmt: off
     beta_com = (
         np.random.binomial(n=1, p=prob_com, size=p) *
         np.abs(np.random.normal(size=p))
@@ -170,6 +172,7 @@ def _simulate_effects(
         np.random.binomial(n=1, p=prob_sep, size=p * q).reshape(p, q) *
         np.abs(np.random.normal(size=p * q)).reshape(p, q)
     )
+    # fmt: on
     beta = beta_com[:, np.newaxis] + beta_sep
     return beta
 
@@ -200,6 +203,6 @@ def _simulate_targets(*, n: int, q: int, x: np.ndarray, beta: np.ndarray):
         eta = np.full((n, q), np.nan)
         for k in range(q):
             eta[:, k] = x[:, :, k] @ beta[:, k]
-    noise_sd = 0.5 * np.std(eta, axis = 0)
-    y = eta + np.random.normal(size = eta.shape, scale = noise_sd)
+    noise_sd = 0.5 * np.std(eta, axis=0)
+    y = eta + np.random.normal(size=eta.shape, scale=noise_sd)
     return y
