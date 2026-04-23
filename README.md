@@ -31,7 +31,7 @@ model.fit(X_train, y_train)
 model.predict(y_test)
 ```
 
-The [vignette](scripts/vignette.qmd) contains further examples on multi-task regression with a common feature matrix, multi-task regression with specific feature matrices, and multi-task regression with privileged information.
+The [vignette](scripts/vignette.py) contains further examples on multi-task regression with a common feature matrix, multi-task regression with specific feature matrices, and multi-task regression with privileged information. This respository also contain the scripts for a [simulation](scripts/simulation.py) and an [application](scripts/application.py).
 
 ## Reference
 
