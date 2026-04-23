@@ -164,13 +164,19 @@ def _validate_test_data(self, *, X: np.ndarray) -> np.ndarray:
     """
     Validate testing data X is a matrix or array
     """
-    # Z = _format_mask(self,Z=self.Z)
+    Z = _format_mask(self, Z=self.z_)
     if isinstance(X, np.ndarray) and X.ndim == 3:
+        if X.shape[1] == Z.shape[0] and X.shape[2] == Z.shape[1]:
+            X = X.copy() 
+            X[:, Z==0] = 0
         check_array(X, allow_nd=True, dtype="numeric")
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
                 f"Expected {self.n_features_in_} but received {X.shape[1]} features"
             )
     else:
+        if isinstance(X, np.ndarray) and X.ndim == 2 and X.shape[1] == Z.shape[0]:
+            X = X.copy() 
+            X[:, Z.sum(axis=1) == 0] = 0
         X = validate_data(self, X=X, reset=False, dtype="numeric")
     return X

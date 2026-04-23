@@ -123,21 +123,34 @@ def test_interpolation(data):
 def test_privileged_information(data):
     # pylint: disable=redefined-outer-name
     """CoopLassoCV estimates no coefficients for auxiliary variables"""
-    x_train, y_train, _, _, _ = data
+    x_train, y_train, x_test, _, _ = data
     p = x_train.shape[1]
     q = y_train.shape[1]
     z = np.random.binomial(n=1, p=0.5, size=p)
     model = CoopLassoCV(random_state=1)
     model.fit(X=x_train, y=y_train, Z=z)
     beta_hat = model.coef_[:, z == 0]
+    y_hat0 = model.predict(X=x_test)
+    xx_test = x_test.copy()
+    xx_test[:,z==0] = np.nan
+    y_hat1 = model.predict(X=xx_test)
     assert np.count_nonzero(beta_hat) == 0, "LUPI works under matrix y and vector z"
+    assert np.allclose(y_hat0,y_hat1), "LUPI works under matrix y and vector z"
     model.fit(X=x_train, y=y_train[:, 0], Z=z)
     beta_hat = model.coef_[:, z == 0]
+    y_hat0 = model.predict(X=x_test)
+    y_hat1 = model.predict(X=xx_test)
     assert np.count_nonzero(beta_hat) == 0, "LUPI works under vectors y and z"
+    assert np.allclose(y_hat0,y_hat1), "LUPI works under vectors y and z"
     z = np.random.binomial(n=1, p=0.5, size=(p, q))
     model.fit(X=x_train, y=y_train, Z=z)
     beta_hat = model.coef_[z.T == 0]
+    y_hat0 = model.predict(X=x_test)
+    xx_test = x_test.copy()
+    xx_test[:, z.sum(axis=1) == 0] = np.nan
+    y_hat1 = model.predict(X=xx_test)
     assert np.count_nonzero(beta_hat) == 0, "LUPI works under matrices y and z"
+    assert np.allclose(y_hat0,y_hat1), "LUPI works under matrices y and z"
 
 
 def test_weight_calculation(data):

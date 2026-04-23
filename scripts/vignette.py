@@ -52,5 +52,5 @@ np.all(beta_hat[z == 0, :] == 0)  # no selection
 
 # And their values in the test data therefore have no impact on predictions:
 x_test_new = x_test
-x_test_new[:, z == 0] = np.nan # np.random.normal(size=(x_test.shape[0], np.sum(z == 0)))
+x_test_new[:, z == 0] =  np.nan
 np.all(y_hat == model.predict(x_test_new))  # no impact
