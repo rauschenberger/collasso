@@ -27,7 +27,7 @@ def simulate(
     n0: int = 100,
     n1: int = 10000,
     p: int = 200,
-    q: int = 10,
+    q: int = 3,
     rho: float = 0.90,
     kappa: float = 1.00,
     prob_com: float = 0.05,
