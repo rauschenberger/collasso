@@ -8,6 +8,8 @@
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
 ![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
 
+![collasso-logo](collasso-logo.png)
+
 # Sparse Linear Multi-Task Regression
 
 The Python package `collasso` implements "Sparse linear multi-task regression with correlation-based information sharing". Please find the documentation on the [website](https://rauschenberger.github.io/collasso/). This personal GitHub repository is mirrored at two institutional GitLab instances (see [LIH](https://git.lih.lu/arauschenberger/collasso) and [LCSB](https://gitlab.com/uniluxembourg/Personalfolders/armin.rauschenberger/collasso)).

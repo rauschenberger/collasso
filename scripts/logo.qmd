@@ -1,0 +1,32 @@
+---
+title: "Logo"
+author: "Armin Rauschenberger"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r,eval=FALSE}
+grDevices::png(filename="collasso-logo.png",width=1000,height=200)
+
+letters <- strsplit(x="collasso",split="")[[1]]
+length <- ifelse(letters=="l",0.5,1)
+pos_x <- cumsum(length)
+drop <- rep(x=c(0,-0.01,-0.015),times=c(length(letters)-2,1,1))
+pos_y <- cumsum(drop)
+gradient <- grDevices::colorRampPalette(c("#29ABE2", "#F7931E"))
+colour <- gradient(n=length(letters))
+
+graphics::par(mar=c(0,0,0,0))
+graphics::plot.new()
+xlim <- c(0,max(position))
+ylim <- range(pos_y)+c(-1,1)*1.5*diff(range(pos_y))
+graphics::plot.window(xlim=xlim,ylim=ylim)
+for(i in seq_along(letters)){
+  graphics::text(x=pos_x[i],y=pos_y[i],labels=letters[i],cex=20,pos=2,col=colour[i],font=2)  
+}
+
+grDevices::dev.off()
+```
+
