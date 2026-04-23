@@ -8,19 +8,22 @@ editor_options:
 
 
 ```{r,eval=FALSE}
+rm(list=ls())
+
 grDevices::png(filename="collasso-logo.png",width=1000,height=200)
 
 letters <- strsplit(x="collasso",split="")[[1]]
 length <- ifelse(letters=="l",0.5,1)
 pos_x <- cumsum(length)
-drop <- rep(x=c(0,-0.01,-0.015),times=c(length(letters)-2,1,1))
-pos_y <- cumsum(drop)
+#drop <- rep(x=c(0,-0.01,-0.015),times=c(length(letters)-2,1,1))
+#pos_y <- cumsum(drop)
+pos_y <- (4-pos_x)^2
 gradient <- grDevices::colorRampPalette(c("#29ABE2", "#F7931E"))
 colour <- gradient(n=length(letters))
 
 graphics::par(mar=c(0,0,0,0))
 graphics::plot.new()
-xlim <- c(0,max(position))
+xlim <- c(0,max(pos_x))
 ylim <- range(pos_y)+c(-1,1)*1.5*diff(range(pos_y))
 graphics::plot.window(xlim=xlim,ylim=ylim)
 for(i in seq_along(letters)){
