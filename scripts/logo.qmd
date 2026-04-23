@@ -20,14 +20,15 @@ pos_x <- cumsum(length)
 pos_y <- (4-pos_x)^2
 gradient <- grDevices::colorRampPalette(c("#29ABE2", "#F7931E"))
 colour <- gradient(n=length(letters))
+angle <- 5*(pos_x-3)
 
 graphics::par(mar=c(0,0,0,0))
 graphics::plot.new()
-xlim <- c(0,max(pos_x))
-ylim <- range(pos_y)+c(-1,1)*1.5*diff(range(pos_y))
+xlim <- c(0,max(pos_x)) # +c(-1,1)*0.2*diff(range(pos_x)) 
+ylim <- range(pos_y)+c(-1,1)*2*diff(range(pos_y))
 graphics::plot.window(xlim=xlim,ylim=ylim)
 for(i in seq_along(letters)){
-  graphics::text(x=pos_x[i],y=pos_y[i],labels=letters[i],cex=20,pos=2,col=colour[i],font=2)  
+  graphics::text(x=pos_x[i],y=pos_y[i],labels=letters[i],cex=20,pos=2,col=colour[i],font=2) #,srt=angle[i]  
 }
 
 grDevices::dev.off()

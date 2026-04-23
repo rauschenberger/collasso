@@ -8,7 +8,8 @@
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
 ![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
 
-<img src="collasso-logo.png" alt="collasso-logo" style="width:25%; height:auto;">
+<img src="collasso-logo.png" alt="collasso-logo"
+     style="display:block; margin:auto; width:25%; height:auto;">
 
 # Sparse Linear Multi-Task Regression
 
