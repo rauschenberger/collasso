@@ -27,6 +27,7 @@ from sklearn.utils.validation import check_is_fitted
 from collasso._helpers import (
     _check_dims,
     _spearmanr,
+    _format_mask,
     _validate_train_data,
     _validate_test_data,
 )
@@ -263,10 +264,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         check_array(array=y, dtype="numeric")
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
-        if Z is None:
-            Z = np.full((self.p_, self.q_), 1)
-        elif Z.ndim == 1:
-            Z = np.broadcast_to(Z[:, None], (self.p_, self.q_))
+        Z = _format_mask(self,Z=Z)
         self.mu_y_ = np.mean(y, axis=0)
         self.sd_y_ = np.std(y, axis=0)
         y = (y - self.mu_y_) / self.sd_y_
@@ -472,6 +470,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         self.min_: list
         self.model_: CoopLasso
         self.coef_: np.ndarray
+        self.z_: np.ndarray|None
 
     def fit(
         self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
@@ -499,6 +498,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         X, y = _validate_train_data(self=self, X=X, y=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
+        self.z_ = Z
         self.model_ = CoopLasso(
             l1_ratio=self.l1_ratio,
             n_alphas=self.n_alphas,

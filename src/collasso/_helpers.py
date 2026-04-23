@@ -150,11 +150,21 @@ def _validate_train_data(
             y = y.reshape(-1, 1)
     return X, y
 
+def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
+    """
+    Transform Z to p x q matrix
+    """
+    if Z is None:
+        Z = np.full((self.p_, self.q_), 1)
+    elif Z.ndim == 1:
+        Z = np.broadcast_to(Z[:, None], (self.p_, self.q_))
+    return Z
 
 def _validate_test_data(self, *, X: np.ndarray) -> np.ndarray:
     """
     Validate testing data X is a matrix or array
     """
+    # Z = _format_mask(self,Z=self.Z)
     if isinstance(X, np.ndarray) and X.ndim == 3:
         check_array(X, allow_nd=True, dtype="numeric")
         if X.shape[1] != self.n_features_in_:

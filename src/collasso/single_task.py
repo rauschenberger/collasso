@@ -21,7 +21,12 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LassoCV
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
-from collasso._helpers import _check_dims, _validate_train_data, _validate_test_data
+from collasso._helpers import (
+    _check_dims,
+    _format_mask,
+    _validate_train_data,
+    _validate_test_data,
+)
 
 
 class IndepLassoCV(RegressorMixin, BaseEstimator):
@@ -64,8 +69,9 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         self.n_features_in_: int
         self.model_: list
         self.coef_: np.ndarray
+        self.z_: np.ndarray
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> "IndepLassoCV":
+    def fit(self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None) -> "IndepLassoCV":
         # pylint: disable=invalid-name
         """
         Fit IndepLassoCV
@@ -77,6 +83,11 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
             a separate feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
             target matrix
+        Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
+            logical vector or matrix
+            indicating primary (1, True)
+            and auxiliary features (0, False)
+            for all targets together or each target separately
 
         Returns
         -------
@@ -87,15 +98,22 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         X, y = _validate_train_data(self=self, X=X, y=y)
         check_array(array=X, allow_nd=True, dtype="numeric")
         check_array(array=y, dtype="numeric")
-        if X.ndim == 2:
-            X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
-        self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=None)
+        #if X.ndim == 2:
+        #    X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
+        self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
+        self.z_ = _format_mask(self,Z=Z)
         self.model_ = []
         self.coef_ = np.full((self.q_, self.p_), np.nan)
+        xx = np.empty(0)
+        if X.ndim == 2:
+            xx = X.copy()
         for i in range(self.q_):
+            if X.ndim == 3:
+                xx = X[:, :, i].copy()
+            xx[:, self.z_[:, i] == 0] = 0
             model = LassoCV(alphas=self.alphas, cv=self.cv)
-            model.fit(X[:, :, i], y[:, i])
+            model.fit(xx, y[:, i])
             self.model_.append(model)
             self.coef_[i, :] = model.coef_
         return self
