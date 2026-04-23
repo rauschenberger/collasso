@@ -12,7 +12,7 @@
 
 # Sparse Linear Multi-Task Regression
 
-The Python package `collasso` implements "Sparse linear multi-task regression with correlation-based information sharing". Please find the documentation on the [website](https://rauschenberger.github.io/collasso/). This personal GitHub repository is mirrored at two institutional GitLab instances (see [LIH](https://git.lih.lu/arauschenberger/collasso) and [LCSB](https://gitlab.com/uniluxembourg/Personalfolders/armin.rauschenberger/collasso)).
+The Python package `collasso` implements sparse linear multi-task regression. In contrast to ``MultiTaskLassoCV`` from ``scikit-learn``, it supports target-specific feature selection, target-specific feature matrices, and privileged information. Please find the documentation on the [website](https://rauschenberger.github.io/collasso/). This personal GitHub repository is mirrored at two institutional GitLab instances (see [LIH](https://git.lih.lu/arauschenberger/collasso) and [LCSB](https://gitlab.com/uniluxembourg/Personalfolders/armin.rauschenberger/collasso)).
 
 ## Usage
 
@@ -31,6 +31,8 @@ model.fit(X_train, y_train)
 model.predict(y_test)
 ```
 
+The [vignette](scripts/vignette.qmd) contains further examples on multi-task regression with a common feature matrix, multi-task regression with specific feature matrices, and multi-task regression with privileged information.
+
 ## Reference
 
 Armin Rauschenberger
@@ -45,6 +47,6 @@ Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used f
 
 ## Disclaimer
 
-The Python package `collasso` implements sparse linear multi-task regression with correlation-based information sharing (*Rauschenberger*, 2026).
+The Python package `collasso` implements sparse linear multi-task regression (*Rauschenberger*, 2026).
 
 **Copyright** &copy; 2026 Armin Rauschenberger; Luxembourg Institute of Health (LIH), Department of Medical Informatics (DMI), Bioinformatics and Artificial Intelligence (BioAI); University of Luxembourg, Luxembourg Centre for Systems Biomedicine (LCSB), Biomedical Data Science (BDS). **All Rights Reserved.** (NB: The Python package will have an open-source license at a later stage.)
