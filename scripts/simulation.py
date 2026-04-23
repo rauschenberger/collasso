@@ -3,7 +3,6 @@ Simulation
 
 This script performs a simulation study to compare the selection performance
 and the predictive performance between different methods.
-
 """
 
 from itertools import product
@@ -32,6 +31,7 @@ for i, _ in enumerate(grid):
     # Try with common feature matrix (kappa=1)
     # and with separate feature matrices (0<=kappa<1).
     kappa = 0.5
+    theta = 1.0
     x_train, y_train, x_test, y_test, beta = simulate(
         rho=grid[i, 0],
         prob_com=grid[i, 1],
@@ -44,22 +44,28 @@ for i, _ in enumerate(grid):
         x_test_scaled = scaler.transform(x_test)
     else:
         x_train_scaled = x_train * np.nan
+        x_test_scaled = x_test * np.nan
         for k in range(x_train.shape[2]):
             scaler = StandardScaler()
             x_train_scaled[:, :, k] = scaler.fit_transform(x_train[:, :, k])
             x_test_scaled[:, :, k] = scaler.transform(x_test[:, :, k])
+    # privileged information (1=primary, 0=auxiliary)
+    z = np.random.binomial(n=1, p=theta, size=x_test.shape[1])
+    x_test_scaled[:,z==0] = 0
     # prediction by the mean
     coef_mean = np.zeros((y_train.shape[1], x_train.shape[1]))
     pred_mean = np.tile(np.mean(y_train, axis=0), (y_test.shape[0], 1))
     # separate lasso regressions (common or specific X)
     model_single = IndepLassoCV(alphas=100, cv=5)
-    model_single.fit(X=x_train_scaled, y=y_train)
+    model_single.fit(X=x_train_scaled, y=y_train, Z=z)
     coef_single = model_single.coef_
     pred_single = model_single.predict(X=x_test_scaled)
     # multi-task lasso regression (only if common X)
     if kappa == 1:
         model_multi = MultiTaskLassoCV(alphas=100, cv=5)
-        model_multi.fit(X=x_train_scaled, y=y_train)
+        x_train_scaled_temp = x_train_scaled
+        x_train_scaled_temp[:,z==0] = 0
+        model_multi.fit(X=x_train_scaled_temp, y=y_train)
         coef_multi = model_multi.coef_
         pred_multi = model_multi.predict(X=x_test_scaled)
     else:
@@ -67,7 +73,7 @@ for i, _ in enumerate(grid):
         pred_multi = np.full((y_test.shape[0], y_test.shape[1]), np.nan)
     # cooperative lasso regression (common or specific X)
     model_coop = CoopLassoCV(n_alphas=100, cv=5, l1_ratio=0.5)
-    model_coop.fit(X=x_train_scaled, y=y_train)
+    model_coop.fit(X=x_train_scaled, y=y_train, Z=z)
     coef_coop = model_coop.coef_
     pred_coop = model_coop.predict(X=x_test_scaled)
 
