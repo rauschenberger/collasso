@@ -1,3 +1,11 @@
+"""
+Vignette
+
+This script illustrates sparse linear multi-task regression
+with a common feature matrix, with specific feature matrices,
+and with privileged information.
+"""
+
 
 # --- initialisation ---
 
