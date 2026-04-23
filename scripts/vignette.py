@@ -32,11 +32,13 @@ x_train, y_train, x_test, y_test, beta = simulate()
 
 model = CoopLassoCV()
 model.fit(X=x_train, y=y_train)
-beta_hat = model.coef_.T  # estimated regression coefficients (p x q matrix)
-y_hat = model.predict(X=x_test) # out-of-sample predicted values (n x q matrix)
 
-mean_squared_error(y_true=y_test, y_pred=y_hat)
+beta_hat = model.coef_.T  # estimated regression coefficients (p x q matrix)
 precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
+
+y_hat = model.predict(X=x_test) # out-of-sample predicted values (n x q matrix)
+mean_squared_error(y_true=y_test, y_pred=y_hat)
+
 
 
 # --- multi-task regression with specific feature matrices ---
@@ -50,11 +52,12 @@ x_train, y_train, x_test, y_test, beta = simulate(kappa=0.5)
 model = CoopLassoCV()
 model.fit(X=x_train, y=y_train)
 
-y_hat = model.predict(X=x_test)
 beta_hat = model.coef_.T
-
-mean_squared_error(y_true=y_test, y_pred=y_hat)
 precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
+
+y_hat = model.predict(X=x_test)
+mean_squared_error(y_true=y_test, y_pred=y_hat)
+
 
 
 # --- multi-task regression with privileged information ---
