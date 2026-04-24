@@ -445,7 +445,13 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     """
 
     def __init__(
-        self, *, cv=10, n_alphas=100, l1_ratio=0.5, exp_y=1, exp_x=1, random_state=None
+        self, *,
+        cv: int = 10,
+        n_alphas: int= 100,
+        l1_ratio: float = 0.5,
+        exp_y: float = 1,
+        exp_x: float = 1,
+        random_state: int|None = None
     ):
         # pylint: disable=too-many-arguments
         """

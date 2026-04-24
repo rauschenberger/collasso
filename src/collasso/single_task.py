@@ -63,7 +63,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         to improve selection and prediction.
     """
 
-    def __init__(self, *, cv=10, alphas=100):
+    def __init__(self, *, cv: int = 10, alphas: int = 100):
         """
         Parameters
         ----------

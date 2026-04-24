@@ -73,11 +73,14 @@ mean_squared_error(y_true=y_test, y_pred=y_hat)
 
 x_train, y_train, x_test, y_test, beta = simulate()
 
-# option 1: vector
+# Allow the model to select from the same set of features for all targets:
 z = np.zeros(x_train.shape[1])
 z[0:100] = 1
+# Here, all targets have the same
+# primary features (x_1,...,x_100)
+# and auxiliary features (x_101,...,x_200).
 
-# option 2: matrix
+# Allow the model to select from a different set of features for each target:
 z = np.zeros((x_train.shape[1],y_train.shape[1]))
 z[0:100,0] = 1
 z[100:150,1] = 1

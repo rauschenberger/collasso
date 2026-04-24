@@ -30,6 +30,9 @@ addopts = "--doctest-modules"
 [tool.poe.tasks]
 docs = "pdoc --docformat numpy src/functions.py -o docs/"
 
+#[tool.mypy]
+#check_untyped_defs = true
+
 [[tool.mypy.overrides]]
 module = ["sklearn.*", "openml.*", "docrep"]
 ignore_missing_imports = true
@@ -38,3 +41,9 @@ ignore_missing_imports = true
 exclude_also = [
   "raise ValueError",
 ]
+
+[tool.pydoclint]
+style = "numpy"
+arg-type-hints-in-docstring = false
+check-return-types = false
+check-class-attributes = false
