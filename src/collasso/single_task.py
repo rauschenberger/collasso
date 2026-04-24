@@ -37,6 +37,9 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     Fits single-task lasso regression separately to multiple targets,
     optimising the regularisation parameters by cross-validation.
 
+    This is a convencience class with the same inputs and outputs as
+    CoopLassoCV (but without sharing information among targets or features).
+
     Attributes
     ----------
     n_ : int
@@ -88,6 +91,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
             indicating primary (1, True)
             and auxiliary features (0, False)
             for all targets together or each target separately
+            (NB: auxiliary features are simply excluded)
 
         Returns
         -------
