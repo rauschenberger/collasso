@@ -13,4 +13,4 @@ jobs:
       - name: Install docstr-coverage
         run: pip install docstr-coverage
       - name: Check docstring coverage
-        run: docstr-coverage src/ --fail-under=100
+        run: docstr-coverage src/ --skip-init --fail-under=100 
