@@ -28,6 +28,13 @@ def _check_dims(
     # pylint: disable=invalid-name
     """
     Check dimensionality of inputs
+    
+    This functions checks whether the feature matrix X,
+    the target vector or target matrix Y,
+    and the indicator vector or matrix Z (if provided)
+    are compatible.
+    If this is the case,
+    it returns the number of samples, features and targets.
 
     Parameters
     ----------
@@ -101,7 +108,9 @@ def _spearmanr(x: np.ndarray) -> np.ndarray:
     """
     Spearman correlation coefficients
 
-    Returns a matrix also in degenerate cases (one or two features).
+    Returns a correlation matrix also in degenerate cases (one or two features).
+    The standard implementation ``scipy.stats.spearmanr``
+    requires at least two features and returns a scalar for two features.
     """
     if x.shape[1] == 1:
         cor = np.ones((1, 1))
@@ -117,6 +126,10 @@ def _validate_train_data(
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Validate training data when y is a vector or matrix and X is a matrix or array
+    
+    This function is necessary for compatibility with ``scikit-learn``
+    because the function ``sklearn.utils.validation.validate_data``
+    does not accept a three-dimensional feature array.
     """
     if y is None:
         raise ValueError(
@@ -153,6 +166,9 @@ def _validate_train_data(
 def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
     """
     Transform Z to p x q matrix
+    
+    This function replaces Z=None by a matrix filled with 1,
+    and a vector Z by a matrix with identical columns (one for each target).
     """
     if Z is None:
         Z = np.full((self.p_, self.q_), 1)
@@ -163,6 +179,11 @@ def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
 def _validate_test_data(self, *, X: np.ndarray) -> np.ndarray:
     """
     Validate testing data X is a matrix or array
+    
+    This function is necessary for compatibility with ``scikit-learn``
+    because the function ``sklearn.utils.validation.validate_data``
+    accept neither missing values in auxiliary features
+    nor a three-dimensional feature array.
     """
     z = _format_mask(self, Z=self.z_)
     if isinstance(X, np.ndarray) and X.ndim == 3:

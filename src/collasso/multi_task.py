@@ -189,6 +189,11 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         fitted by sklearn.linear_model.lasso_path
         with concatenated identity and inverse of feature matrix (X,-X)
         and non-negativity constraint (positive=True)
+        
+    See also
+    --------
+    ``CoopLassoCV`` : Optimises the regularisation parameter
+        of cooperative multi-task lasso regression by cross-validation.
     """
 
     _EPS = 1e-09
@@ -418,6 +423,15 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         indices of regularisation parameters corresponding to the lowest mean squared error
     coef_ : ndarray of shape (q_targets, p_features)
         estimated effects (of the feature in the column on the target in the row)
+
+    See also
+    --------
+    ``IndepLassoCV`` : A convenience class using the same interface as ``CoopLassoCV``
+        (similarly formatted inputs and outputs)
+        without sharing information among targets or features.
+    ``CoopLasso`` : A class without cross-validation returning the lasso solution path.
+        This is repeatedly called by ``CoopLassoCV``
+        (once in each cross-validation iteration and once for the full dataset).
 
     Examples
     --------

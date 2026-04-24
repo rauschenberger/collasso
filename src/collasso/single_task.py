@@ -37,8 +37,8 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     Fits single-task lasso regression separately to multiple targets,
     optimising the regularisation parameters by cross-validation.
 
-    This is a convencience class with the same inputs and outputs as
-    CoopLassoCV (but without sharing information among targets or features).
+    This is a convencience class with the interface as
+    ``CoopLassoCV`` (but without sharing information among targets or features).
 
     Attributes
     ----------
@@ -53,6 +53,14 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     coef_ : ndarray of shape (q_targets, p_features)
         estimated coefficients
         (of the feature in the column on the target in the row)
+        
+    See also
+    --------
+    ``CoopLassoCV`` : The main class of this package.
+        It uses the same interface as ``IndepLassoCV``
+        (similarly formatted inputs and outputs)
+        but shares information among targets and features
+        to improve selection and prediction.
     """
 
     def __init__(self, *, cv=10, alphas=100):
