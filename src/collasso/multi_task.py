@@ -61,9 +61,9 @@ from collasso._helpers import (
 
 def _calc_cor(*, x: np.ndarray, q: int) -> list[np.ndarray]:
     """
-    Feature correlation per target
+    Feature correlation per target.
 
-    Calculates the Spearman correlation matrix between features for each target
+    Calculates the Spearman correlation matrix between features for each target.
     """
     if x.ndim == 2:
         cor = _spearmanr(x)
@@ -110,7 +110,7 @@ def _calc_weights_fast(
     exp_x: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Adaptive weights
+    Adaptive weights.
 
     Calculates adaptive weights to share information
     on feature-target effects
@@ -179,36 +179,37 @@ class CoopLasso(RegressorMixin, BaseEstimator):
     Parameters
         ----------
     n_alphas : int, default=100
-        number of candidate values for the regularisation parameter in the final regressions
+        Number of candidate values for the regularisation parameter
+        in the final regressions.
     l1_ratio : float, default=0.5
-        elastic net mixing parameter for the initial regressions,
+        Elastic net mixing parameter for the initial regressions,
         with `0<=l1_ratio<=1`,
         where `l1_ratio=0` leads to L2 (ridge)
-        and `l1_ratio=1` leads to L1 (lasso) penalisation
+        and `l1_ratio=1` leads to L1 (lasso) penalisation.
     alpha_init : ndarray of shape (q_targets,) or None, default=None
-        regularisation parameters for the initial regressions,
+        Regularisation parameters for the initial regressions,
         one non-negative number for each target
-        (if `None`: optimisation by cross-validation)
+        (if `None`: optimisation by cross-validation).
     exp_y : float, default=1.0
-        non-negative number for exponentiating
-        the target-target correlation coefficients
+        Non-negative number for exponentiating
+        the target-target correlation coefficients.
     exp_x : float, default=1.0
-        non-negative number for exponentiating
-        the feature-feature correlation coefficients
+        Non-negative number for exponentiating
+        the feature-feature correlation coefficients.
 
     Attributes
     ----------
     n_ : int
-        number of training samples
+        Number of training samples.
     p_ : int
-        number of features
+        Number of features.
     q_ : int
-        number of targets
+        Number of targets.
     model_ : list
-        list of `q_targets` models (one for each target)
+        List of `q_targets` models (one for each target)
         fitted by sklearn.linear_model.lasso_path
         with concatenated identity and inverse of feature matrix (X,-X)
-        and non-negativity constraint (positive=True)
+        and non-negativity constraint (positive=True).
         
     See Also
     --------
@@ -248,20 +249,21 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets or a specific feature matrix for each target
+            Common feature matrix for all targets
+            or a specific feature matrix for each target.
         y : ndarray of shape (n_samples, q_targets)
-            target matrix
+            Target matrix.
         Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
-            logical vector or matrix
+            Logical vector or matrix
             indicating primary (1, True)
             and auxiliary features (0, False)
-            for all targets together or each target separately
+            for all targets together or each target separately.
 
         Returns
         -------
 
         self: CoopLasso
-            fitted model
+            Fitted models.
         """
         if y.ndim == 1:
             y = y.reshape(-1, 1)
@@ -358,16 +360,16 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets,
-            or a specificfeature matrix for each target
-        alpha : list of length q_targets or None, default=None
+            Common feature matrix for all targets,
+            or a specificfeature matrix for each target.
+        alpha : List of length q_targets or None, default=None
             one ndarray of non-negative regularisation parameters for each target;
-            if None, predictions are returned for the fitted path
+            if None, predictions are returned for the fitted path.
 
         Returns
         -------
         y_hat : list of length q_targets
-            one ndarray of shape (n_samples, n_alphas) for each target
+            One ndarray of shape (n_samples, n_alphas) for each target.
         """
         check_is_fitted(self, attributes=["model_"])
         check_array(X, allow_nd=True, dtype="numeric")
@@ -408,41 +410,43 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     Parameters
     ----------
     cv : int, default=10
-        number of cross-validation folds
+        Number of cross-validation folds.
     n_alphas : int, default=100
-        number of candidate values for the regularisation parameter in the final regressions
+        Number of candidate values for the regularisation parameter
+        in the final regressions.
     l1_ratio : float, default=0.5
-        elastic net mixing parameter for the initial regressions,
+        Elastic net mixing parameter for the initial regressions,
         with `0<=l1_ratio<=1`,
         where `l1_ratio=0` leads to L2 (ridge)
-        and `l1_ratio=1` leads to L1 (lasso) penalisation
+        and `l1_ratio=1` leads to L1 (lasso) penalisation.
     exp_y : float, default=1.0
-        non-negative number for exponentiating
-        the target-target correlation coefficients
+        Non-negative number for exponentiating
+        the target-target correlation coefficients.
     exp_x : float, default=1.0
-        non-negative number for exponentiating
-        the feature-feature correlation coefficients
+        Non-negative number for exponentiating
+        the feature-feature correlation coefficients.
     random_state : int or None, default=None
-        random seed for generating reproducible cross-validation folds
+        Random seed for generating reproducible cross-validation folds.
 
     Attributes
     ----------
     n_ : int
-        number of training samples
+        Number of training samples.
     p_ : int
-        number of features
+        Number of features.
     q_ : int
-        number of targets
+        Number of targets.
     model_ : list of length q_targets
-        fitted models from CoopLasso
-    alpha_ : list of length q_targets
-        ndarray of regularisation parameters
-    mse_ : list of length q_targets
-        ndarray of cross-validated mean squared error for each value of alpha
-    min_ : list of length q_targets
-        indices of regularisation parameters corresponding to the lowest mean squared error
+        Fitted models from ``CoopLasso``.
+    alpha_ : list length q_targets of ndarrays
+        Sequence of regularisation parameters.
+    mse_ : list of length q_targets of ndarrays
+        Cross-validated mean squared errors
+        for each value of alpha.
+    min_ : list of length q_targets of ndarrays
+        Indices of regularisation parameters corresponding to the lowest mean squared error.
     coef_ : ndarray of shape (q_targets, p_features)
-        estimated effects (of the feature in the column on the target in the row)
+        Estimated effects (of the feature in the column on the target in the row).
 
     See Also
     --------
@@ -567,13 +571,12 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets, or a specific feature matrix for each target
+            Common feature matrix for all targets, or a specific feature matrix for each target.
 
         Returns
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
-            matrix of predicted values (of the target in the column for the sample in the row)
-
+            Matrix of predicted values (of the target in the column for the sample in the row).
         """
         check_is_fitted(self, attributes=["coef_"])
         X = _validate_test_data(self=self, X=X)

@@ -32,7 +32,7 @@ from collasso._helpers import (
 class IndepLassoCV(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
-    Single-Task Lasso Regression For Multiple Targets
+    Single-Task Lasso Regression For Multiple Targets.
 
     Fits single-task lasso regression separately to multiple targets,
     optimising the regularisation parameters by cross-validation.
@@ -43,28 +43,28 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     Parameters
     ----------
     cv : int, default=10
-        number of cross-validation folds
+        Number of cross-validation folds.
     alphas : int, default=100
-        number of candidate values for the regularisation parameter
+        Number of candidate values for the regularisation parameter.
 
     Attributes
     ----------
     n_ : int
-        number of training samples
+        Number of training samples.
     p_ : int
-        number of features
+        Number of features.
     q_ : int
-        number of targets
+        Number of targets.
     model_ : list of length q_targets
-        fitted models from LassoCV (one for each target)
+        Fitted models from LassoCV (one for each target).
     coef_ : ndarray of shape (q_targets, p_features)
-        estimated coefficients
-        (of the feature in the column on the target in the row)
+        Estimated coefficients
+        (of the feature in the column on the target in the row).
         
     See Also
     --------
     CoopLassoCV
-      The main class of this package.
+        The main class of this package.
         It uses the same interface as ``IndepLassoCV``
         (similarly formatted inputs and outputs)
         but shares information among targets and features
@@ -85,27 +85,27 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     def fit(self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None) -> "IndepLassoCV":
         # pylint: disable=invalid-name
         """
-        Fit IndepLassoCV
+        Fit IndepLassoCV.
 
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets or
-            a separate feature matrix for each target
+            Common feature matrix for all targets or
+            a separate feature matrix for each target.
         y : ndarray of shape (n_samples, q_targets)
-            target matrix
+            Target matrix.
         Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
-            logical vector or matrix
-            indicating primary (1, True)
-            and auxiliary features (0, False)
+            Logical vector or matrix
+            indicating primary (1/True)
+            and auxiliary features (0/False)
             for all targets together or each target separately
-            (NB: auxiliary features are simply excluded)
+            (NB: auxiliary features are simply excluded).
 
         Returns
         -------
 
         self: IndepLassoCV
-            fitted model
+            Fitted models.
         """
         X, y = _validate_train_data(self=self, X=X, y=y)
         check_array(array=X, allow_nd=True, dtype="numeric")
@@ -138,13 +138,13 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets,
-            or a separate feature matrix for each target
+            Common feature matrix for all targets,
+            or a separate feature matrix for each target.
 
         Returns
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
-            matrix of predicted values
+            Matrix of predicted values.
         """
         check_is_fitted(self, attributes=["coef_"])
         X = _validate_test_data(self=self, X=X)
