@@ -73,8 +73,15 @@ mean_squared_error(y_true=y_test, y_pred=y_hat)
 
 x_train, y_train, x_test, y_test, beta = simulate()
 
-z = np.random.binomial(n=1, p=0.5, size=x_test.shape[1])
-z = np.random.binomial(n=1, p=0.5, size=(x_test.shape[1],y_test.shape[1]))
+# option 1: vector
+z = np.zeros(x_train.shape[1])
+z[0:100] = 1
+
+# option 2: matrix
+z = np.zeros((x_train.shape[1],y_train.shape[1]))
+z[0:100,0] = 1
+z[100:150,1] = 1
+z[150:200,2] = 1
 
 model = CoopLassoCV()
 model.fit(X=x_train, y=y_train, Z=z)
