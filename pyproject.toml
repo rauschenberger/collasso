@@ -37,6 +37,9 @@ docs = "pdoc --docformat numpy src/functions.py -o docs/"
 module = ["sklearn.*", "openml.*", "docrep"]
 ignore_missing_imports = true
 
+[tool.docstr-coverage]
+skip_init = true
+
 [tool.coverage.report]
 exclude_also = [
   "raise ValueError",
@@ -44,6 +47,6 @@ exclude_also = [
 
 [tool.pydoclint]
 style = "numpy"
-arg-type-hints-in-docstring = false
+arg-type-hints-in-docstring = true
 check-return-types = false
 check-class-attributes = false

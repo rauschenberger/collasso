@@ -172,9 +172,29 @@ def _calc_weights_fast(
 class CoopLasso(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
-    Cooperative Multi-Task Lasso Regression
+    Cooperative Multi-Task Lasso Regression.
 
-    Fits cooperative multi-task lasso regression
+    Fits cooperative multi-task lasso regression.
+
+    Parameters
+        ----------
+    n_alphas : int, default=100
+        number of candidate values for the regularisation parameter in the final regressions
+    l1_ratio : float, default=0.5
+        elastic net mixing parameter for the initial regressions,
+        with `0<=l1_ratio<=1`,
+        where `l1_ratio=0` leads to L2 (ridge)
+        and `l1_ratio=1` leads to L1 (lasso) penalisation
+    alpha_init : ndarray of shape (q_targets,) or None, default=None
+        regularisation parameters for the initial regressions,
+        one non-negative number for each target
+        (if `None`: optimisation by cross-validation)
+    exp_y : float, default=1.0
+        non-negative number for exponentiating
+        the target-target correlation coefficients
+    exp_x : float, default=1.0
+        non-negative number for exponentiating
+        the feature-feature correlation coefficients
 
     Attributes
     ----------
@@ -190,9 +210,10 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         with concatenated identity and inverse of feature matrix (X,-X)
         and non-negativity constraint (positive=True)
         
-    See also
+    See Also
     --------
-    ``CoopLassoCV`` : Optimises the regularisation parameter
+    CoopLassoCV
+        Optimises the regularisation parameter
         of cooperative multi-task lasso regression by cross-validation.
     """
 
@@ -202,27 +223,6 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         self, *, n_alphas=100, l1_ratio=0.5, alpha_init=None, exp_y=1, exp_x=1
     ):
         # pylint: disable=too-many-arguments
-        """
-        Parameters
-        ----------
-        n_alphas : int, default=100
-            number of candidate values for the regularisation parameter in the final regressions
-        l1_ratio : float, default=0.5
-            elastic net mixing parameter for the initial regressions,
-            with `0<=l1_ratio<=1`,
-            where `l1_ratio=0` leads to L2 (ridge)
-            and `l1_ratio=1` leads to L1 (lasso) penalisation
-        alpha_init : ndarray of shape (q_targets,) or None, default=None
-            regularisation parameters for the initial regressions,
-            one non-negative number for each target
-            (if `None`: optimisation by cross-validation)
-        exp_y : float, default=1.0
-            non-negative number for exponentiating
-            the target-target correlation coefficients
-        exp_x : float, default=1.0
-            non-negative number for exponentiating
-            the feature-feature correlation coefficients
-        """
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio
         self.alpha_init = alpha_init
@@ -400,10 +400,30 @@ class CoopLasso(RegressorMixin, BaseEstimator):
 class CoopLassoCV(RegressorMixin, BaseEstimator):
     # pylint: disable=too-many-instance-attributes
     """
-    Cross-Validated Cooperative Multi-Task Lasso Regression
+    Cross-Validated Cooperative Multi-Task Lasso Regression.
 
     Fits cooperative multi-task lasso regression,
     optimising the regularisation parameters by cross-validation.
+
+    Parameters
+    ----------
+    cv : int, default=10
+        number of cross-validation folds
+    n_alphas : int, default=100
+        number of candidate values for the regularisation parameter in the final regressions
+    l1_ratio : float, default=0.5
+        elastic net mixing parameter for the initial regressions,
+        with `0<=l1_ratio<=1`,
+        where `l1_ratio=0` leads to L2 (ridge)
+        and `l1_ratio=1` leads to L1 (lasso) penalisation
+    exp_y : float, default=1.0
+        non-negative number for exponentiating
+        the target-target correlation coefficients
+    exp_x : float, default=1.0
+        non-negative number for exponentiating
+        the feature-feature correlation coefficients
+    random_state : int or None, default=None
+        random seed for generating reproducible cross-validation folds
 
     Attributes
     ----------
@@ -424,12 +444,14 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     coef_ : ndarray of shape (q_targets, p_features)
         estimated effects (of the feature in the column on the target in the row)
 
-    See also
+    See Also
     --------
-    ``IndepLassoCV`` : A convenience class using the same interface as ``CoopLassoCV``
+    IndepLassoCV
+        A convenience class using the same interface as ``CoopLassoCV``
         (similarly formatted inputs and outputs)
         without sharing information among targets or features.
-    ``CoopLasso`` : A class without cross-validation returning the lasso solution path.
+    CoopLasso
+        A class without cross-validation returning the lasso solution path.
         This is repeatedly called by ``CoopLassoCV``
         (once in each cross-validation iteration and once for the full dataset).
 
@@ -454,27 +476,6 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         random_state: int|None = None
     ):
         # pylint: disable=too-many-arguments
-        """
-        Parameters
-        ----------
-        cv : int, default=10
-            number of cross-validation folds
-        n_alphas : int, default=100
-            number of candidate values for the regularisation parameter in the final regressions
-        l1_ratio : float, default=0.5
-            elastic net mixing parameter for the initial regressions,
-            with `0<=l1_ratio<=1`,
-            where `l1_ratio=0` leads to L2 (ridge)
-            and `l1_ratio=1` leads to L1 (lasso) penalisation
-        exp_y : float, default=1.0
-            non-negative number for exponentiating
-            the target-target correlation coefficients
-        exp_x : float, default=1.0
-            non-negative number for exponentiating
-            the feature-feature correlation coefficients
-        random_state : int or None, default=None
-            random seed for generating reproducible cross-validation folds
-        """
         self.cv = cv
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio

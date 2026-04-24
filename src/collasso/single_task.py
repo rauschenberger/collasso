@@ -40,6 +40,13 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     This is a convencience class with the interface as
     ``CoopLassoCV`` (but without sharing information among targets or features).
 
+    Parameters
+    ----------
+    cv : int, default=10
+        number of cross-validation folds
+    alphas : int, default=100
+        number of candidate values for the regularisation parameter
+
     Attributes
     ----------
     n_ : int
@@ -54,9 +61,10 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         estimated coefficients
         (of the feature in the column on the target in the row)
         
-    See also
+    See Also
     --------
-    ``CoopLassoCV`` : The main class of this package.
+    CoopLassoCV
+      The main class of this package.
         It uses the same interface as ``IndepLassoCV``
         (similarly formatted inputs and outputs)
         but shares information among targets and features
@@ -64,14 +72,6 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     """
 
     def __init__(self, *, cv: int = 10, alphas: int = 100):
-        """
-        Parameters
-        ----------
-        cv : int, default=10
-            number of cross-validation folds
-        alphas : int, default=100
-            number of candidate values for the regularisation parameter
-        """
         self.cv = cv
         self.alphas = alphas
         self.n_: int
