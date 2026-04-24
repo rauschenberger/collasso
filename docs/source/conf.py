@@ -1,4 +1,8 @@
-# sphinx - configuration file
+"""
+sphinx - configuration file
+"""
+# pylint: disable=invalid-name,redefined-builtin
+
 import sys
 import os
 

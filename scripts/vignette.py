@@ -84,9 +84,9 @@ beta_hat = model.coef_.T
 
 # Auxiliary features are not selected:
 if z.ndim==1:  # z = vector of shape (p_features,)
-  np.all(beta_hat[z == 0, :] == 0)
+    np.all(beta_hat[z == 0, :] == 0)
 else:  # z = matrix shape (p_features, q_targets)
-  np.all(beta_hat[z == 0] == 0)
+    np.all(beta_hat[z == 0] == 0)
 
 # And their values in the test data therefore have no impact on predictions:
 x_test_new = x_test
@@ -97,7 +97,8 @@ np.all(y_hat == model.predict(x_test_new))  # no impact
 
 # --- related Python packages ---
 
-# scikit-learn provides the classes MultiTaskLasso, MultiTaskLassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV
+# scikit-learn provides the classes MultiTaskLasso, MultiTaskLassoCV.
+# MultiTaskElasticNet, MultiTaskElasticNetCV
 # GitHub: https://github.com/scikit-learn/scikit-learn
 # PyPI: https://pypi.org/project/scikit-learn/
 # website: https://scikit-learn.org
@@ -114,4 +115,3 @@ np.all(y_hat == model.predict(x_test_new))  # no impact
 # if linear regression is used in the base and in the meta layer)
 # GitHub: https://github.com/hengzhe-zhang/Scikit-MTR
 # PyPI: https://pypi.org/project/scikit-MTR/
-
