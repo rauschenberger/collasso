@@ -35,7 +35,7 @@ def simulate(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     # pylint: disable=too-many-arguments,too-many-locals
     """
-    Simulate Data for Linear Multi-Task Regression
+    Simulate Data for Linear Multi-Task Regression.
 
     Simulates feature matrix and target matrix,
     with given probabilities of
@@ -45,21 +45,21 @@ def simulate(
     Parameters
     ----------
     n0 : int, default=100
-        number of training samples
+        Number of training samples.
     n1 : int, default=10000
-        number of testing samples
+        Number of testing samples.
     p : int, default=200
-        number of features
+        Number of features.
     q : int, default=10
-        number of targets
+        Number of targets.
     rho : float, default=0.90
-        correlation coefficient, `0<=rho<=1`
+        Correlation coefficient, `0<=rho<=1`.
     kappa : float, default=1.00
-        correlation coefficient, `0<=kappa<=1`
+        Correlation coefficient, `0<=kappa<=1`.
     prob_com : float, default=0.05
-        probability of common effects for all targets, 0<=prob_com<=1
+        Probability of common effects for all targets, 0<=prob_com<=1.
     prob_sep : float, default=0.05
-        probability of separate effects for each target
+        Probability of separate effects for each target.
 
     Raises
     ------
@@ -68,20 +68,20 @@ def simulate(
     Returns
     -------
     x_train : ndarray of shape (n0_samples,p_features) or (n0_samples,p_features,q_targets)
-        training feature matrix or matrices,
+        Training feature matrix or matrices,
         common matrix for all targets (if kappa=1)
-        or separate matrix for each target (if 0<=kappa<1)
+        or separate matrix for each target (if 0<=kappa<1).
     y_train : ndarray of shape (n0_samples,q_targets)
-        training target matrix
+        Training target matrix.
     x_test : ndarray of shape (n1_samples,p_features) or (n1_samples,p_features,q_targets)
-        test feature matrix or matrices,
+        Test feature matrix or matrices,
         common matrix for all targets (if kappa=1)
-        or separate matrix for each target (if 0<=kappa<1)
+        or separate matrix for each target (if 0<=kappa<1).
     y_test : ndarray of shape (n1_samples,q_targets)
-        test target matrix
+        Test target matrix.
     beta : ndarray of shape (p_features,q_targets)
-        true effects in the training and the test data
-        (of the feature in the row on the target in the column)
+        True effects in the training and the test data
+        (of the feature in the row on the target in the column).
     """
     if n0 < 10:
         raise ValueError(f"Use n0>=10 (not n0={n0})")
@@ -117,12 +117,12 @@ def _simulate_features(
     *, n: int, p: int, q: int, rho: float, kappa: float
 ) -> np.ndarray:
     """
-    Simulate Features
+    Simulate Features.
 
     Parameters
     ----------
     n : int
-        number of samples
+        Number of samples.
     %(simulate.parameters.p|q|rho|kappa)s
 
     Returns
@@ -153,7 +153,7 @@ def _simulate_effects(
     *, p: int, q: int, prob_com: float, prob_sep: float
 ) -> np.ndarray:
     """
-    Simulate Effects
+    Simulate Effects.
 
     Parameters
     ----------
@@ -187,10 +187,10 @@ def _simulate_targets(*, n: int, q: int, x: np.ndarray, beta: np.ndarray):
 
     Parameters
     ----------
-    x : np.ndarray of shape (n_samples,p_features) or (n_samples,p_features,q_targets)
-        common feature matrix or separate feature matrices
-    beta: np.ndarray of shape (p_features,q_targets)
-        effect matrix
+    x : np.ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+        Common feature matrix or separate feature matrices.
+    beta: np.ndarray of shape (p_features, q_targets)
+        Effect matrix.
     %(simulate.parameters.n|q)s
 
     Returns
