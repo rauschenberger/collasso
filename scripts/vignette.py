@@ -7,7 +7,9 @@ and with privileged information.
 
 Use the class ``CoopLassoCV`` for multi-task regression
 (sharing information between targets and features).
-For comparison, use the class ``IndepLassoCV`` for standard lasso regression.
+
+For comparison, use the class ``IndepLassoCV`` for
+independent lasso regressions for multiple targets.
 """
 
 
@@ -90,3 +92,26 @@ else:  # z = matrix shape (p_features, q_targets)
 x_test_new = x_test
 x_test_new[:, z == 0] =  np.nan
 np.all(y_hat == model.predict(x_test_new))  # no impact
+
+
+
+# --- related Python packages ---
+
+# scikit-learn provides the classes MultiTaskLasso, MultiTaskLassoCV, MultiTaskElasticNet, MultiTaskElasticNetCV
+# GitHub: https://github.com/scikit-learn/scikit-learn
+# PyPI: https://pypi.org/project/scikit-learn/
+# website: https://scikit-learn.org
+
+# MuTaR from Hicham Janati:
+# group-norms multi-task linear models and optimal transport regularised models
+# GitHub: https://github.com/hichamjanati/mutar
+# PyPI: https://pypi.org/project/mutar/
+# website: https://hichamjanati.github.io/mutar/
+
+# scikit-MTR from Henzhe Zhang:
+# multi-task regression by stacking
+# (interpretable feature-target effects can be obtained
+# if linear regression is used in the base and in the meta layer)
+# GitHub: https://github.com/hengzhe-zhang/Scikit-MTR
+# PyPI: https://pypi.org/project/scikit-MTR/
+
