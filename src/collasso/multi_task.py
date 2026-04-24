@@ -499,7 +499,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
             common feature matrix for all targets or a specific feature matrix for each target
         y : ndarray of shape (n_samples, q_targets)
             target matrix
-        Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
+        Z : ndarray of shape (p_features,) or (p_features, q_targets), or None
             logical vector or matrix
             indicating primary (1, True) and auxiliary features (0, False)
             for all targets or each target

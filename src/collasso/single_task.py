@@ -4,7 +4,7 @@ Single-Task Learning (convenience functions)
 Class:
     ``IndepLassoCV`` - a wrapper function for ``sklearn.linear_model.LassoCV``
     to model multiple targets based on a common feature matrix
-    or specific feature matrices (using the same API as ``CoopLassoCV``)
+    or specific feature matrices (using the same interface as ``CoopLassoCV``)
 
 Example:
     >>> from sklearn.datasets import load_linnerud
