@@ -14,12 +14,17 @@ Example
     # model.predict(x_test)
 """
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import warnings
 import numpy as np
 from scipy.stats import rankdata
 from sklearn.exceptions import DataConversionWarning
 from sklearn.utils import check_array
 from sklearn.utils.validation import validate_data
+
+if TYPE_CHECKING:
+    from collasso import CoopLassoCV, CoopLasso, IndepLassoCV
 
 
 def _check_dims(
@@ -138,7 +143,7 @@ def _spearmanr(x: np.ndarray) -> np.ndarray:
 
 
 def _validate_train_data(
-    self,
+    self: CoopLassoCV|IndepLassoCV,
     *,
     X: np.ndarray,
     y: np.ndarray
@@ -164,6 +169,10 @@ def _validate_train_data(
         Validated feature matrix.
     y : ndarray of shape (n_samples, q_targets)
         Validated target matrix.
+        
+    Raises
+    ------
+    ValueError
 
     See Also
     --------
@@ -203,7 +212,7 @@ def _validate_train_data(
     return X, y
 
 def _format_mask(
-    self,
+    self: CoopLassoCV|CoopLasso|IndepLassoCV,
     *,
     Z: np.ndarray|None
 ) -> np.ndarray:
@@ -235,7 +244,7 @@ def _format_mask(
     return Z
 
 def _validate_test_data(
-    self,
+    self: CoopLassoCV|IndepLassoCV,
     *,
     X: np.ndarray
 ) -> np.ndarray:

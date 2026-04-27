@@ -107,7 +107,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
             a separate feature matrix for each target.
         y : ndarray of shape (n_samples, q_targets)
             Target matrix.
-        Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
+        Z : ndarray of shape (p_features,) or (p_features, q_targets), or None
             Logical vector or matrix
             indicating primary (1/True)
             and auxiliary features (0/False)

@@ -147,22 +147,22 @@ def _calc_weights_fast(
         Target-target correlation coefficients.
     cor_x : np.ndarray of shape (p_features, p_features)
         Feature-feature correlation coefficients.
-    coef : np.ndarray of shape
+    coef : np.ndarray of shape (p_features, q_targets)
         Estimated feature-target effects.
     exp_y : float
         Non-negative number for exponentiating
         the target-target correlation coefficients.
     exp_x : float
         Non-negative number for exponentiating
-        the target-target correlation coefficients.
+        the feature-feature correlation coefficients.
 
     Returns
     -------
-    w_pos : np.ndarray of shape (2*n_features,1)
+    w_pos : np.ndarray of shape (p_features,)
         prior weights for positive effects
-    w_neg : np.ndarray of shape (2*n_features,1)
+    w_neg : np.ndarray of shape (p_features,)
         prior weights for negative effects
-    w_abs : np.ndarray of shape (2*n_features,1)
+    w_abs : np.ndarray of shape (p_features,)
         prior weights for positive or negative effects
 
     See Also
@@ -315,7 +315,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
             or a specific feature matrix for each target.
         y : ndarray of shape (n_samples, q_targets)
             Target matrix.
-        Z : ndarray of shape (p_features,) or (q_targets, p_features), or None
+        Z : ndarray of shape (p_features,) or (p_features, q_targets), or None
             Logical vector or matrix
             indicating primary (1, True)
             and auxiliary features (0, False)
@@ -584,13 +584,14 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         Parameters
         ----------
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-            common feature matrix for all targets or a specific feature matrix for each target
+            Common feature matrix for all targets
+            or a specific feature matrix for each target.
         y : ndarray of shape (n_samples, q_targets)
-            target matrix
+            Target matrix.
         Z : ndarray of shape (p_features,) or (p_features, q_targets), or None
-            logical vector or matrix
+            Logical vector or matrix
             indicating primary (1, True) and auxiliary features (0, False)
-            for all targets or each target
+            for all targets or each target.
 
         Returns
         -------

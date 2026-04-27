@@ -51,7 +51,7 @@ def simulate(
         Number of testing samples.
     p : int, default=200
         Number of features.
-    q : int, default=10
+    q : int, default=3
         Number of targets.
     rho : float, default=0.90
         Correlation coefficient, `0<=rho<=1`.
@@ -135,7 +135,7 @@ def _simulate_features(
     -------
     x : ndarray of shape (n_samples, p_features) if kappa=1
         or (n_samples, p_features, q_targets) if 0<=kappa<1
-    """
+    """  # noqa: DOC101,DOC103,DOC110
     mean = np.zeros(p)
     idx = np.arange(p)
     row_idx, col_idx = np.meshgrid(idx, idx)
@@ -168,7 +168,7 @@ def _simulate_effects(
     Returns
     -------
     beta : ndarray of shape (p_features, q_targets)
-    """
+    """ # noqa: DOC101,DOC103,DOC109,DOC110
     # fmt: off
     beta_com = (
         np.random.binomial(n=1, p=prob_com, size=p) *
@@ -202,7 +202,7 @@ def _simulate_targets(*, n: int, q: int, x: np.ndarray, beta: np.ndarray):
     Returns
     -------
     y : ndarray of shape (n_samples,q_targets)
-    """
+    """ # noqa: DOC101,DOC103,DOC110
     if x.ndim == 2:
         eta = x @ beta
     else:
