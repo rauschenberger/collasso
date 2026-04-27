@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "collasso"
-version = "0.0.1"
+version = "0.1.0"
 description = "Sparse linear multi-task regression with correlation-based information sharing"
 authors = [
     { name = "Armin Rauschenberger" }
