@@ -38,12 +38,12 @@ def _check_dims(
 
     Parameters
     ----------
-    X : np.ndarray of shape (n_samples, p_features)
+    X : ndarray of shape (n_samples, p_features)
         or (n_samples, p_features, q_targets)
         feature matrix
-    y : np.ndarray of shape (n_samples, p_targets)
+    y : ndarray of shape (n_samples, p_targets)
         target matrix
-    Z : np.ndarray of shape (p_features) or (p_features, q_targets) or None
+    Z : ndarray of shape (p_features) or (p_features, q_targets) or None
         indicator matrix (0=auxiliary, 1=primary)
 
     Raises
@@ -115,11 +115,13 @@ def _spearmanr(x: np.ndarray) -> np.ndarray:
     
     Parameters
     ----------
-    x : np.ndarray of shape (n_samples, p_features) or (n_samples, q_targets)
+    x : ndarray of shape (n_samples, p_features) or (n_samples, q_targets)
+        Feature or target matrix.
     
     Returns
     -------
-    cor : np.ndarray of shape (p_features, p_features) or (q_targets, q_targets)
+    cor : ndarray of shape (p_features, p_features) or (q_targets, q_targets)
+        Correlation matrix.
     
     See Also
     --------
@@ -151,16 +153,16 @@ def _validate_train_data(
     Parameters
     ----------
     self : CoopLassoCV|IndepLassoCV
-    X : np.ndarray of shape (n_samples, p_features)
+    X : ndarray of shape (n_samples, p_features)
         Feature matrix.
-    y : np.ndarray of shape (n_samples, q_targets)
+    y : ndarray of shape (n_samples, q_targets)
         Target matrix.
 
     Returns
     -------
-    X : np.ndarray of shape (n_samples, p_features)
+    X : ndarray of shape (n_samples, p_features)
         Validated feature matrix.
-    y : np.ndarray of shape (n_samples, q_targets)
+    y : ndarray of shape (n_samples, q_targets)
         Validated target matrix.
 
     See Also
@@ -214,14 +216,14 @@ def _format_mask(
     Parameters
     ----------
     self: CoopLassoCV|CoopLasso|IndepLassoCV
-    Z : np.ndarray of shape (p_features,) or (p_features, q_targets) or None
+    Z : ndarray of shape (p_features,) or (p_features, q_targets) or None
         Logical matrix indicating
         primary features (1=True)
         and auxiliary features (0=False).
         
     Returns
     -------
-    Z : np.ndarray of shape (p_features, q_targets)
+    Z : ndarray of shape (p_features, q_targets)
         Logical matrix indicating
         primary features (1=True)
         and auxiliary features (0=False).
@@ -248,13 +250,13 @@ def _validate_test_data(
     Parameters
     ----------
     self : CoopLassoCV|IndepLassoCV
-    X : np.ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+    X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
         common feature matrix for all targets
         or specific features matrices for each target
 
     Returns
     -------
-    X : np.ndarray of shape (n_samples, p_features)
+    X : ndarray of shape (n_samples, p_features)
         Validated feature matrix.
     
     Raises
