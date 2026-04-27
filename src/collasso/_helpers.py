@@ -5,8 +5,8 @@ Classes:
     SingleTaskLassoCV: Modelling multiple targets separately
     CoopLassoCV: Modelling multiple targets together
 
-Example
--------
+Examples
+--------
     # from collasso import CoopLassoCV
     # x_train, y_train, x_test, y_test, beta = simulate()
     # model = CoopLassoCV()
@@ -43,26 +43,49 @@ def _check_dims( # noqa: DOC105
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, p_features)
-        or (n_samples, p_features, q_targets)
-        feature matrix
+    X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+        Feature matrix.
     y : ndarray of shape (n_samples, p_targets)
-        target matrix
+        Target matrix.
     Z : ndarray of shape (p_features) or (p_features, q_targets) or None
-        indicator matrix (0=auxiliary, 1=primary)
-
-    Raises
-    ------
-    ValueError
+        Indicator matrix (0=auxiliary, 1=primary).
 
     Returns
     -------
     n : int
-        number of samples
+        Number of samples.
     p : int
-        number of features
+        Number of features.
     q : int
-        number of targets
+        Number of targets.
+        
+    Raises
+    ------
+    ValueError
+    
+    See Also
+    --------
+    _validate_train_data
+        Validation for training data allowing for feature arrays.
+    _validate_test_data
+        Validation for test data allowing for feature arrays
+        and privileged information.
+        
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from collasso.multi_task import _check_dims
+    >>> rng = np.random.default_rng()
+    >>> n_samples = 20
+    >>> p_features = 3
+    >>> q_targets = 2
+    >>> X = rng.normal(size=(n_samples, p_features)) # common
+    >>> # X = rng.normal(size=(n_samples, p_features, q_targets)) # specific
+    >>> y = rng.normal(size=(n_samples, q_targets)) # multivariate
+    >>> # y = rng.normal(size=n_samples).reshape(n_samples,1) # univariate
+    >>> Z = rng.binomial(n=1,p=0.5,size=(p_features, q_targets)) # varying
+    >>> # Z = rng.binomial(n=1,p=0.5,size=p_features) # constant
+    >>> _check_dims(X=X,y=y,Z=Z)
     """
     # --- targets ---
     if y.ndim != 2:
@@ -110,7 +133,7 @@ def _check_dims( # noqa: DOC105
     return n, p, q
 
 
-def _spearmanr(x: np.ndarray) -> np.ndarray: # noqa: DOC105
+def _spearmanr(x: np.ndarray) -> np.ndarray: # noqa: DOC105 # numpydoc ignore=RT02
     """
     Spearman correlation coefficients.
 
@@ -132,6 +155,16 @@ def _spearmanr(x: np.ndarray) -> np.ndarray: # noqa: DOC105
     --------
     _calc_cor
         Calculates one feature-feature correlation matrix for each target.
+        
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from collasso.multi_task import _spearmanr
+    >>> rng = np.random.default_rng()
+    >>> n_samples = 20
+    >>> p_features = 2 # try 1, 2, and >2
+    >>> x = rng.normal(size=(n_samples, p_features))
+    >>> _spearmanr(x)
     """
     if x.shape[1] == 1:
         cor = np.ones((1, 1))
@@ -142,7 +175,7 @@ def _spearmanr(x: np.ndarray) -> np.ndarray: # noqa: DOC105
     return cor
 
 
-def _validate_train_data( # noqa: DOC105
+def _validate_train_data( # noqa: DOC105 # numpydoc ignore=EX01
     self: CoopLassoCV|IndepLassoCV,
     *,
     X: np.ndarray,
@@ -158,6 +191,7 @@ def _validate_train_data( # noqa: DOC105
     Parameters
     ----------
     self : CoopLassoCV|IndepLassoCV
+        Object of class ``CoopLassoCV`` or ``IndepLassoCV``.
     X : ndarray of shape (n_samples, p_features)
         Feature matrix.
     y : ndarray of shape (n_samples, q_targets)
@@ -177,7 +211,7 @@ def _validate_train_data( # noqa: DOC105
     See Also
     --------
     _validate_test_data
-        A corresponding approach for testing data. 
+        A corresponding approach for testing data.
     """
     if y is None:
         raise ValueError(
@@ -211,7 +245,7 @@ def _validate_train_data( # noqa: DOC105
             y = y.reshape(-1, 1)
     return X, y
 
-def _format_mask( # noqa: DOC105
+def _format_mask( # noqa: DOC105 # numpydoc ignore=RT02
     self: CoopLassoCV|IndepLassoCV|_CoopLasso,
     *,
     Z: np.ndarray|None
@@ -224,7 +258,8 @@ def _format_mask( # noqa: DOC105
     
     Parameters
     ----------
-    self: CoopLassoCV|IndepLassoCV|_CoopLasso
+    self : CoopLassoCV|IndepLassoCV|_CoopLasso
+        Object of class ``CoopLassoCV````IndepLassoCV``, or ``_CoopLasso``.
     Z : ndarray of shape (p_features,) or (p_features, q_targets) or None
         Logical matrix indicating
         primary features (1=True)
@@ -236,6 +271,26 @@ def _format_mask( # noqa: DOC105
         Logical matrix indicating
         primary features (1=True)
         and auxiliary features (0=False).
+    
+    See Also
+    --------
+    _validate_test_data
+        Validate test data under privileged information.
+        
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from collasso import CoopLassoCV
+    >>> from collasso._helpers import _format_mask
+    >>> rng = np.random.default_rng()
+    >>> self = CoopLassoCV()
+    >>> self.p_ = 10
+    >>> self.q_ = 2
+    >>> _format_mask(self,Z=None)
+    >>> Z = rng.binomial(n=1,p=0.5,size=self.p_)
+    >>> _format_mask(self,Z=Z)
+    >>> Z = rng.binomial(n=1,p=0.5,size=(self.p_, self.q_))
+    >>> _format_mask(self,Z=Z)
     """
     if Z is None:
         Z = np.full((self.p_, self.q_), 1)
@@ -243,7 +298,7 @@ def _format_mask( # noqa: DOC105
         Z = np.broadcast_to(Z[:, None], (self.p_, self.q_))
     return Z
 
-def _validate_test_data( # noqa: DOC105
+def _validate_test_data( # noqa: DOC105 # numpydoc ignore=RT02,EX01
     self: CoopLassoCV|IndepLassoCV,
     *,
     X: np.ndarray
@@ -259,9 +314,10 @@ def _validate_test_data( # noqa: DOC105
     Parameters
     ----------
     self : CoopLassoCV|IndepLassoCV
+        Object of class ``CoopLassoCV`` or ``IndepLassoCV``.
     X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
-        common feature matrix for all targets
-        or specific features matrices for each target
+        Common feature matrix for all targets
+        or specific features matrices for each target.
 
     Returns
     -------

@@ -6,8 +6,8 @@ Class:
     to model multiple targets based on a common feature matrix
     or specific feature matrices (using the same interface as ``CoopLassoCV``)
 
-Example
--------
+Examples
+--------
     >>> from sklearn.datasets import load_linnerud
     >>> from collasso import CoopLassoCV
     >>> x, y = load_linnerud(return_X_y=True)
@@ -83,6 +83,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     """
 
     def __init__(self, *, cv: int = 10, alphas: int = 100): # noqa: DOC105
+        # numpydoc ignore=GL08
         self.cv = cv
         self.alphas = alphas
         self.n_: int
@@ -93,12 +94,14 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         self.coef_: np.ndarray
         self.z_: np.ndarray
 
-    def fit( # noqa: DOC105
+    def fit( # noqa: DOC105, numpydoc ignore=SA01,EX01
       self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None
     ) -> "IndepLassoCV":
         # pylint: disable=invalid-name
         """
         Fit IndepLassoCV.
+        
+        Fit independent lasso regressions to multiple targets.
 
         Parameters
         ----------
@@ -143,9 +146,13 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray: # noqa: DOC105
+        # numpydoc ignore=RT02,SA01,EX01
         # pylint: disable=invalid-name
         """
         Make predictions.
+        
+        Make prediction with models estimated
+        by independent lasso regressions.
 
         Parameters
         ----------

@@ -4,8 +4,8 @@ Multi-Task Learning.
 Main Class:
     ``CoopLassoCV`` - cross-validated cooperative multi-task lasso regression
 
-Example
--------
+Examples
+--------
     >>> from sklearn.datasets import load_linnerud
     >>> from collasso import CoopLassoCV
     >>> x, y = load_linnerud(return_X_y=True)
@@ -65,6 +65,7 @@ def _calc_cor( # noqa: DOC105
     x: np.ndarray,
     q: int
 ) -> list[np.ndarray]:
+    # numpydoc ignore=RT02
     """
     Feature correlation per target.
 
@@ -72,9 +73,9 @@ def _calc_cor( # noqa: DOC105
     
     Parameters
     ----------
-    x: np.ndarray of shape (n_samples, p_features)
+    x : np.ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
         Feature matrix.
-    q: int
+    q : int
         Number of targets.
         
     Returns
@@ -85,7 +86,22 @@ def _calc_cor( # noqa: DOC105
     See Also
     --------
     _spearmanr
-        Calculates the Spearman correlation matrix
+        Calculates the Spearman correlation matrix.
+        
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from collasso.multi_task import _calc_cor
+    >>> rng = np.random.default_rng()
+    >>> n_samples = 20
+    >>> p_features = 3
+    >>> q_targets = 2
+    >>> # common feature matrix
+    >>> x = rng.normal(size=(n_samples, p_features))
+    >>> rho = _calc_cor(x=x,q=q_targets)
+    >>> # specific feature matrices
+    >>> x = rng.normal(size=(n_samples, p_features, q_targets))
+    >>> rho = _calc_cor(x=x,q=q_targets)
     """
     if x.ndim == 2:
         cor = _spearmanr(x)
@@ -107,11 +123,7 @@ def _calc_weights_slow( # noqa: DOC105
     exp_x: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Adaptive weights.
-    
-    Calculates adaptive weights to share information
-    on feature-target effects
-    between correlated features and correlated targets.
+    SEE BELOW (FUNCTION TO BE REMOVED)
     """
     p_ = coef.shape[0]
     link_y = np.sign(cor_y) * (np.abs(cor_y) ** exp_y)
@@ -160,16 +172,32 @@ def _calc_weights_fast( # noqa: DOC105
     Returns
     -------
     w_pos : np.ndarray of shape (p_features,)
-        prior weights for positive effects
+        Prior weights for positive effects.
     w_neg : np.ndarray of shape (p_features,)
-        prior weights for negative effects
+        Prior weights for negative effects.
     w_abs : np.ndarray of shape (p_features,)
-        prior weights for positive or negative effects
+        Prior weights for positive or negative effects.
 
     See Also
     --------
     _calc_weights_slow
         A less efficient but more interpretable approach.
+        
+    Examples
+    --------
+    >>> from collasso import simulate
+    >>> from collasso.multi_task import _calc_weights_fast
+    >>> from scipy.stats import spearmanr
+    >>> x_train, y_train, _, _, beta = simulate()
+    >>> cor_y = spearmanr(y_train).statistic
+    >>> cor_x = spearmanr(x_train).statistic
+    >>> w_pos, w_neg, w_abs = _calc_weights_fast(
+    >>>     cor_y=cor_y[:, 1],
+    >>>     cor_x=cor_x,
+    >>>     coef=beta,
+    >>>     exp_y=1,
+    >>>     exp_x=1,
+    >>>)
     """
     link_y = np.sign(cor_y) * np.abs(cor_y) ** exp_y
     link_x = np.sign(cor_x) * np.abs(cor_x) ** exp_x
@@ -271,11 +299,23 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
     CoopLassoCV
         Optimises the regularisation parameter
         of cooperative multi-task lasso regression by cross-validation.
+        
+    Examples
+    --------
+    >>> from sklearn.datasets import load_linnerud
+    >>> from collasso import CoopLasso
+    >>> x, y = load_linnerud(return_X_y=True)
+    >>> model = _CoopLasso()
+    >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
+    >>> y_pred = model.predict(x)
+    >>> len(y_pred) # q_targets
+    >>> y_pred[1].shape # n_samples x n_alphas
     """
 
     _EPS = 1e-09
 
     def __init__( # noqa: DOC105
+        # numpydoc ignore=GL08
         self,
         *,
         n_alphas: int = 100,
@@ -303,6 +343,7 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
     def fit( # noqa: DOC105
         self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
     ) -> "_CoopLasso":
+        # numpydoc ignore=RT02,SA01,EX01
         # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
         """
         Model fitting.
@@ -324,19 +365,8 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
 
         Returns
         -------
-        self: CoopLasso
+        self : CoopLasso
             Fitted models.
-            
-        Examples
-        --------
-        >>> from sklearn.datasets import load_linnerud
-        >>> from collasso import CoopLasso
-        >>> x, y = load_linnerud(return_X_y=True)
-        >>> model = _CoopLasso()
-        >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
-        >>> y_pred = model.predict(x)
-        >>> len(y_pred) # q_targets
-        >>> y_pred[1].shape # n_samples x n_alphas
         """
         if y.ndim == 1:
             y = y.reshape(-1, 1)
@@ -426,11 +456,12 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
     def predict( # noqa: DOC105
         self, X: np.ndarray, alpha: list[np.ndarray] | None = None
     ) -> list[np.ndarray]:
+        # numpydoc ignore=RT02,SA01,EX01
         # pylint: disable=invalid-name
         """
         Make predictions.
         
-        Make predictions with a model estimated by 
+        Make predictions with models estimated by 
         cooperative multi-task lasso regression.
 
         Parameters
@@ -438,8 +469,8 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
         X : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
             Common feature matrix for all targets,
             or a specificfeature matrix for each target.
-        alpha : List of length q_targets or None, default=None
-            one ndarray of non-negative regularisation parameters for each target;
+        alpha : list of length q_targets or None, default=None
+            One ndarray of non-negative regularisation parameters for each target;
             if None, predictions are returned for the fitted path.
 
         Returns
@@ -547,6 +578,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     """
 
     def __init__( # noqa: DOC105
+        # numpydoc ignore=GL08
         self, *,
         cv: int = 10,
         n_alphas: int = 100,
@@ -576,9 +608,10 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     def fit( # noqa: DOC105
         self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
     ) -> "CoopLassoCV":
+        # numpydoc ignore=RT02,SA01,EX01
         # pylint: disable=invalid-name
         """
-        Fits cross-validated model.
+        Fit cross-validated model.
         
         Fits cross-validated cooperative multi-task lasso regression.
 
@@ -597,7 +630,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         Returns
         -------
         self : CoopLassoCV
-            fitted model
+            Fitted model.
         """
         X, y = _validate_train_data(self=self, X=X, y=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
@@ -643,6 +676,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray: # noqa: DOC105
+        # numpydoc ignore=RT02,SA01,EX01
         # pylint: disable=invalid-name
         """
         Make predictions.

@@ -4,8 +4,8 @@ Simulation.
 Main function:
     ``simulate`` - simulating feature and target matrices for multi-task learning
 
-Example
--------
+Examples
+--------
     >>> from collasso import CoopLassoCV
     >>> x_train, y_train, x_test, y_test, beta = simulate()
     >>> model = CoopLassoCV()
@@ -62,10 +62,6 @@ def simulate( # noqa: DOC105
     prob_sep : float, default=0.05
         Probability of separate effects for each target.
 
-    Raises
-    ------
-    ValueError
-
     Returns
     -------
     x_train : ndarray of shape (n0_samples,p_features) or (n0_samples,p_features,q_targets)
@@ -83,6 +79,19 @@ def simulate( # noqa: DOC105
     beta : ndarray of shape (p_features,q_targets)
         True effects in the training and the test data
         (of the feature in the row on the target in the column).
+        
+    Raises
+    ------
+    ValueError
+    
+    See Also
+    --------
+    _simulate_features
+        Internal function for simulating feature matrix or matrices.
+    _simulate_effects
+        Internal function for simulating effect matrix.
+    _simulate_targets
+        Internal function for simulating target matrix.
 
     Examples
     --------
