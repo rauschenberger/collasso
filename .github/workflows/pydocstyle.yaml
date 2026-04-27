@@ -1,4 +1,4 @@
-name: pylint
+name: pydocstyle
 
 on: [push, pull_request]
 
@@ -10,5 +10,8 @@ jobs:
     - uses: actions/setup-python@v6
       with:
         python-version: "3.14"
+    - name: Install dependencies
+      run: |
+        pip install pydocstyle
     - name: Analysing the code with pydocstyle
       run: pydocstyle --convention=numpy .
