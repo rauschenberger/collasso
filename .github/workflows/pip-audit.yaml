@@ -10,12 +10,11 @@ jobs:
     - uses: actions/setup-python@v6
       with:
         python-version: "3.14"
+    - name: Upgrade pip
+      run: python -m pip install --upgrade pip
     - name: Install dependencies
       run: |
         python -m pip install -e .
         pip install pip-audit
     - name: pip-audit
       run: pip-audit --skip-editable
-#- uses: pypa/gh-action-pip-audit@v1.1.0
-#  with:
-#    inputs: --skip-editable
