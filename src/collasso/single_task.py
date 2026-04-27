@@ -82,7 +82,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     >>> y_pred = model.predict(x) # n_samples x q_targets
     """ # noqa: DOC105
 
-    def __init__(self, *, cv: int = 10, alphas: int = 100):
+    def __init__(self, *, cv: int = 10, alphas: int = 100): # noqa: D419
         """""" # noqa: DOC105
         self.cv = cv
         self.alphas = alphas

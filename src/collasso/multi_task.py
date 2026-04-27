@@ -282,8 +282,8 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         alpha_init: np.ndarray|None = None,
         exp_y: float = 1,
         exp_x: float = 1
-    ):
-        """""" # noqa: DOC105
+    ): # noqa: D419
+        """""" # noqa: DOC105 
         # pylint: disable=too-many-arguments
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio
@@ -554,8 +554,8 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         exp_y: float = 1,
         exp_x: float = 1,
         random_state: int|None = None
-    ):
-        """"""# noqa: DOC105
+    ): # noqa: D419
+        """""" # noqa: DOC105
         # pylint: disable=too-many-arguments
         self.cv = cv
         self.n_alphas = n_alphas

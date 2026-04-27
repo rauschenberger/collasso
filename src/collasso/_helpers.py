@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 def _check_dims(
     *, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None
-) -> tuple[int, int, int]:
+) -> tuple[int, int, int]: 
     # pylint: disable=invalid-name
     """
     Check dimensionality of inputs.

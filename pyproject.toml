@@ -50,6 +50,7 @@ style = "numpy"
 arg-type-hints-in-docstring = true
 check-return-types = false
 check-class-attributes = false
+#native-mode-noqa-location = "definition"
 
 [tool.pydoctest]
 parser = "numpy"
