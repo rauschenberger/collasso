@@ -30,7 +30,7 @@ from collasso._helpers import (
 )
 
 
-class IndepLassoCV(RegressorMixin, BaseEstimator):
+class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     # pylint: disable=too-many-instance-attributes
     """
     Single-Task Lasso Regression For Multiple Targets.
@@ -80,10 +80,9 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
     >>> model.coef_ # q_targets x p_features
     >>> y_pred = model.predict(x) # n_samples x q_targets
-    """ # noqa: DOC105
+    """
 
-    def __init__(self, *, cv: int = 10, alphas: int = 100): # noqa: D419
-        """""" # noqa: DOC105
+    def __init__(self, *, cv: int = 10, alphas: int = 100): # noqa: DOC105
         self.cv = cv
         self.alphas = alphas
         self.n_: int
@@ -94,9 +93,9 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         self.coef_: np.ndarray
         self.z_: np.ndarray
 
-    def fit(
-      self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None
-    ) -> "IndepLassoCV":
+    def fit( # noqa: DOC105
+      self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None 
+    ) -> "IndepLassoCV": 
         # pylint: disable=invalid-name
         """
         Fit IndepLassoCV.
@@ -119,7 +118,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         -------
         self: IndepLassoCV
             Fitted models.
-        """ # noqa: DOC105
+        """
         X, y = _validate_train_data(self=self, X=X, y=y)
         check_array(array=X, allow_nd=True, dtype="numeric")
         check_array(array=y, dtype="numeric")
@@ -143,7 +142,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
             self.coef_[i, :] = model.coef_
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> np.ndarray: # noqa: DOC105
         # pylint: disable=invalid-name
         """
         Make predictions.
@@ -158,7 +157,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
             Matrix of predicted values.
-        """ # noqa: DOC105
+        """
         check_is_fitted(self, attributes=["coef_"])
         X = _validate_test_data(self=self, X=X)
         if X.ndim == 2:

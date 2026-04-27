@@ -23,7 +23,7 @@ docstrings = DocstringProcessor()
 
 @docstrings.get_sections(base="simulate", sections=["Parameters"])  # pylint: disable=no-value-for-parameter
 @docstrings.dedent
-def simulate(
+def simulate( # noqa: DOC105
     *,
     n0: int = 100,
     n1: int = 10000,
@@ -88,7 +88,7 @@ def simulate(
     --------
     >>> from collasso import simulate
     >>> x_train, y_train, x_test, y_test, beta = simulate()
-    """ # noqa: DOC105
+    """
     if n0 < 10:
         raise ValueError(f"Use n0>=10 (not n0={n0})")
     if n1 < 10:
@@ -119,7 +119,7 @@ docstrings.keep_params("simulate.parameters", "p", "q", "rho", "kappa")
 
 
 @docstrings.dedent
-def _simulate_features(
+def _simulate_features( # noqa: DOC101,DOC103,DOC110
     *, n: int, p: int, q: int, rho: float, kappa: float
 ) -> np.ndarray:
     """
@@ -135,7 +135,7 @@ def _simulate_features(
     -------
     x : ndarray of shape (n_samples, p_features) if kappa=1
         or (n_samples, p_features, q_targets) if 0<=kappa<1
-    """  # noqa: DOC101,DOC103,DOC110
+    """
     mean = np.zeros(p)
     idx = np.arange(p)
     row_idx, col_idx = np.meshgrid(idx, idx)
@@ -155,7 +155,7 @@ docstrings.keep_params("simulate.parameters", "p", "q", "prob_com", "prob_sep")
 
 
 @docstrings.dedent
-def _simulate_effects(
+def _simulate_effects( # noqa: DOC101,DOC103,DOC109,DOC110
     *, p: int, q: int, prob_com: float, prob_sep: float
 ) -> np.ndarray:
     """
@@ -168,7 +168,7 @@ def _simulate_effects(
     Returns
     -------
     beta : ndarray of shape (p_features, q_targets)
-    """ # noqa: DOC101,DOC103,DOC109,DOC110
+    """
     # fmt: off
     beta_com = (
         np.random.binomial(n=1, p=prob_com, size=p) *
@@ -187,7 +187,13 @@ docstrings.keep_params("simulate.parameters", "n", "q")
 
 
 @docstrings.dedent
-def _simulate_targets(*, n: int, q: int, x: np.ndarray, beta: np.ndarray):
+def _simulate_targets( # noqa: DOC101,DOC103,DOC110
+    *,
+    n: int,
+    q: int,
+    x: np.ndarray,
+    beta: np.ndarray
+):
     """
     Simulate Targets.
 
@@ -202,7 +208,7 @@ def _simulate_targets(*, n: int, q: int, x: np.ndarray, beta: np.ndarray):
     Returns
     -------
     y : ndarray of shape (n_samples,q_targets)
-    """ # noqa: DOC101,DOC103,DOC110
+    """
     if x.ndim == 2:
         eta = x @ beta
     else:
