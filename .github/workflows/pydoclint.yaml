@@ -1,0 +1,21 @@
+name: pydoclint
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.14"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pydoclint
+        pip install ".[test]"
+    - name: Analysing the code with pydoclint
+      run: |
+        pydoclint --style=numpy --skip-checking-raises=False
+src/ 2>&1 | grep -v "DOC105"
