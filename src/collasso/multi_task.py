@@ -60,7 +60,10 @@ from collasso._helpers import (
 # return weight
 
 
-def _calc_cor(*, x: np.ndarray, q: int) -> list[np.ndarray]:
+def _calc_cor(*,
+    x: np.ndarray,
+    q: int
+) -> list[np.ndarray]:
     """
     Feature correlation per target.
 
@@ -272,7 +275,13 @@ class CoopLasso(RegressorMixin, BaseEstimator):
     _EPS = 1e-09
 
     def __init__(
-        self, *, n_alphas=100, l1_ratio=0.5, alpha_init=None, exp_y=1, exp_x=1
+        self,
+        *,
+        n_alphas: int = 100,
+        l1_ratio: float = 0.5,
+        alpha_init: np.ndarray|None = None,
+        exp_y: float = 1,
+        exp_x: float = 1
     ):
         # pylint: disable=too-many-arguments
         self.n_alphas = n_alphas
@@ -539,7 +548,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     def __init__(
         self, *,
         cv: int = 10,
-        n_alphas: int= 100,
+        n_alphas: int = 100,
         l1_ratio: float = 0.5,
         exp_y: float = 1,
         exp_x: float = 1,

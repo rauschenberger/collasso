@@ -20,6 +20,7 @@ from scipy.stats import rankdata
 from sklearn.exceptions import DataConversionWarning
 from sklearn.utils import check_array
 from sklearn.utils.validation import validate_data
+from collasso import CoopLassoCV, IndepLassoCV
 
 
 def _check_dims(
@@ -136,7 +137,7 @@ def _spearmanr(x: np.ndarray) -> np.ndarray:
 
 
 def _validate_train_data(
-    self, *, X: np.ndarray, y: np.ndarray
+    self: CoopLassoCV|IndepLassoCV, *, X: np.ndarray, y: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Validate training data when y is a vector or matrix and X is a matrix or array.
@@ -197,7 +198,7 @@ def _validate_train_data(
             y = y.reshape(-1, 1)
     return X, y
 
-def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
+def _format_mask(self: CoopLassoCV|IndepLassoCV, *, Z: np.ndarray|None) -> np.ndarray:
     """
     Transform Z to p x q matrix.
     
@@ -206,6 +207,7 @@ def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
     
     Parameters
     ----------
+    self: CoopLassoCV
     Z : np.ndarray of shape (p_features,) or (p_features, q_targets) or None
         Logical matrix indicating
         primary features (1=True)
@@ -224,7 +226,7 @@ def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
         Z = np.broadcast_to(Z[:, None], (self.p_, self.q_))
     return Z
 
-def _validate_test_data(self, *, X: np.ndarray) -> np.ndarray:
+def _validate_test_data(self: CoopLassoCV|IndepLassoCV, *, X: np.ndarray) -> np.ndarray:
     """
     Validate testing data X is a matrix or array.
     
