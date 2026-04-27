@@ -51,3 +51,13 @@ arg-type-hints-in-docstring = true
 check-return-types = false
 check-class-attributes = false
 
+[tool.pydoctest]
+parser = "numpy"
+exclude_paths = [
+    "**/__init__.py",
+    "**/setup.py",
+    "**/application.py",
+    "**/simulation.py",
+    "**/vignette.py",
+]
+
