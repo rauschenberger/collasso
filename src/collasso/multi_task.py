@@ -123,7 +123,7 @@ def _calc_weights_slow( # noqa: DOC105
     exp_x: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    SEE BELOW (FUNCTION TO BE REMOVED)
+    SEE BELOW (FUNCTION TO BE REMOVED).
     """
     p_ = coef.shape[0]
     link_y = np.sign(cor_y) * (np.abs(cor_y) ** exp_y)
