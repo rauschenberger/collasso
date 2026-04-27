@@ -1,12 +1,14 @@
 
-![tests](https://github.com/rauschenberger/collasso/actions/workflows/tests.yaml/badge.svg)
+![pytest](https://github.com/rauschenberger/collasso/actions/workflows/pytest.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/rauschenberger/collasso/graph/badge.svg?token=7E6GSQ32F5)](https://codecov.io/gh/rauschenberger/collasso)
 ![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yaml/badge.svg)
 ![ruff](https://github.com/rauschenberger/collasso/actions/workflows/ruff.yaml/badge.svg)
 ![pylint](https://github.com/rauschenberger/collasso/actions/workflows/pylint.yaml/badge.svg)
 ![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yaml/badge.svg)
+![pydocstyle](https://github.com/rauschenberger/collasso/actions/workflows/pydocstyle.yaml/badge.svg)
+![pip-audit](https://github.com/rauschenberger/collasso/actions/workflows/pip-audit.yaml/badge.svg)
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
-![docs](https://github.com/rauschenberger/collasso/actions/workflows/pages/pages-build-deployment/badge.svg)
+![sphinx](https://github.com/rauschenberger/collasso/actions/workflows/pages/sphinx/badge.svg)
 
 <img src="collasso-logo.png" alt="collasso-logo" style="width:25%; height:auto;">
 
