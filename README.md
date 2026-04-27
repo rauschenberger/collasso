@@ -8,7 +8,7 @@
 ![pydocstyle](https://github.com/rauschenberger/collasso/actions/workflows/pydocstyle.yaml/badge.svg)
 ![pip-audit](https://github.com/rauschenberger/collasso/actions/workflows/pip-audit.yaml/badge.svg)
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
-![sphinx](https://github.com/rauschenberger/collasso/actions/workflows/pages/sphinx/badge.svg)
+![sphinx](https://github.com/rauschenberger/collasso/actions/workflows/sphinx/badge.svg)
 
 <img src="collasso-logo.png" alt="collasso-logo" style="width:25%; height:auto;">
 
