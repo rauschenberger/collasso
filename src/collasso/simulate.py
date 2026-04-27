@@ -1,10 +1,11 @@
 """
-Simulation
+Simulation.
 
 Main function:
     ``simulate`` - simulating feature and target matrices for multi-task learning
 
-Example:
+Example
+-------
     >>> from collasso import CoopLassoCV
     >>> x_train, y_train, x_test, y_test, beta = simulate()
     >>> model = CoopLassoCV()
@@ -82,6 +83,11 @@ def simulate(
     beta : ndarray of shape (p_features,q_targets)
         True effects in the training and the test data
         (of the feature in the row on the target in the column).
+
+    Examples
+    --------
+    >>> from collasso import simulate
+    >>> x_train, y_train, x_test, y_test, beta = simulate()
     """
     if n0 < 10:
         raise ValueError(f"Use n0>=10 (not n0={n0})")
@@ -183,7 +189,7 @@ docstrings.keep_params("simulate.parameters", "n", "q")
 @docstrings.dedent
 def _simulate_targets(*, n: int, q: int, x: np.ndarray, beta: np.ndarray):
     """
-    Simulate Targets
+    Simulate Targets.
 
     Parameters
     ----------

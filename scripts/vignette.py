@@ -1,5 +1,5 @@
 """
-Vignette
+Vignette.
 
 This vignette illustrates sparse linear multi-task regression
 with a common feature matrix, with specific feature matrices,

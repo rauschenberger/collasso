@@ -1,5 +1,5 @@
 """
-Application
+Application.
 
 This script compares the predictive performance between different methods in an application.
 """

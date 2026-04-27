@@ -50,3 +50,4 @@ style = "numpy"
 arg-type-hints-in-docstring = true
 check-return-types = false
 check-class-attributes = false
+

@@ -1,12 +1,12 @@
 """
-Sparse linear multi-task regression
-with correlation-based information sharing
+Sparse linear multi-task regression with correlation-based information sharing.
 
 Classes:
     SingleTaskLassoCV: Modelling multiple targets separately
     CoopLassoCV: Modelling multiple targets together
 
-Example:
+Example
+-------
     # from collasso import CoopLassoCV
     # x_train, y_train, x_test, y_test, beta = simulate()
     # model = CoopLassoCV()
@@ -27,7 +27,7 @@ def _check_dims(
 ) -> tuple[int, int, int]:
     # pylint: disable=invalid-name
     """
-    Check dimensionality of inputs
+    Check dimensionality of inputs.
     
     This functions checks whether the feature matrix X,
     the target vector or target matrix Y,
@@ -38,11 +38,12 @@ def _check_dims(
 
     Parameters
     ----------
-    X : np.ndarray of shape (n_samples,p_features) or (n_samples,p_features,q_targets)
+    X : np.ndarray of shape (n_samples, p_features)
+        or (n_samples, p_features, q_targets)
         feature matrix
-    y : np.ndarray of shape (n_samples,p_targets)
+    y : np.ndarray of shape (n_samples, p_targets)
         target matrix
-    Z : np.ndarray of shape (p_features) or (p_features,q_targets) or None
+    Z : np.ndarray of shape (p_features) or (p_features, q_targets) or None
         indicator matrix (0=auxiliary, 1=primary)
 
     Raises
@@ -106,11 +107,24 @@ def _check_dims(
 
 def _spearmanr(x: np.ndarray) -> np.ndarray:
     """
-    Spearman correlation coefficients
+    Spearman correlation coefficients.
 
     Returns a correlation matrix also in degenerate cases (one or two features).
     The standard implementation ``scipy.stats.spearmanr``
     requires at least two features and returns a scalar for two features.
+    
+    Parameters
+    ----------
+    x : np.ndarray of shape (n_samples, p_features) or (n_samples, q_targets)
+    
+    Returns
+    -------
+    cor : np.ndarray of shape (p_features, p_features) or (q_targets, q_targets)
+    
+    See Also
+    --------
+    _calc_cor
+        Calculates one feature-feature correlation matrix for each target.
     """
     if x.shape[1] == 1:
         cor = np.ones((1, 1))
@@ -125,11 +139,31 @@ def _validate_train_data(
     self, *, X: np.ndarray, y: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Validate training data when y is a vector or matrix and X is a matrix or array
-    
+    Validate training data when y is a vector or matrix and X is a matrix or array.
+
     This function is necessary for compatibility with ``scikit-learn``
     because the function ``sklearn.utils.validation.validate_data``
     does not accept a three-dimensional feature array.
+
+    Parameters
+    ----------
+    self : CoopLassoCV
+    X : np.ndarray of shape (n_samples, p_features)
+        Feature matrix.
+    y : np.ndarray of shape (n_samples, q_targets)
+        Target matrix.
+
+    Returns
+    -------
+    X : np.ndarray of shape (n_samples, p_features)
+        Validated feature matrix.
+    y : np.ndarray of shape (n_samples, q_targets)
+        Validated target matrix.
+
+    See Also
+    --------
+    _validate_test_data
+        A corresponding approach for testing data. 
     """
     if y is None:
         raise ValueError(
@@ -165,10 +199,24 @@ def _validate_train_data(
 
 def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
     """
-    Transform Z to p x q matrix
+    Transform Z to p x q matrix.
     
     This function replaces Z=None by a matrix filled with 1,
     and a vector Z by a matrix with identical columns (one for each target).
+    
+    Parameters
+    ----------
+    Z : np.ndarray of shape (p_features,) or (p_features, q_targets) or None
+        Logical matrix indicating
+        primary features (1=True)
+        and auxiliary features (0=False).
+        
+    Returns
+    -------
+    Z : np.ndarray of shape (p_features, q_targets)
+        Logical matrix indicating
+        primary features (1=True)
+        and auxiliary features (0=False).
     """
     if Z is None:
         Z = np.full((self.p_, self.q_), 1)
@@ -178,12 +226,33 @@ def _format_mask(self, *, Z: np.ndarray|None) -> np.ndarray:
 
 def _validate_test_data(self, *, X: np.ndarray) -> np.ndarray:
     """
-    Validate testing data X is a matrix or array
+    Validate testing data X is a matrix or array.
     
     This function is necessary for compatibility with ``scikit-learn``
     because the function ``sklearn.utils.validation.validate_data``
     accept neither missing values in auxiliary features
     nor a three-dimensional feature array.
+    
+    Parameters
+    ----------
+    self : CoopLassoCV
+    X : np.ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+        common feature matrix for all targets
+        or specific features matrices for each target
+
+    Returns
+    -------
+    X : np.ndarray of shape (n_samples, p_features)
+        Validated feature matrix.
+    
+    Raises
+    ------
+    ValueError
+    
+    See Also
+    --------
+    _validate_train_data
+        A corresponding approach for training data.
     """
     z = _format_mask(self, Z=self.z_)
     if isinstance(X, np.ndarray) and X.ndim == 3:

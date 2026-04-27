@@ -1,4 +1,4 @@
-"""Sparse linear multi-task regression"""
+"""Sparse linear multi-task regression."""
 
 __version__ = "0.1.0"
 __docformat__ = "numpy"

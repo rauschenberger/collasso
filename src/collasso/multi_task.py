@@ -1,10 +1,11 @@
 """
-Multi-Task Learning
+Multi-Task Learning.
 
 Main Class:
     ``CoopLassoCV`` - cross-validated cooperative multi-task lasso regression
 
-Example:
+Example
+-------
     >>> from sklearn.datasets import load_linnerud
     >>> from collasso import CoopLassoCV
     >>> x, y = load_linnerud(return_X_y=True)
@@ -64,6 +65,23 @@ def _calc_cor(*, x: np.ndarray, q: int) -> list[np.ndarray]:
     Feature correlation per target.
 
     Calculates the Spearman correlation matrix between features for each target.
+    
+    Parameters
+    ----------
+    x: np.ndarray of shape (n_samples, p_features)
+        Feature matrix.
+    q: int
+        Number of targets.
+        
+    Returns
+    -------
+    rho_x : list of length q_targets
+        List of length q_targets of np.ndarrays of shape (p_features, p_features).
+    
+    See Also
+    --------
+    _spearmanr
+        Calculates the Spearman correlation matrix
     """
     if x.ndim == 2:
         cor = _spearmanr(x)
@@ -85,7 +103,11 @@ def _calc_weights_slow(
     exp_x: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Adaptive weights
+    Adaptive weights.
+    
+    Calculates adaptive weights to share information
+    on feature-target effects
+    between correlated features and correlated targets.
     """
     p_ = coef.shape[0]
     link_y = np.sign(cor_y) * (np.abs(cor_y) ** exp_y)
@@ -115,6 +137,35 @@ def _calc_weights_fast(
     Calculates adaptive weights to share information
     on feature-target effects
     between correlated features and correlated targets.
+
+    Parameters
+    ----------
+    cor_y : np.ndarray of shape (q_targets, 1)
+        Target-target correlation coefficients.
+    cor_x : np.ndarray of shape (p_features, p_features)
+        Feature-feature correlation coefficients.
+    coef : np.ndarray of shape
+        Estimated feature-target effects.
+    exp_y : float
+        Non-negative number for exponentiating
+        the target-target correlation coefficients.
+    exp_x : float
+        Non-negative number for exponentiating
+        the target-target correlation coefficients.
+
+    Returns
+    -------
+    w_pos : np.ndarray of shape (2*n_features,1)
+        prior weights for positive effects
+    w_neg : np.ndarray of shape (2*n_features,1)
+        prior weights for negative effects
+    w_abs : np.ndarray of shape (2*n_features,1)
+        prior weights for positive or negative effects
+
+    See Also
+    --------
+    _calc_weights_slow
+        A less efficient but more interpretable approach.
     """
     link_y = np.sign(cor_y) * np.abs(cor_y) ** exp_y
     link_x = np.sign(cor_x) * np.abs(cor_x) ** exp_x
@@ -174,10 +225,10 @@ class CoopLasso(RegressorMixin, BaseEstimator):
     """
     Cooperative Multi-Task Lasso Regression.
 
-    Fits cooperative multi-task lasso regression.
+    Implements cooperative multi-task lasso regression.
 
     Parameters
-        ----------
+    ----------
     n_alphas : int, default=100
         Number of candidate values for the regularisation parameter
         in the final regressions.
@@ -244,7 +295,9 @@ class CoopLasso(RegressorMixin, BaseEstimator):
     ) -> "CoopLasso":
         # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
         """
-        Fit CoopLasso
+        Model fitting.
+        
+        Fit a cooperative multi-task lasso regression model.
 
         Parameters
         ----------
@@ -261,9 +314,19 @@ class CoopLasso(RegressorMixin, BaseEstimator):
 
         Returns
         -------
-
         self: CoopLasso
             Fitted models.
+            
+        Examples
+        --------
+        >>> from sklearn.datasets import load_linnerud
+        >>> from collasso import CoopLasso
+        >>> x, y = load_linnerud(return_X_y=True)
+        >>> model = CoopLasso()
+        >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
+        >>> y_pred = model.predict(x)
+        >>> len(y_pred) # q_targets
+        >>> y_pred[1].shape # n_samples x n_alphas
         """
         if y.ndim == 1:
             y = y.reshape(-1, 1)
@@ -355,7 +418,10 @@ class CoopLasso(RegressorMixin, BaseEstimator):
     ) -> list[np.ndarray]:
         # pylint: disable=invalid-name
         """
-        Make predictions
+        Make predictions.
+        
+        Make predictions with a model estimated by 
+        cooperative multi-task lasso regression.
 
         Parameters
         ----------
@@ -404,7 +470,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     """
     Cross-Validated Cooperative Multi-Task Lasso Regression.
 
-    Fits cooperative multi-task lasso regression,
+    Implements cooperative multi-task lasso regression,
     optimising the regularisation parameters by cross-validation.
 
     Parameters
@@ -502,7 +568,9 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     ) -> "CoopLassoCV":
         # pylint: disable=invalid-name
         """
-        Fit CoopLassoCV
+        Fits cross-validated model.
+        
+        Fits cross-validated cooperative multi-task lasso regression.
 
         Parameters
         ----------
@@ -566,7 +634,10 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     def predict(self, X: np.ndarray) -> np.ndarray:
         # pylint: disable=invalid-name
         """
-        Make predictions
+        Make predictions.
+        
+        Make predictions from a cross-validated model
+        obtained by cooperative multi-task lasso regression.
 
         Parameters
         ----------

@@ -1,12 +1,13 @@
 """
-Single-Task Learning (convenience functions)
+Single-Task Learning (convenience functions).
 
 Class:
     ``IndepLassoCV`` - a wrapper function for ``sklearn.linear_model.LassoCV``
     to model multiple targets based on a common feature matrix
     or specific feature matrices (using the same interface as ``CoopLassoCV``)
 
-Example:
+Example
+-------
     >>> from sklearn.datasets import load_linnerud
     >>> from collasso import CoopLassoCV
     >>> x, y = load_linnerud(return_X_y=True)
@@ -69,6 +70,16 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         (similarly formatted inputs and outputs)
         but shares information among targets and features
         to improve selection and prediction.
+        
+    Examples
+    --------
+    >>> from sklearn.datasets import load_linnerud
+    >>> from collasso import IndepLassoCV
+    >>> x, y = load_linnerud(return_X_y=True)
+    >>> model = IndepLassoCV()
+    >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
+    >>> model.coef_ # q_targets x p_features
+    >>> y_pred = model.predict(x) # n_samples x q_targets
     """
 
     def __init__(self, *, cv: int = 10, alphas: int = 100):
@@ -82,7 +93,9 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         self.coef_: np.ndarray
         self.z_: np.ndarray
 
-    def fit(self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None) -> "IndepLassoCV":
+    def fit(
+      self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None
+    ) -> "IndepLassoCV":
         # pylint: disable=invalid-name
         """
         Fit IndepLassoCV.
@@ -103,7 +116,6 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
 
         Returns
         -------
-
         self: IndepLassoCV
             Fitted models.
         """
@@ -133,7 +145,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     def predict(self, X: np.ndarray) -> np.ndarray:
         # pylint: disable=invalid-name
         """
-        Make predictions
+        Make predictions.
 
         Parameters
         ----------
