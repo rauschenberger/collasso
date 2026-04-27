@@ -224,7 +224,7 @@ def _calc_weights_fast( # noqa: DOC105
 #     return w_pos, w_neg, w_abs
 
 
-class CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
+class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
     # pylint: disable=too-many-instance-attributes
     """
     Cooperative Multi-Task Lasso Regression.
@@ -302,7 +302,7 @@ class CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
 
     def fit( # noqa: DOC105
         self, X: np.ndarray, y: np.ndarray, Z: np.ndarray | None = None
-    ) -> "CoopLasso":
+    ) -> "_CoopLasso":
         # pylint: disable=invalid-name,too-many-locals,too-many-branches,too-many-statements
         """
         Model fitting.
@@ -332,7 +332,7 @@ class CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
         >>> from sklearn.datasets import load_linnerud
         >>> from collasso import CoopLasso
         >>> x, y = load_linnerud(return_X_y=True)
-        >>> model = CoopLasso()
+        >>> model = _CoopLasso()
         >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
         >>> y_pred = model.predict(x)
         >>> len(y_pred) # q_targets
@@ -569,7 +569,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         self.alpha_: list
         self.mse_: list
         self.min_: list
-        self.model_: CoopLasso
+        self.model_: _CoopLasso
         self.coef_: np.ndarray
         self.z_: np.ndarray|None
 
@@ -603,7 +603,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
         self.z_ = Z
-        self.model_ = CoopLasso(
+        self.model_ = _CoopLasso(
             l1_ratio=self.l1_ratio,
             n_alphas=self.n_alphas,
             alpha_init=None,
@@ -617,7 +617,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         y_hat = np.full((self.n_, self.q_, self.n_alphas), np.nan)
         folds = KFold(n_splits=self.cv, shuffle=True, random_state=self.random_state)
         for train_id, test_id in folds.split(X=X, y=y):
-            sub = CoopLasso(
+            sub = _CoopLasso(
                 n_alphas=self.n_alphas,
                 l1_ratio=self.l1_ratio,
                 alpha_init=self.model_.alpha_init_,

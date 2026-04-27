@@ -14,10 +14,10 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from scipy.stats import spearmanr
 from collasso import (
-    CoopLasso,
     CoopLassoCV,
     IndepLassoCV,
     simulate,
+    _CoopLasso,
     _spearmanr,
     _calc_weights_slow,
     _calc_weights_fast,
@@ -110,7 +110,7 @@ def test_interpolation(data):
     # pylint: disable=redefined-outer-name
     """CoopLasso can use original or interpolated alpha values."""
     x_train, y_train, x_test, _, _ = data
-    model = CoopLasso()
+    model = _CoopLasso()
     model.fit(X=x_train, y=y_train)
     pred1 = model.predict(X=x_test)
     alpha = []

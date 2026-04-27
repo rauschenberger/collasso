@@ -11,8 +11,8 @@ from collasso.simulate import (
 )
 from collasso.single_task import IndepLassoCV
 from collasso.multi_task import (
-    CoopLasso,
     CoopLassoCV,
+    _CoopLasso,
     _spearmanr,
     _calc_weights_slow,
     _calc_weights_fast,
@@ -25,7 +25,7 @@ __all__ = [
     "_simulate_targets",
     "IndepLassoCV",
     "CoopLassoCV",
-    "CoopLasso",
+    "_CoopLasso",
     "_spearmanr",
     "_calc_weights_slow",
     "_calc_weights_fast",

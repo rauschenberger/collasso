@@ -24,7 +24,7 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import validate_data
 
 if TYPE_CHECKING:
-    from collasso import CoopLassoCV, CoopLasso, IndepLassoCV
+    from collasso import CoopLassoCV, _CoopLasso, IndepLassoCV
 
 
 def _check_dims( # noqa: DOC105
@@ -212,7 +212,7 @@ def _validate_train_data( # noqa: DOC105
     return X, y
 
 def _format_mask( # noqa: DOC105
-    self: CoopLassoCV|CoopLasso|IndepLassoCV,
+    self: CoopLassoCV|IndepLassoCV|_CoopLasso,
     *,
     Z: np.ndarray|None
 ) -> np.ndarray:
