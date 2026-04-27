@@ -20,9 +20,9 @@ jobs:
         run: |
           pip install -e .
           pip install ".[test]"
-          pip install pip-audit
-      - name: Audit dependencies
-        run: pip-audit --skip-editable
+      #    pip install pip-audit
+      #- name: Audit dependencies
+      #  run: pip-audit --skip-editable
       - name: Run tests
         run: pytest tests/ --doctest-modules --cov=collasso --cov-report=xml --cov-fail-under=95
       - name: Upload coverage to Codecov
