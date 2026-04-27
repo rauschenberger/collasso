@@ -18,6 +18,7 @@ jobs:
           cache: 'pip'
       - name: Install package with test dependencies
         run: |
+          pip install -e .
           pip install ".[test]"
           pip install pip-audit
       - name: Audit dependencies
