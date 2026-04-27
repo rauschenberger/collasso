@@ -15,6 +15,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pydoclint
     - name: Analysing the code with pydoclint
-      run: |
-        set -o pipefail
-        pydoclint --style=numpy --skip-checking-raises=False src/ 2>&1 | grep -v "DOC105"
+      run: pydoclint
+
+#set -o pipefail
+#pydoclint --style=numpy --skip-checking-raises=False src/ 2>&1 | grep -v "DOC105"

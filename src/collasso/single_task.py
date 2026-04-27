@@ -80,9 +80,10 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
     >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
     >>> model.coef_ # q_targets x p_features
     >>> y_pred = model.predict(x) # n_samples x q_targets
-    """
+    """ # noqa: DOC105
 
     def __init__(self, *, cv: int = 10, alphas: int = 100):
+        """""" # noqa: DOC105
         self.cv = cv
         self.alphas = alphas
         self.n_: int
@@ -118,7 +119,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         -------
         self: IndepLassoCV
             Fitted models.
-        """
+        """ # noqa: DOC105
         X, y = _validate_train_data(self=self, X=X, y=y)
         check_array(array=X, allow_nd=True, dtype="numeric")
         check_array(array=y, dtype="numeric")
@@ -157,7 +158,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator):
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
             Matrix of predicted values.
-        """
+        """ # noqa: DOC105
         check_is_fitted(self, attributes=["coef_"])
         X = _validate_test_data(self=self, X=X)
         if X.ndim == 2:

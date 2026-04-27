@@ -63,7 +63,7 @@ def _check_dims(
         number of features
     q : int
         number of targets
-    """
+    """ # noqa: DOC105
     # --- targets ---
     if y.ndim != 2:
         raise ValueError("'y' should be an 'n x q' matrix")
@@ -132,7 +132,7 @@ def _spearmanr(x: np.ndarray) -> np.ndarray:
     --------
     _calc_cor
         Calculates one feature-feature correlation matrix for each target.
-    """
+    """ # noqa: DOC105
     if x.shape[1] == 1:
         cor = np.ones((1, 1))
     else:
@@ -178,7 +178,7 @@ def _validate_train_data(
     --------
     _validate_test_data
         A corresponding approach for testing data. 
-    """
+    """ # noqa: DOC105
     if y is None:
         raise ValueError(
             "Requires target matrix y."
@@ -236,7 +236,7 @@ def _format_mask(
         Logical matrix indicating
         primary features (1=True)
         and auxiliary features (0=False).
-    """
+    """ # noqa: DOC105
     if Z is None:
         Z = np.full((self.p_, self.q_), 1)
     elif Z.ndim == 1:
@@ -276,7 +276,7 @@ def _validate_test_data(
     --------
     _validate_train_data
         A corresponding approach for training data.
-    """
+    """ # noqa: DOC105
     z = _format_mask(self, Z=self.z_)
     if isinstance(X, np.ndarray) and X.ndim == 3:
         if X.shape[1] == z.shape[0] and X.shape[2] == z.shape[1]:

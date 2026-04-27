@@ -85,7 +85,7 @@ def _calc_cor(*,
     --------
     _spearmanr
         Calculates the Spearman correlation matrix
-    """
+    """ # noqa: DOC105
     if x.ndim == 2:
         cor = _spearmanr(x)
         cor_x = [cor] * q
@@ -111,7 +111,7 @@ def _calc_weights_slow(
     Calculates adaptive weights to share information
     on feature-target effects
     between correlated features and correlated targets.
-    """
+    """ # noqa: DOC105
     p_ = coef.shape[0]
     link_y = np.sign(cor_y) * (np.abs(cor_y) ** exp_y)
     w_pos = np.full(p_, np.nan)
@@ -169,7 +169,7 @@ def _calc_weights_fast(
     --------
     _calc_weights_slow
         A less efficient but more interpretable approach.
-    """
+    """ # noqa: DOC105
     link_y = np.sign(cor_y) * np.abs(cor_y) ** exp_y
     link_x = np.sign(cor_x) * np.abs(cor_x) ** exp_x
     cont = coef * link_y[np.newaxis, :] * link_x.T[:, :, np.newaxis]
@@ -270,7 +270,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
     CoopLassoCV
         Optimises the regularisation parameter
         of cooperative multi-task lasso regression by cross-validation.
-    """
+    """ # noqa: DOC105
 
     _EPS = 1e-09
 
@@ -283,6 +283,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         exp_y: float = 1,
         exp_x: float = 1
     ):
+        """""" # noqa: DOC105
         # pylint: disable=too-many-arguments
         self.n_alphas = n_alphas
         self.l1_ratio = l1_ratio
@@ -336,7 +337,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         >>> y_pred = model.predict(x)
         >>> len(y_pred) # q_targets
         >>> y_pred[1].shape # n_samples x n_alphas
-        """
+        """ # noqa: DOC105
         if y.ndim == 1:
             y = y.reshape(-1, 1)
         check_array(array=X, allow_nd=True, dtype="numeric")
@@ -445,7 +446,7 @@ class CoopLasso(RegressorMixin, BaseEstimator):
         -------
         y_hat : list of length q_targets
             One ndarray of shape (n_samples, n_alphas) for each target.
-        """
+        """ # noqa: DOC105
         check_is_fitted(self, attributes=["model_"])
         check_array(X, allow_nd=True, dtype="numeric")
         y_hat = []
@@ -543,7 +544,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
     >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
     >>> model.coef_ # q_targets x p_features
     >>> y_pred = model.predict(x) # n_samples x q_targets
-    """
+    """ # noqa: DOC105
 
     def __init__(
         self, *,
@@ -554,6 +555,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         exp_x: float = 1,
         random_state: int|None = None
     ):
+        """"""# noqa: DOC105
         # pylint: disable=too-many-arguments
         self.cv = cv
         self.n_alphas = n_alphas
@@ -597,7 +599,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         -------
         self : CoopLassoCV
             fitted model
-        """
+        """ # noqa: DOC105
         X, y = _validate_train_data(self=self, X=X, y=y)
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
@@ -658,7 +660,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator):
         -------
         y_hat : ndarray of shape (n_samples, q_targets)
             Matrix of predicted values (of the target in the column for the sample in the row).
-        """
+        """ # noqa: DOC105
         check_is_fitted(self, attributes=["coef_"])
         X = _validate_test_data(self=self, X=X)
         y_hat = np.full((X.shape[0], self.q_), np.nan)

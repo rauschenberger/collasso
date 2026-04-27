@@ -88,7 +88,7 @@ def simulate(
     --------
     >>> from collasso import simulate
     >>> x_train, y_train, x_test, y_test, beta = simulate()
-    """
+    """ # noqa: DOC105
     if n0 < 10:
         raise ValueError(f"Use n0>=10 (not n0={n0})")
     if n1 < 10:
