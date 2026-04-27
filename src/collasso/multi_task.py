@@ -275,7 +275,7 @@ class CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
 
     _EPS = 1e-09
 
-    def __init__( # noqa: DOC105 
+    def __init__( # noqa: DOC105
         self,
         *,
         n_alphas: int = 100,

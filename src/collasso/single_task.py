@@ -94,8 +94,8 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         self.z_: np.ndarray
 
     def fit( # noqa: DOC105
-      self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None 
-    ) -> "IndepLassoCV": 
+      self, X: np.ndarray, y: np.ndarray, Z: np.ndarray|None = None
+    ) -> "IndepLassoCV":
         # pylint: disable=invalid-name
         """
         Fit IndepLassoCV.
