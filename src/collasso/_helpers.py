@@ -224,7 +224,7 @@ def _format_mask( # noqa: DOC105
     
     Parameters
     ----------
-    self: CoopLassoCV|CoopLasso|IndepLassoCV
+    self: CoopLassoCV|IndepLassoCV|_CoopLasso
     Z : ndarray of shape (p_features,) or (p_features, q_targets) or None
         Logical matrix indicating
         primary features (1=True)
