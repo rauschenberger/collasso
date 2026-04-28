@@ -19,8 +19,7 @@ from collasso import (
     simulate,
     _CoopLasso,
     _spearmanr,
-    _calc_weights_slow,
-    _calc_weights_fast,
+    _calc_weights,
 )
 
 
@@ -153,26 +152,43 @@ def test_privileged_information(data):
     assert np.allclose(y_hat0,y_hat1), "LUPI works under matrices y and z"
 
 
-def test_weight_calculation(data):
-    # pylint: disable=redefined-outer-name
+def test_weights(data):
+    # pylint: disable=redefined-outer-name,too-many-locals
     """Weight calculation with loop or vector is the same"""
-    x_train, y_train, _, _, beta = data
+    x_train, y_train, _, _, coef = data
+    exp_y = 1
+    exp_x = 1
+    p = x_train.shape[1]
+    q = y_train.shape[1]
     cor_y = spearmanr(y_train).statistic
     cor_x = spearmanr(x_train).statistic
-    w_pos0, w_neg0, w_abs0 = _calc_weights_slow(
-        cor_y=cor_y[:, 1],
-        cor_x=cor_x,
-        coef=beta,
-        exp_y=1,
-        exp_x=1,
-    )
-    w_pos1, w_neg1, w_abs1 = _calc_weights_fast(
-        cor_y=cor_y[:, 1],
-        cor_x=cor_x,
-        coef=beta,
-        exp_y=1,
-        exp_x=1,
-    )
+    # matrix notation (efficient)
+    w_pos0 = np.full((p,q),np.nan)
+    w_neg0 = np.full((p,q),np.nan)
+    w_abs0 = np.full((p,q),np.nan)
+    for i in range(q):
+        w_pos, w_neg, w_abs = _calc_weights(
+            cor_y=cor_y[:, i],
+            cor_x=cor_x,
+            coef=coef,
+            exp_y=exp_y,
+            exp_x=exp_x,
+        )
+        w_pos0[:, i] = w_pos
+        w_neg0[:, i] = w_neg
+        w_abs0[:, i] = w_abs
+    # sigma notation (interpretable)
+    w_pos1 = np.zeros((p,q))
+    w_neg1 = np.zeros((p,q))
+    w_abs1 = np.zeros((p,q))
+    for j in range(p):
+        for k in range(q):
+            for j_ in range(p):
+                for k_ in range(q):
+                    cont = cor_x[j,j_]**exp_x*cor_y[k,k_]**exp_y*coef[j_,k_]
+                    w_pos1[j,k] = w_pos1[j,k] + np.maximum(0,cont)
+                    w_neg1[j,k] = w_neg1[j,k] + np.maximum(0,-cont)
+                    w_abs1[j,k] = w_abs1[j,k] + np.abs(cont)
     assert np.allclose(w_pos0, w_pos1), "positive weights should be the same"
     assert np.allclose(w_neg0, w_neg1), "negative weights should be the same"
     assert np.allclose(w_abs0, w_abs1), "absolute weights should be the same"

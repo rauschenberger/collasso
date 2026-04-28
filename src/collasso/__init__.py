@@ -14,8 +14,7 @@ from collasso.multi_task import (
     CoopLassoCV,
     _CoopLasso,
     _spearmanr,
-    _calc_weights_slow,
-    _calc_weights_fast,
+    _calc_weights,
 )
 
 __all__ = [
@@ -27,6 +26,5 @@ __all__ = [
     "CoopLassoCV",
     "_CoopLasso",
     "_spearmanr",
-    "_calc_weights_slow",
-    "_calc_weights_fast",
+    "_calc_weights",
 ]

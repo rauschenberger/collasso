@@ -35,30 +35,6 @@ from collasso._helpers import (
 
 # --- multi-task lasso regression ---
 
-# def _construct_weights(self,*,coef,cor_y,cor_x,exp_y,exp_x,Z):
-#     temp = (
-#         coef *
-#         (np.sign(cor_y[:, i]) *
-#         (np.abs(cor_y[:, i])**self.exp_y))
-#     )
-#     w_pos = np.full(self.p_,np.nan)
-#     w_neg = np.full(self.p_,np.nan)
-#     w_abs = np.full(self.p_,np.nan)
-#     for j in range(self.p_):
-#         cont = (
-#             temp *
-#             (np.sign(cor_x[i][:, j]) *
-#              (np.abs(cor_x[i][:, j])**self.exp_x))[:, np.newaxis]
-#         )
-#         w_pos[j] = np.sum(np.maximum(cont, 0))
-#         w_neg[j] = np.sum(np.maximum(-cont, 0))
-#         w_abs[j] = np.sum(np.abs(cont))
-#     exclude = Z[:,i]==0
-#     w_pos[exclude] = 0
-#     w_neg[exclude] = 0
-#     weight = np.append(w_pos+self._EPS,w_neg+self._EPS)
-# return weight
-
 
 def _calc_cor( # noqa: DOC105
     *,
@@ -114,32 +90,7 @@ def _calc_cor( # noqa: DOC105
     return cor_x
 
 
-def _calc_weights_slow( # noqa: DOC105
-    *,
-    cor_y: np.ndarray,
-    cor_x: np.ndarray,
-    coef: np.ndarray,
-    exp_y: float,
-    exp_x: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    SEE BELOW (FUNCTION TO BE REMOVED).
-    """
-    p_ = coef.shape[0]
-    link_y = np.sign(cor_y) * (np.abs(cor_y) ** exp_y)
-    w_pos = np.full(p_, np.nan)
-    w_neg = np.full(p_, np.nan)
-    w_abs = np.full(p_, np.nan)
-    for j in range(p_):
-        link_x = np.sign(cor_x[:, j]) * (np.abs(cor_x[:, j]) ** exp_x)
-        cont = coef * link_y * link_x[:, np.newaxis]
-        w_pos[j] = np.sum(np.maximum(cont, 0))
-        w_neg[j] = np.sum(np.maximum(-cont, 0))
-        w_abs[j] = np.sum(np.abs(cont))
-    return w_pos, w_neg, w_abs
-
-
-def _calc_weights_fast( # noqa: DOC105
+def _calc_weights( # noqa: DOC105
     *,
     cor_y: np.ndarray,
     cor_x: np.ndarray,
@@ -186,12 +137,12 @@ def _calc_weights_fast( # noqa: DOC105
     Examples
     --------
     >>> from collasso import simulate
-    >>> from collasso.multi_task import _calc_weights_fast
+    >>> from collasso.multi_task import _calc_weights
     >>> from scipy.stats import spearmanr
     >>> x_train, y_train, _, _, beta = simulate()
     >>> cor_y = spearmanr(y_train).statistic
     >>> cor_x = spearmanr(x_train).statistic
-    >>> w_pos, w_neg, w_abs = _calc_weights_fast(
+    >>> w_pos, w_neg, w_abs = _calc_weights(
     >>>     cor_y=cor_y[:, 1],
     >>>     cor_x=cor_x,
     >>>     coef=beta,
@@ -206,50 +157,6 @@ def _calc_weights_fast( # noqa: DOC105
     w_neg = np.maximum(0, -cont).sum(axis=(1, 2))
     w_abs = np.abs(cont).sum(axis=(1, 2))
     return w_pos, w_neg, w_abs
-
-
-# def _calc_weights_matrix_slow(
-#     *,
-#     cor_y:np.ndarray,
-#     cor_x:np.ndarray,
-#     coef:np.ndarray,
-#     exp_y:float,
-#     exp_x:float
-#     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
-#     p_, q_ = coef.shape
-#     w_pos = np.zeros((p_,q_))
-#     w_neg = np.zeros((p_,q_))
-#     w_abs = np.zeros((p_,q_))
-#     for j in range(p_):
-#         for k in range(q_):
-#             for j_ in range(p_):
-#                 for k_ in range(q_):
-#                     cont = cor_x[j,j_]**exp_x*cor_y[k,k_]**exp_y*coef[j_,k_]
-#                     w_pos[j,k] = w_pos[j,k] + np.maximum(0,cont)
-#                     w_neg[j,k] = w_neg[j,k] + np.maximum(0,-cont)
-#                     w_abs[j,k] = w_abs[j,k] + np.abs(cont)
-#     return w_pos, w_neg, w_abs
-#
-# def _calc_weights_matrix_fast(
-#     *,
-#     cor_y:np.ndarray,
-#     cor_x:np.ndarray,
-#     coef:np.ndarray,
-#     exp_y:float,
-#     exp_x:float
-#     ) -> tuple[np.ndarray,np.ndarray,np.ndarray]:
-#     p_, q_ = coef.shape
-#     w_pos = np.full((p_,q_),np.nan)
-#     w_neg = np.full((p_,q_),np.nan)
-#     w_abs = np.full((p_,q_),np.nan)
-#     for j in range(q_):
-#         link_y = np.sign(cor_y[:,j])*np.abs(cor_y[:,j])**exp_y
-#         link_x = np.sign(cor_x)*np.abs(cor_x)**exp_x
-#         cont = coef * link_y[np.newaxis,:] * link_x.T[:,:,np.newaxis]
-#         w_pos[:,j] = np.maximum(0,cont).sum(axis=(1,2))
-#         w_neg[:,j] = np.maximum(0,-cont).sum(axis=(1,2))
-#         w_abs[:,j] = np.abs(cont).sum(axis=(1,2))
-#     return w_pos, w_neg, w_abs
 
 
 class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
@@ -424,7 +331,7 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
         for i in range(self.q_):
             if X.ndim == 3:
                 xx = np.hstack([X[:, :, i], -X[:, :, i]])
-            w_pos, w_neg, _ = _calc_weights_fast(
+            w_pos, w_neg, _ = _calc_weights(
                 cor_y=cor_y[:, i],
                 cor_x=cor_x[i],
                 coef=coef,
