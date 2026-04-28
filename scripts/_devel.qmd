@@ -1,0 +1,48 @@
+---
+title: "Development"
+engine: knitr
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+This file contains commands for developing the Python package.
+
+```{r,eval=FALSE}
+setwd("C:/Users/arauschenberger/Desktop/collasso")
+system("pip install -e .")
+
+system("pytest tests/")
+
+system("docstr-coverage src/ --skip-init")
+
+system("mypy .")
+
+system("ruff check .")
+
+system("pylint .")
+
+system("pydoclint --style=numpy src/")
+
+system("pydocstyle --convention=numpy")
+
+system("numpydoc lint src/collasso/multi_task.py")
+system("numpydoc lint src/collasso/single_task.py")
+system("numpydoc lint src/collasso/simulate.py")
+system("numpydoc lint src/collasso/_helpers.py")
+```
+
+
+```{bash,eval=FALSE}
+sphinx-apidoc -o docs/source src/collasso --separate
+cd docs
+make html
+sphinx-autobuild source build/html
+```
+
+
+
+
+
+
+
