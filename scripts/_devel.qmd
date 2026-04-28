@@ -24,7 +24,7 @@ system("pydocstyle --convention=numpy")
 
 system("numpydoc lint src/collasso/multi_task.py")
 system("numpydoc lint src/collasso/single_task.py")
-system("numpydoc lint src/collasso/simulate.py")
+system("numpydoc lint src/collasso/simulate.py") # not compatible with docrep
 system("numpydoc lint src/collasso/_helpers.py")
 
 system("pylint .")
