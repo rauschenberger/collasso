@@ -7,6 +7,7 @@
 ![docstr-coverage](https://github.com/rauschenberger/collasso/actions/workflows/docstr-coverage.yaml/badge.svg)
 ![pydocstyle](https://github.com/rauschenberger/collasso/actions/workflows/pydocstyle.yaml/badge.svg)
 ![pydoclint](https://github.com/rauschenberger/collasso/actions/workflows/pydoclint.yaml/badge.svg)
+![numpydoc](https://github.com/rauschenberger/collasso/actions/workflows/numpydoc.yaml/badge.svg)
 ![pip-audit](https://github.com/rauschenberger/collasso/actions/workflows/pip-audit.yaml/badge.svg)
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
 ![sphinx](https://github.com/rauschenberger/collasso/actions/workflows/sphinx.yaml/badge.svg)

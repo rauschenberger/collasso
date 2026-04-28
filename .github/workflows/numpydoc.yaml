@@ -1,0 +1,20 @@
+name: numpydoc
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
+      with:
+        python-version: "3.14"
+    - name: Install dependencies
+      run: |
+        pip install numpydoc
+    - name: Analyse docstrings
+      run: |
+        numpydoc lint src/collasso/multi_task.py
+        numpydoc lint src/collasso/single_task.py
+        numpydoc lint src/collasso/_helper.py
