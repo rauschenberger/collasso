@@ -12,15 +12,11 @@ This file contains commands for developing the Python package.
 setwd("C:/Users/arauschenberger/Desktop/collasso")
 system("pip install -e .")
 
-system("pytest tests/")
-
-system("docstr-coverage src/ --skip-init")
+system("ruff check .")
 
 system("mypy .")
 
-system("ruff check .")
-
-system("pylint .")
+system("docstr-coverage src/ --skip-init")
 
 system("pydoclint --style=numpy src/")
 
@@ -30,6 +26,10 @@ system("numpydoc lint src/collasso/multi_task.py")
 system("numpydoc lint src/collasso/single_task.py")
 system("numpydoc lint src/collasso/simulate.py")
 system("numpydoc lint src/collasso/_helpers.py")
+
+system("pylint .")
+
+system("pytest tests/")
 ```
 
 
@@ -39,10 +39,6 @@ cd docs
 make html
 sphinx-autobuild source build/html
 ```
-
-
-
-
 
 
 
