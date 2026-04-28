@@ -26,18 +26,24 @@ propnzero = np.full((len(grid), 4), np.nan)
 precision = np.full((len(grid), 4), np.nan)
 prederror = np.full((len(grid), 4), np.nan)
 
+# Try with common feature matrix (kappa=1)
+# and with separate feature matrices (0<=kappa<1, e.g., kappa=0.5).
+kappa = [1.0]
+
+# Try without privileged information (theta=1)
+# and with privileged information (0<theta<1, e.g., theta=0.5).
+theta = [1.0]
+
 for i, _ in enumerate(grid):
     np.random.seed(i)
-    # Try with common feature matrix (kappa=1)
-    # and with separate feature matrices (0<=kappa<1).
-    kappa = 0.5
-    theta = 1.0
+    # --- data generation ---
     x_train, y_train, x_test, y_test, beta = simulate(
         rho=grid[i, 0],
         prob_com=grid[i, 1],
         prob_sep=grid[i, 2],
         kappa=kappa,
     )
+    # --- scaling ---
     if kappa == 1:
         scaler = StandardScaler()
         x_train_scaled = scaler.fit_transform(x_train)
@@ -49,19 +55,19 @@ for i, _ in enumerate(grid):
             scaler = StandardScaler()
             x_train_scaled[:, :, k] = scaler.fit_transform(x_train[:, :, k])
             x_test_scaled[:, :, k] = scaler.transform(x_test[:, :, k])
-    # privileged information (1=primary, 0=auxiliary)
+    # --- privileged information (1=primary, 0=auxiliary) ---
     z = np.random.binomial(n=1, p=theta, size=x_test.shape[1])
-    x_test_scaled[:,z==0] = 0
-    # prediction by the mean
+    x_test_scaled[:,z==0] = np.nan
+    # --- prediction by the mean ---
     coef_mean = np.zeros((y_train.shape[1], x_train.shape[1]))
     pred_mean = np.tile(np.mean(y_train, axis=0), (y_test.shape[0], 1))
-    # separate lasso regressions (common or specific X)
+    # --- separate lasso regressions (common or specific X) ---
     model_single = IndepLassoCV(alphas=100, cv=5)
     model_single.fit(X=x_train_scaled, y=y_train, Z=z)
     coef_single = model_single.coef_
     pred_single = model_single.predict(X=x_test_scaled)
-    # multi-task lasso regression (only if common X)
-    if kappa == 1:
+    # --- multi-task lasso regression (only if common X) ---
+    if kappa == 1 and theta == 1:
         model_multi = MultiTaskLassoCV(alphas=100, cv=5)
         x_train_scaled_temp = x_train_scaled
         x_train_scaled_temp[:,z==0] = 0
@@ -71,34 +77,12 @@ for i, _ in enumerate(grid):
     else:
         coef_multi = np.full((y_train.shape[1], x_train.shape[1]), np.nan)
         pred_multi = np.full((y_test.shape[0], y_test.shape[1]), np.nan)
-    # cooperative lasso regression (common or specific X)
+    # --- cooperative lasso regression (common or specific X) ---
     model_coop = CoopLassoCV(n_alphas=100, cv=5, l1_ratio=0.5)
     model_coop.fit(X=x_train_scaled, y=y_train, Z=z)
     coef_coop = model_coop.coef_
     pred_coop = model_coop.predict(X=x_test_scaled)
-
-    # mutar (add internal cross-validation)
-    # x_train_scaled_repeated = np.repeat(x_train_scaled[None, :, :],
-    # repeats=y_train.shape[1],axis=0)
-    # x_test_scaled_repeated = np.repeat(x_test_scaled[None, :, :],
-    # repeats=y_test.shape[1],axis=0)
-    #
-    # model = GroupLasso()
-    # model.fit(x_train_scaled_repeated,y_train.T)
-    # coef_group = model.coef_.T
-    # pred_group = model.predict(x_test_scaled_repeated).T
-    #
-    # model = DirtyModel()
-    # model.fit(x_train_scaled_repeated,y_train.T)
-    # coef_dirty = model.coef_.T
-    # pred_dirty = model.predict(x_test_scaled_repeated).T
-    #
-    # model = MultiLevelLasso()
-    # model.fit(x_train_scaled_repeated,y_train.T)
-    # coef_level = model.coef_.T
-    # pred_level = model.predict(x_test_scaled_repeated).T
-
-    # comparison
+    # --- evaluation ---
     if kappa == 1:
         coef = np.stack([coef_mean, coef_single, coef_multi, coef_coop])
         pred = np.stack([pred_mean, pred_single, pred_multi, pred_coop])
@@ -130,3 +114,25 @@ ttest_rel(a=predratio[:, 1], b=predratio[:, 3])
 ttest_rel(a=predratio[:, 2], b=predratio[:, 3])
 
 predratio.reshape(6, 10, -1).mean(axis=1)
+
+
+# mutar (add internal cross-validation)
+# x_train_scaled_repeated = np.repeat(x_train_scaled[None, :, :],
+# repeats=y_train.shape[1],axis=0)
+# x_test_scaled_repeated = np.repeat(x_test_scaled[None, :, :],
+# repeats=y_test.shape[1],axis=0)
+#
+# model = GroupLasso()
+# model.fit(x_train_scaled_repeated,y_train.T)
+# coef_group = model.coef_.T
+# pred_group = model.predict(x_test_scaled_repeated).T
+#
+# model = DirtyModel()
+# model.fit(x_train_scaled_repeated,y_train.T)
+# coef_dirty = model.coef_.T
+# pred_dirty = model.predict(x_test_scaled_repeated).T
+#
+# model = MultiLevelLasso()
+# model.fit(x_train_scaled_repeated,y_train.T)
+# coef_level = model.coef_.T
+# pred_level = model.predict(x_test_scaled_repeated).T
