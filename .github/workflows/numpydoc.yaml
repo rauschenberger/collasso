@@ -13,6 +13,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install numpydoc
+        pip install -e .
     - name: Analyse docstrings
       run: |
         numpydoc lint src/collasso/multi_task.py
