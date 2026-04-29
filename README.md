@@ -1,4 +1,8 @@
 
+<img src="https://raw.githubusercontent.com/rauschenberger/collasso/main/collasso-logo.png" alt="collasso-logo" width="25%">
+
+&nbsp;
+
 ![pytest](https://github.com/rauschenberger/collasso/actions/workflows/pytest.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/rauschenberger/collasso/graph/badge.svg?token=7E6GSQ32F5)](https://codecov.io/gh/rauschenberger/collasso)
 ![mypy](https://github.com/rauschenberger/collasso/actions/workflows/mypy.yaml/badge.svg)
@@ -12,12 +16,6 @@
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
 ![sphinx](https://github.com/rauschenberger/collasso/actions/workflows/sphinx.yaml/badge.svg)
 ![pypi](https://github.com/rauschenberger/collasso/actions/workflows/pypi.yaml/badge.svg)
-
-&nbsp;
-
-<img src="https://raw.githubusercontent.com/rauschenberger/collasso/main/collasso-logo.png" alt="collasso-logo" width="25%">
-
-&nbsp;
 
 # Sparse Linear Multi-Task Regression
 
