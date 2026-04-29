@@ -1,21 +1,23 @@
+"""
+Vignette.
+
+This script illustrates sparse linear multi-task regression
+with a common feature matrix, with specific feature matrices,
+and with privileged information.
+"""
 
 # %% [markdown]
-# # Vignette
+# # Examples
 #
-#This vignette illustrates sparse linear multi-task regression
-#with a common feature matrix, with specific feature matrices,
-#and with privileged information.
-#
-#Use the class `CoopLassoCV` for multi-task regression
-#(sharing information between targets and features).
-#
-#For comparison, use the class `IndepLassoCV` for
-#independent lasso regressions for multiple targets.
+# Use the class `CoopLassoCV` for multi-task regression
+# (sharing information between targets and features).
+# For comparison, use the class `IndepLassoCV` for
+# independent lasso regressions for multiple targets.
 
 # %% [markdown]
 # ## Initialisation
-
-# %%
+# Import the function `simulate` to simulate data,
+# and import the class `CoopLassoCV` to perform linear multi-task regression.
 import numpy as np
 from sklearn.metrics import mean_squared_error, precision_score
 from collasso import simulate, CoopLassoCV
@@ -24,26 +26,32 @@ from collasso import simulate, CoopLassoCV
 # ## Multi-task regression with a common feature matrix
 #
 # The standard setting for multi-task regression involves
-# a feature matrix of shape (n_samples, p_features)
-# and a target matrix of shape (n_samples, q_targets).
+# a feature matrix of shape `(n_samples, p_features)`
+# and a target matrix of shape `(n_samples, q_targets)`.
 #
 # Model training requires the feature matrix
 # and the target matrix of the training samples (`x_train` and `y_train`),
 # model testing requires the feature matrix of the testing samples (`x_test`).
 
 # %%
+# Simulate training and test data:
 x_train, y_train, x_test, y_test, beta = simulate()
 
 # %%
+# Fit linear multi-task regression:
 model = CoopLassoCV()
 model.fit(X=x_train, y=y_train)
 
 # %%
-beta_hat = model.coef_.T  # estimated regression coefficients (p x q matrix)
+# Extract estimated coefficients, a matrix of shape `(p_features, q_targets)`,
+# and calculate precision:
+beta_hat = model.coef_.T  # estimated regression coefficients 
 precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 
 # %%
-y_hat = model.predict(X=x_test) # out-of-sample predicted values (n x q matrix)
+# Make out-of-sample predictions, a matrix of shape (`n_samples, q_targets`),
+# and calculate mean squared error:
+y_hat = model.predict(X=x_test)
 mean_squared_error(y_true=y_test, y_pred=y_hat)
 
 
@@ -52,20 +60,26 @@ mean_squared_error(y_true=y_test, y_pred=y_hat)
 #
 # In some settings, there is not a common feature matrix for all targets
 # but a specific feature matrix for each target.
-# Then the model requires a feature array of shape (n_samples, p_features, q_targets).
+# Then the model requires a feature array of shape `(n_samples, p_features, q_targets)`.
 
 # %%
+# Simulate training and test data:
 x_train, y_train, x_test, y_test, beta = simulate(kappa=0.5)
 
 # %%
+# Fit linear multi-task regression:
 model = CoopLassoCV()
 model.fit(X=x_train, y=y_train)
 
 # %%
+# Extract estimated coefficients, a matrix of shape `(p_features, q_targets)`,
+# and calculate precision:
 beta_hat = model.coef_.T
 precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 
 # %%
+# Make out-of-sample predictions, a matrix of shape (`n_samples, q_targets`),
+# and calculate mean squared error:
 y_hat = model.predict(X=x_test)
 mean_squared_error(y_true=y_test, y_pred=y_hat)
 
@@ -81,54 +95,51 @@ mean_squared_error(y_true=y_test, y_pred=y_hat)
 # or specific sets of features for each target.
 
 # %%
+# Simulate training and test data:
 x_train, y_train, x_test, y_test, beta = simulate()
 
 # %% [markdown]
+# **Option 1** -
 # Allow the model to select from the *same set* of features for all targets:
-
-# %%
 z = np.zeros(x_train.shape[1])
 z[0:100] = 1
-
-# %% [markdown]
 # (Here, all targets have the primary features `x_1,...,x_100` and the auxiliary features `x_101,...,x_200`.)
 
 
 # %% [markdown]
+# **Option 2** -
 # Allow the model to select from a *different set* of features for each target:
-
-# %%
 z = np.zeros((x_train.shape[1],y_train.shape[1]))
 z[0:100,0] = 1
 z[100:175,1] = 1
 z[125:200,2] = 1
-
-# %% [markdown]
 # (Here, the first target has the primary features `x_1,...,x_100`, the second target `x_101,...,x_175`, and the third target `x_125,...,x_200`.)
 
 # %%
+# Fit linear multi-task regression:
 model = CoopLassoCV()
 model.fit(X=x_train, y=y_train, Z=z)
 
 # %%
+# Extract estimated coefficients, a matrix of shape `(p_features, q_targets)`,
+# and calculate precision:
 y_hat = model.predict(X=x_test)
 beta_hat = model.coef_.T
 
-# Auxiliary features are not selected:
-
 # %%
+# **Note 1** -
+# Auxiliary features are not selected:
 if z.ndim==1:  # z = vector of shape (p_features,)
     np.all(beta_hat[z == 0, :] == 0)
-else:  # z = matrix shape (p_features, q_targets)
+else:  # z = matrix of shape (p_features, q_targets)
     np.all(beta_hat[z == 0] == 0)
-
-# And their values in the test data therefore have no impact on predictions:
-
+    
 # %%
+# **Note 2** - 
+# Their values in the test data therefore have no impact on predictions:
 x_test_new = x_test
 x_test_new[:, z == 0] =  np.nan
-np.all(y_hat == model.predict(x_test_new))  # no impact
-
+np.all(y_hat == model.predict(x_test_new))
 
 
 # %% [markdown]
