@@ -72,4 +72,4 @@ Large-language models (mainly Claude Sonnet 4.6 and Claude Opus 4.6) were used f
 
 ## Disclaimer
 
-**Copyright** &copy; 2026 Armin Rauschenberger; Luxembourg Institute of Health (LIH), Department of Medical Informatics (DMI), Bioinformatics and Artificial Intelligence (BioAI); University of Luxembourg, Luxembourg Centre for Systems Biomedicine (LCSB), Biomedical Data Science (BDS). **All Rights Reserved.** (NB: The Python package will have an open-source license at a later stage.)
+**Copyright** &copy; 2026 Armin Rauschenberger; Luxembourg Institute of Health (LIH), Department of Medical Informatics (DMI), Bioinformatics and Artificial Intelligence (BioAI); University of Luxembourg, Luxembourg Centre for Systems Biomedicine (LCSB), Biomedical Data Science (BDS). This Python package is distributed under the [BSD-3-Clause license](https://github.com/rauschenberger/collasso/blob/main/LICENSE).

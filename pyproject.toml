@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     { name = "Armin Rauschenberger" }
 ]
-license = {text = "no license"}
+license = {text = "BSD-3-Clause"}
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24",
