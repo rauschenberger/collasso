@@ -12,6 +12,7 @@
 ![pip-audit](https://github.com/rauschenberger/collasso/actions/workflows/pip-audit.yaml/badge.svg)
 ![pip-licenses](https://github.com/rauschenberger/collasso/actions/workflows/pip-licenses.yaml/badge.svg)
 ![sphinx](https://github.com/rauschenberger/collasso/actions/workflows/sphinx.yaml/badge.svg)
+![pypi](https://github.com/rauschenberger/collasso/actions/workflows/pypi.yaml/badge.svg)
 
 <img src="collasso-logo.png" alt="collasso-logo" style="width:25%; height:auto;">
 
@@ -25,14 +26,14 @@ The Python package `collasso` implements sparse linear multi-task regression wit
 
 ## Installation
 
-Install the latest release from PyPI or conda-forge:
+Install the latest release from [PyPI](https://pypi.org/project/collasso) or [Anaconda](https://anaconda.org/conda-forge/collasso):
 
 ```bash
 pip install -U collasso
 conda install -c conda-forge collasso
 ```
 
-Alternatively, install the development version from GitHub or TestPyPI:
+Alternatively, install the development version from [GitHub](https://github.com/rauschenberger/collasso) or [TestPyPI](https://test.pypi.org/project/collasso):
 
 ```bash
 pip install -U git+https://github.com/rauschenberger/collasso.git
