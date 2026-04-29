@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "collasso"
-version = "0.1.0b2"
+version = "0.1.0b3"
 description = "Sparse Linear Multi-Task Regression"
 readme = "README.md"
 authors = [
@@ -21,8 +21,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://rauschenberger.github.io/collasso/"
-Vignette = "https://github.com/rauschenberger/collasso/scripts/vignette.py"
-Repository = "https://github.com/rauschenberger/collasso"
+Documentation = "https://github.com/rauschenberger/collasso/blob/main/scripts/vignette.py"
+Repository = "https://github.com/rauschenberger/collasso.git"
 Issues = "https://github.com/rauschenberger/collasso/issues"
 
 [project.optional-dependencies]
