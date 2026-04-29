@@ -1,9 +1,9 @@
 """
 Vignette.
 
-This script illustrates sparse linear multi-task regression
-with a common feature matrix, with specific feature matrices,
-and with privileged information.
+This script illustrates sparse linear multi-task regression with
+(i) a common feature matrix, (ii) specific feature matrices,
+and (iii) privileged information.
 """
 
 # %% [markdown]
@@ -13,8 +13,6 @@ and with privileged information.
 # (sharing information between targets and features).
 # For comparison, use the class `IndepLassoCV` for
 # independent lasso regressions for multiple targets.
-
-
 
 # %% [markdown]
 # ## Initialisation
@@ -26,10 +24,8 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, precision_score
 from collasso import simulate, CoopLassoCV
 
-
-
 # %% [markdown]
-# ## Multi-task regression with a common feature matrix
+# ## (i) Multi-task regression with a common feature matrix
 #
 # The standard setting for multi-task regression involves
 # a feature matrix of shape `(n_samples, p_features)`
@@ -68,10 +64,8 @@ precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 y_hat = model.predict(X=x_test)
 mean_squared_error(y_true=y_test, y_pred=y_hat)
 
-
-
 # %% [markdown]
-# ## Multi-task regression with specific feature matrices
+# ## (ii) Multi-task regression with specific feature matrices
 #
 # In some settings, there is not a common feature matrix for all targets
 # but a specific feature matrix for each target.
@@ -106,10 +100,8 @@ precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 y_hat = model.predict(X=x_test)
 mean_squared_error(y_true=y_test, y_pred=y_hat)
 
-
-
 # %% [markdown]
-# ## Multi-task regression with privileged information
+# ## (iii) Multi-task regression with privileged information
 #
 # In some applications, some features may be used for model training
 # but not for model testing (prileged information).
@@ -184,27 +176,25 @@ x_test_new = x_test
 x_test_new[:, z == 0] =  np.nan
 np.all(y_hat == model.predict(x_test_new))
 
-
 # %% [markdown]
 # ## Related packages
 #
 # - **scikit-learn** implements
-# multi-task lasso and elastic net regression,
+# linear multi-task lasso and elastic net regression,
 # in the classes `MultiTaskLasso`, `MultiTaskLassoCV`,
-# `MultiTaskElasticNet` and `MultiTaskElasticNetCV`
+# `MultiTaskElasticNet` and `MultiTaskElasticNetCV`.<br>
 # [GitHub](https://github.com/scikit-learn/scikit-learn)|
 # [PyPI](https://pypi.org/project/scikit-learn/)|
 # [website](https://scikit-learn.org)
 #
 # - **MuTaR** from Hicham Janati implements
-# group-norms multi-task linear models and optimal transport regularised models
-# [GitHub]: https://github.com/hichamjanati/mutar)|
+# group-norms multi-task linear models
+# and optimal transport regularised models.<br>
+# [GitHub](https://github.com/hichamjanati/mutar)|
 # [PyPI](https://pypi.org/project/mutar/)|
 # [website](https://hichamjanati.github.io/mutar/)
 #
 # - **scikit-MTR** from Henzhe Zhang implements
-# multi-task regression by stacking
-# (interpretable feature-target effects can be obtained
-# if linear regression is used in the base and in the meta layer)
+# multi-task regression by stacking. <br>
 # [GitHub](https://github.com/hengzhe-zhang/Scikit-MTR)|
 # [PyPI](https://pypi.org/project/scikit-MTR/)
