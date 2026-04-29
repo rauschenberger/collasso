@@ -19,6 +19,12 @@ dependencies = [
     "docrep>=0.3",
 ]
 
+[project.urls]
+Homepage = "https://rauschenberger.github.io/collasso/"
+Vignette = "https://github.com/rauschenberger/collasso/scripts/vignette.py"
+Repository = "https://github.com/rauschenberger/collasso"
+Issues = "https://github.com/rauschenberger/collasso/issues"
+
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov"]
 
