@@ -27,3 +27,5 @@ html_theme_options = {
     "navigation_depth": 3,
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
 }
+
+nb_execution_mode = "off" 
