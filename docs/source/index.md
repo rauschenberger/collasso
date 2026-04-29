@@ -9,4 +9,5 @@ Use `CoopLassoCV` to perform sparse linear multi-task regression with correlatio
 collasso.multi_task
 collasso.single_task
 collasso.simulate
+vignette
 ```

@@ -12,7 +12,7 @@ release = "0.1.0"
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
-extensions = ["sphinx.ext.autodoc", "numpydoc", "myst_parser"]
+extensions = ["sphinx.ext.autodoc", "numpydoc", "myst_nb"]
 source_suffix = [".rst", ".md"]
 
 numpydoc_show_class_members = False
