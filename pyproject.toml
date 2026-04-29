@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "collasso"
-version = "0.1.0b3"
+version = "0.1.0b4"
 description = "Sparse Linear Multi-Task Regression"
 readme = "README.md"
 authors = [
@@ -18,12 +18,21 @@ dependencies = [
     "scikit-learn>=1.2",
     "docrep>=0.3",
 ]
+keywords = ["multi-task regression", "privileged information", "high-dimensional", "feature selection"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Programming Language :: Python",
+]
+
 
 [project.urls]
 Homepage = "https://rauschenberger.github.io/collasso/"
-Documentation = "https://github.com/rauschenberger/collasso/blob/main/scripts/vignette.py"
+Examples = "https://github.com/rauschenberger/collasso/blob/main/scripts/vignette.py"
 Repository = "https://github.com/rauschenberger/collasso.git"
 Issues = "https://github.com/rauschenberger/collasso/issues"
+ORCID = "https://orcid.org/0000-0001-6498-4801"
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov"]
@@ -68,4 +77,3 @@ exclude_paths = [
     "**/simulation.py",
     "**/vignette.py",
 ]
-
