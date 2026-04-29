@@ -210,7 +210,7 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
     Examples
     --------
     >>> from sklearn.datasets import load_linnerud
-    >>> from collasso import CoopLasso
+    >>> from collasso import _CoopLasso
     >>> x, y = load_linnerud(return_X_y=True)
     >>> model = _CoopLasso()
     >>> model.fit(x, y) # n_samples x p_features, n_samples x q_targets
@@ -272,7 +272,7 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
 
         Returns
         -------
-        self : CoopLasso
+        self : _CoopLasso
             Fitted models.
         """
         if y.ndim == 1:
@@ -451,7 +451,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     q_ : int
         Number of targets.
     model_ : list of length q_targets
-        Fitted models from ``CoopLasso``.
+        Fitted models from ``_CoopLasso``.
     alpha_ : list length q_targets of ndarrays
         Sequence of regularisation parameters.
     mse_ : list of length q_targets of ndarrays
@@ -468,7 +468,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         A convenience class using the same interface as ``CoopLassoCV``
         (similarly formatted inputs and outputs)
         without sharing information among targets or features.
-    CoopLasso
+    _CoopLasso
         A class without cross-validation returning the lasso solution path.
         This is repeatedly called by ``CoopLassoCV``
         (once in each cross-validation iteration and once for the full dataset).
