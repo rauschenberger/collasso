@@ -23,7 +23,7 @@ The Python package `collasso` implements sparse linear multi-task regression wit
 
 ## Installation
 
-Install the latest release from [PyPI](https://pypi.org/project/collasso) or [Anaconda](https://anaconda.org/conda-forge/collasso):
+Install the latest release from [PyPI](https://pypi.org/project/collasso) or [Anaconda](https://anaconda.org/conda-forge/collasso) (not yet available):
 
 ```bash
 pip install -U collasso
