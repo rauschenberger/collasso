@@ -113,24 +113,25 @@ mean_squared_error(y_true=y_test, y_pred=y_hat)
 # or specific sets of features for each target.
 
 # %% [markdown]
-# Simulate training and test data:
+# **Step 1** - Simulate data
 
 # %% [markdown]
-# **Step 1** - Simulate data
-# _Option A_: common feature matrix
+# **Option A**: common feature matrix
 
 # %%
 x_train, y_train, x_test, y_test, beta = simulate()
 
 # %% [markdown]
-# _Option B_: separate feature matrices
+# **Option B**: separate feature matrices
 
 # %%
 x_train, y_train, x_test, y_test, beta = simulate(kappa=0.5)
 
 # %% [markdown]
 # **Step 2** - Define primary and auxiliary features
-# _Option A_:
+
+# %% [markdown]
+# **Option A**:
 # Allow the model to select from the *same set* of features for all targets,
 # by defining `z` as a vector of shape `(p_features, )`:
 
@@ -143,7 +144,7 @@ z[0:100] = 1
 # and the auxiliary features `x_101,...,x_200`.)
 
 # %% [markdown]
-# _Option B_:
+# **Option B**:
 # Allow the model to select from a *different set* of features for each target,
 # by defining `z` as a matrix of shape `(p_features, q_targets`):
 
