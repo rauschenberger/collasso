@@ -9,7 +9,7 @@ editor_options:
 This file contains commands for developing the Python package.
 
 ```{r,eval=FALSE}
-setwd("C:/Users/arauschenberger/Desktop/collasso")
+setwd("C:/Users/arauschenberger/Desktop/collasso/package")
 system("pip install -e .")
 
 system("ruff check .")
