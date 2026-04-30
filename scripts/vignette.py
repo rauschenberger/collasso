@@ -50,7 +50,7 @@ model.fit(X=x_train, y=y_train)
 
 # %% [markdown]
 # Extract estimated coefficients, a matrix of shape `(p_features, q_targets)`,
-# and calculate precision:
+# and calculate the precision:
 
 # %%
 beta_hat = model.coef_.T  # estimated regression coefficients 
@@ -58,7 +58,7 @@ precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 
 # %% [markdown]
 # Make out-of-sample predictions, a matrix of shape (`n_samples, q_targets`),
-# and calculate mean squared error:
+# and calculate the mean squared error:
 
 # %%
 y_hat = model.predict(X=x_test)
@@ -86,7 +86,7 @@ model.fit(X=x_train, y=y_train)
 
 # %% [markdown]
 # Extract estimated coefficients, a matrix of shape `(p_features, q_targets)`,
-# and calculate precision:
+# and calculate the precision:
 
 # %%
 beta_hat = model.coef_.T
@@ -94,7 +94,7 @@ precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 
 # %% [markdown]
 # Make out-of-sample predictions, a matrix of shape (`n_samples, q_targets`),
-# and calculate mean squared error:
+# and calculate the mean squared error:
 
 # %%
 y_hat = model.predict(X=x_test)
@@ -107,19 +107,32 @@ mean_squared_error(y_true=y_test, y_pred=y_hat)
 # but not for model testing (prileged information).
 # In contrast to primary features,
 # auxiliary features must not be selected by the model.
-# It is possible to exclude the same set of features for all targets,
+# Irrespective of whether there is a common feature matrix for all targets
+# or a specific feature matrix for each target,
+# it is possible to exclude the same set of features for all targets,
 # or specific sets of features for each target.
 
 # %% [markdown]
 # Simulate training and test data:
 
+# %% [markdown]
+# **Step 1** - Simulate data
+# _Option A_: common feature matrix
+
 # %%
 x_train, y_train, x_test, y_test, beta = simulate()
 
 # %% [markdown]
-# **Option 1** -
-# Allow the model to select from the *same set* of features for all targets
-# (by defining `z` as a vector of length `p_features`):
+# _Option B_: separate feature matrices
+
+# %%
+x_train, y_train, x_test, y_test, beta = simulate(kappa=0.5)
+
+# %% [markdown]
+# **Step 2** - Define primary and auxiliary features
+# _Option A_:
+# Allow the model to select from the *same set* of features for all targets,
+# by defining `z` as a vector of shape `(p_features, )`:
 
 # %%
 z = np.zeros(x_train.shape[1])
@@ -129,18 +142,18 @@ z[0:100] = 1
 # (Here, all targets have the primary features `x_1,...,x_100` and the auxiliary features `x_101,...,x_200`.) 
 
 # %% [markdown]
-# **Option 2** -
-# Allow the model to select from a *different set* of features for each target
-# (by defining `z` as a matrix with `p_features` rows and `q_targets` columns):
+# _Option B_:
+# Allow the model to select from a *different set* of features for each target,
+# by defining `z` as a matrix of shape `(p_features, q_targets`):
 
 # %%
 z = np.zeros((x_train.shape[1],y_train.shape[1]))
-z[0:100,0] = 1
+z[0:50,0] = 1
 z[100:175,1] = 1
 z[125:200,2] = 1
 
 # %% [markdown]
-# (Here, the first target has the primary features `x_1,...,x_100`, the second target `x_101,...,x_175`, and the third target `x_125,...,x_200`.)
+# (Here, the first target has the primary features `x_1,...,x_50`, the second target `x_101,...,x_175`, and the third target `x_126,...,x_200`.)
 
 # %% [markdown]
 # Fit linear multi-task regression:
@@ -158,23 +171,17 @@ y_hat = model.predict(X=x_test)
 beta_hat = model.coef_.T
 
 # %% [markdown]
-# **Note 1** -
-# Auxiliary features are not selected:
+# **Note**: As auxiliary features are not selected,
+# their values in the test data have no impact on predictions.
 
 # %%
-if z.ndim==1:
-    np.all(beta_hat[z == 0, :] == 0)
+assert np.all(beta_hat[z == 0, ...] == 0)
+x_test_new = x_test.copy()
+if x_test.ndim == 2 and z.ndim == 2:
+    x_test_new[: , np.sum(z,axis=1) == 0] = np.nan
 else:
-    np.all(beta_hat[z == 0] == 0)
-    
-# %% [markdown]
-# **Note 2** - 
-# Their values in the test data therefore have no impact on predictions:
-
-# %%
-x_test_new = x_test
-x_test_new[:, z == 0] =  np.nan
-np.all(y_hat == model.predict(x_test_new))
+    x_test_new[:, z == 0, ...] =  np.nan
+assert np.all(y_hat == model.predict(x_test_new))
 
 # %% [markdown]
 # ## Related packages
