@@ -33,8 +33,6 @@ from collasso._helpers import (
     _validate_test_data,
 )
 
-# --- multi-task lasso regression ---
-
 
 def _calc_cor( # noqa: DOC105
     *,
@@ -426,7 +424,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
 
     Parameters
     ----------
-    cv : int, default=10
+    cv : int, default=5
         Number of cross-validation folds.
     n_alphas : int, default=100
         Number of candidate values for the regularisation parameter
@@ -490,7 +488,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     def __init__( # noqa: DOC105
         # numpydoc ignore=GL08
         self, *,
-        cv: int = 10,
+        cv: int = 5,
         n_alphas: int = 100,
         l1_ratio: float = 0.5,
         exp_y: float = 1,

@@ -45,7 +45,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
 
     Parameters
     ----------
-    cv : int, default=10
+    cv : int, default=5
         Number of cross-validation folds.
     alphas : int, default=100
         Number of candidate values for the regularisation parameter.
@@ -84,7 +84,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
     >>> y_pred = model.predict(x) # n_samples x q_targets
     """
 
-    def __init__(self, *, cv: int = 10, alphas: int = 100): # noqa: DOC105
+    def __init__(self, *, cv: int = 5, alphas: int = 100): # noqa: DOC105
         # numpydoc ignore=GL08
         self.cv = cv
         self.alphas = alphas
