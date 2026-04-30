@@ -32,6 +32,15 @@ system("pylint .")
 system("pytest tests/")
 ```
 
+<!--
+git add ...
+git commit -m "blabla"
+git tag v0.1.0
+git push origin main
+git push origin v0.1.0
+-->
+
+
 
 ```{bash,eval=FALSE}
 sphinx-apidoc -o docs/source src/collasso --separate
