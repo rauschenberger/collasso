@@ -39,17 +39,17 @@ pip install -i https://test.pypi.org/simple/ collasso
 
 ## Usage
 
-Use the class `CoopLassoCV` to model a multivariate target (_n_ × _q_ matrix **Y**) based on high-dimensional features (_n_ × _p_ matrix **X**).
+Use the class `CoopLassoCV` to model a multivariate target (_n_ × _q_ matrix **Y**) based on high-dimensional features (_n_ × _p_ matrix or _n_ × _p_ × _q_ array **X**), potentially indicating primary and auxiliary features (_p_-dimensional vector or _p_ × _q_ matrix **Z**).
 
 ```python
 from collasso import CoopLassoCV
 model = CoopLassoCV()
-model.fit(X_train, y_train)
+model.fit(X_train, y_train, Z)
 model.coef_ # estimated coefficients
 model.predict(X_test) # out-of-sample predictions
 ```
 
-Please find the full documentation on the [website](https://rauschenberger.github.io/collasso/). The [vignette](https://github.com/rauschenberger/collasso/blob/main/scripts/vignette.py) contains examples on multi-task regression with a common feature matrix, multi-task regression with specific feature matrices, and multi-task regression with privileged information. This repository also contains the scripts for a [simulation](https://github.com/rauschenberger/collasso/blob/main/scripts/simulation.py) and an [application](https://github.com/rauschenberger/collasso/blob/main/scripts/application.py).
+Please find the full documentation on the [website](https://rauschenberger.github.io/collasso/). The [vignette](https://rauschenberger.github.io/collasso/vignette.html) contains examples on multi-task regression with a common feature matrix, multi-task regression with specific feature matrices, and multi-task regression with privileged information. <!--This repository also contains the scripts for a [simulation](https://github.com/rauschenberger/collasso/blob/main/scripts/simulation.py) and an [application](https://github.com/rauschenberger/collasso/blob/main/scripts/application.py).-->
 
 ## Reference
 
