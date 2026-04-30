@@ -13,7 +13,7 @@ import pandas as pd
 import openml
 from collasso import IndepLassoCV, CoopLassoCV
 
-# scm1d
+# scm1d (https://www.openml.org/search?type=data&status=active&id=41485)
 dataset = openml.datasets.get_dataset(dataset_id=41485, version=2)
 data = dataset.get_data()
 assert isinstance(data[0], pd.DataFrame)
@@ -24,7 +24,7 @@ pred = np.full((y.shape[0], y.shape[1], 4), np.nan)
 
 np.random.seed(0)
 
-folds = KFold(n_splits=2, shuffle=True, random_state=1)
+folds = KFold(n_splits=5, shuffle=True, random_state=1)
 for train_id, test_id in folds.split(X=x, y=y):
     y_train = y[train_id, :]
     scaler = StandardScaler()
