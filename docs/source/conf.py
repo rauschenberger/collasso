@@ -28,4 +28,4 @@ html_theme_options = {
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
 }
 
-nb_execution_mode = "off" 
+nb_execution_mode = "off"

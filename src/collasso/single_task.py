@@ -40,6 +40,8 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
 
     This is a convencience class with the interface as
     ``CoopLassoCV`` (but without sharing information among targets or features).
+    Note that auxiliary features are simply excluded from the model
+    (i.e., learning without privileged information).
 
     Parameters
     ----------

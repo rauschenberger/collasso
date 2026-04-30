@@ -63,6 +63,8 @@ def _calc_cor( # noqa: DOC105
     --------
     _spearmanr
         Calculates the Spearman correlation matrix.
+    _calc_weights
+        Internal function for calculating the adaptive weights.
         
     Examples
     --------
@@ -131,8 +133,9 @@ def _calc_weights( # noqa: DOC105
 
     See Also
     --------
-    _calc_weights_slow
-        A less efficient but more interpretable approach.
+    _calc_cor
+        Internal function for calculating one feature-feature
+        correlation matrix for each target.
         
     Examples
     --------
@@ -469,7 +472,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         (similarly formatted inputs and outputs)
         without sharing information among targets or features.
     _CoopLasso
-        A class without cross-validation returning the lasso solution path.
+        An internal class without cross-validation returning the lasso solution path.
         This is repeatedly called by ``CoopLassoCV``
         (once in each cross-validation iteration and once for the full dataset).
 

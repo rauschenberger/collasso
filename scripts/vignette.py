@@ -53,7 +53,7 @@ model.fit(X=x_train, y=y_train)
 # and calculate the precision:
 
 # %%
-beta_hat = model.coef_.T  # estimated regression coefficients 
+beta_hat = model.coef_.T  # estimated regression coefficients
 precision_score(y_true=beta!=0, y_pred=model.coef_.T!=0, average="micro")
 
 # %% [markdown]
@@ -139,7 +139,8 @@ z = np.zeros(x_train.shape[1])
 z[0:100] = 1
 
 # %% [markdown]
-# (Here, all targets have the primary features `x_1,...,x_100` and the auxiliary features `x_101,...,x_200`.) 
+# (Here, all targets have the primary features `x_1,...,x_100`
+# and the auxiliary features `x_101,...,x_200`.)
 
 # %% [markdown]
 # _Option B_:
@@ -153,7 +154,9 @@ z[100:175,1] = 1
 z[125:200,2] = 1
 
 # %% [markdown]
-# (Here, the first target has the primary features `x_1,...,x_50`, the second target `x_101,...,x_175`, and the third target `x_126,...,x_200`.)
+# (Here, the first target has the primary features `x_1,...,x_50`,
+# the second target `x_101,...,x_175`,
+# and the third target `x_126,...,x_200`.)
 
 # %% [markdown]
 # Fit linear multi-task regression:

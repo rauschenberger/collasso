@@ -118,7 +118,7 @@ def simulate( # noqa: DOC105
     fold = np.array([0] * n0 + [1] * n1)
     x = _simulate_features(n=n, p=p, q=q, rho=rho, kappa=kappa)
     beta = _simulate_effects(p=p, q=q, prob_com=prob_com, prob_sep=prob_sep)
-    y = _simulate_targets(n=n, q=q, x=x, beta=beta)
+    y = _simulate_targets(x=x, beta=beta)
     x_train, y_train = x[fold == 0, ...], y[fold == 0]
     x_test, y_test = x[fold == 1, ...], y[fold == 1]
     return x_train, y_train, x_test, y_test, beta
@@ -144,6 +144,21 @@ def _simulate_features( # noqa: DOC101,DOC103,DOC110
     -------
     x : ndarray of shape (n_samples, p_features) if kappa=1
         or (n_samples, p_features, q_targets) if 0<=kappa<1
+        
+    See Also
+    --------
+    _simulate_effects
+        Internal function for simulating effect matrix.
+    _simulate_targets
+        Internal function for simulating target matrix.
+        
+    Examples
+    --------
+    >>> from collasso import _simulate_features
+    >>> # common feature matrix
+    >>> x = _simulate_features(n=10, p=5, q=3, rho=0.9, kappa=1)
+    >>> # separate feature matrices
+    >>> x = _simulate_features(n=10, p=5, q=3, rho=0.9, kappa=0.5)
     """
     mean = np.zeros(p)
     idx = np.arange(p)
@@ -177,6 +192,21 @@ def _simulate_effects( # noqa: DOC101,DOC103,DOC109,DOC110
     Returns
     -------
     beta : ndarray of shape (p_features, q_targets)
+    
+    See Also
+    --------
+    _simulate_features
+        Internal function for simulating feature matrix or matrices.
+    _simulate_targets
+        Internal function for simulating target matrix.
+        
+    Examples
+    --------
+    >>> from collasso import _simulate_effects
+    >>> # only common effects
+    >>> beta = _simulate_effects(p=10, q=3, prob_com=0.2, prob_sep=0)
+    >>> # only separate effects
+    >>> beta = _simulate_effects(p=10, q=3, prob_com=0, prob_sep=0.2)
     """
     # fmt: off
     beta_com = (
@@ -196,10 +226,8 @@ docstrings.keep_params("simulate.parameters", "n", "q")
 
 
 @docstrings.dedent
-def _simulate_targets( # noqa: DOC101,DOC103,DOC110
+def _simulate_targets( # noqa: DOC105
     *,
-    n: int,
-    q: int,
     x: np.ndarray,
     beta: np.ndarray
 ):
@@ -208,16 +236,39 @@ def _simulate_targets( # noqa: DOC101,DOC103,DOC110
 
     Parameters
     ----------
-    x : np.ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
+    x : ndarray of shape (n_samples, p_features) or (n_samples, p_features, q_targets)
         Common feature matrix or separate feature matrices.
-    beta: np.ndarray of shape (p_features, q_targets)
+    beta: ndarray of shape (p_features, q_targets)
         Effect matrix.
-    %(simulate.parameters.n|q)s
 
     Returns
     -------
-    y : ndarray of shape (n_samples,q_targets)
+    y : ndarray of shape (n_samples, q_targets)
+    
+    Raises
+    ------
+    ValueError
+    
+    See Also
+    --------
+    _simulate_features
+        Internal function for simulating feature matrix or matrices.
+    _simulate_effects
+        Internal function for simulating effect matrix.
+        
+    Examples
+    --------
+    >>> from collasso import _simulate_features, _simulate_effects, _simulate_targets
+    >>> p = 5
+    >>> q = 3
+    >>> x = _simulate_features(n=10, p=p, q=q, rho=0.9, kappa=0.5)
+    >>> beta = _simulate_effects(p=p, q=q, prob_com=0.1, prob_sep=0.1)
+    >>> y = _simulate_targets(x=x, beta=beta)
     """
+    if x.shape[1] != beta.shape[0]:
+        raise ValueError("x and beta must be for the same features.")
+    n = x.shape[0]
+    q = beta.shape[1]
     if x.ndim == 2:
         eta = x @ beta
     else:

@@ -66,10 +66,12 @@ def _check_dims( # noqa: DOC105
     See Also
     --------
     _validate_train_data
-        Validation for training data allowing for feature arrays.
+        Internal function for validating training data,
+        allowing for feature matrices and arrays.
     _validate_test_data
-        Validation for test data allowing for feature arrays
-        and privileged information.
+        Internal function for validating test data,
+        allowing for feature matrices and arrays
+        as well as for privileged information.
         
     Examples
     --------
@@ -154,7 +156,8 @@ def _spearmanr(x: np.ndarray) -> np.ndarray: # noqa: DOC105 # numpydoc ignore=RT
     See Also
     --------
     _calc_cor
-        Calculates one feature-feature correlation matrix for each target.
+        Internal function for calculating one feature-feature
+        correlation matrix for each target.
         
     Examples
     --------
@@ -211,7 +214,9 @@ def _validate_train_data( # noqa: DOC105 # numpydoc ignore=EX01
     See Also
     --------
     _validate_test_data
-        A corresponding approach for testing data.
+        Internal function for validating test data,
+        allowing for feature matrices and arrays
+        as well as for privileged information.
     """
     if y is None:
         raise ValueError(
@@ -245,6 +250,7 @@ def _validate_train_data( # noqa: DOC105 # numpydoc ignore=EX01
             y = y.reshape(-1, 1)
     return X, y
 
+
 def _format_mask( # noqa: DOC105 # numpydoc ignore=RT02
     self: CoopLassoCV|IndepLassoCV|_CoopLasso,
     *,
@@ -275,7 +281,9 @@ def _format_mask( # noqa: DOC105 # numpydoc ignore=RT02
     See Also
     --------
     _validate_test_data
-        Validate test data under privileged information.
+        Internal function for validating test data,
+        allowing for feature matrices and arrays
+        as well as for privileged information.
         
     Examples
     --------
@@ -297,6 +305,7 @@ def _format_mask( # noqa: DOC105 # numpydoc ignore=RT02
     elif Z.ndim == 1:
         Z = np.broadcast_to(Z[:, None], (self.p_, self.q_))
     return Z
+
 
 def _validate_test_data( # noqa: DOC105 # numpydoc ignore=RT02,EX01
     self: CoopLassoCV|IndepLassoCV,
@@ -331,7 +340,10 @@ def _validate_test_data( # noqa: DOC105 # numpydoc ignore=RT02,EX01
     See Also
     --------
     _validate_train_data
-        A corresponding approach for training data.
+        Internal function for validating training data,
+        allowing for feature matrices and arrays.
+    _format_mask
+        Internal function for formatting the indicator matrix.
     """
     z = _format_mask(self, Z=self.z_)
     if isinstance(X, np.ndarray) and X.ndim == 3:
