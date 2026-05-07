@@ -39,7 +39,7 @@ pip install -i https://test.pypi.org/simple/ collasso
 
 ## Usage
 
-Use the class `CoopLassoCV` to model a multivariate target (_n_samples_ × _q_targets_ matrix **Y**) based on high-dimensional features (_n_samples_ × _p_features_ matrix or _n_samples_ × _p_features_ × _q_targets_ array **X**), potentially indicating primary and auxiliary features (_p_features_ vector or _p_features_ × _q_targets_ matrix **Z**).
+Use the class `CoopLassoCV` to model a multivariate target (_n_samples_ × _q_targets_ matrix **Y**) based on high-dimensional features (_n_samples_ × _p_features_ matrix or _n_samples_ × _p_features_ × _q_targets_ array **X**), potentially indicating primary and auxiliary features (_p_features_-dimensional vector or _p_features_ × _q_targets_ matrix **Z**).
 
 ```python
 from collasso import CoopLassoCV
