@@ -577,7 +577,7 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         self.min_ = []
         self.coef_ = np.full((self.q_, self.p_), np.nan)
         for j in range(self.q_):
-            mse = np.mean((y_hat[:, j, :] - y[:, j, np.newaxis]) ** 2, axis=0)
+            mse = np.nanmean((y_hat[:, j, :] - y[:, j, np.newaxis]) ** 2, axis=0)
             self.mse_.append(mse)
             id_min = np.argmin(mse)
             self.min_.append(id_min)
