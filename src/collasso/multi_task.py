@@ -556,7 +556,11 @@ class CoopLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         for i in range(self.q_):
             self.alpha_.append(self.model_.model_[i][0])
         y_hat = np.full((self.n_, self.q_, self.n_alphas), np.nan)
-        folds = KFold(n_splits=self.cv, shuffle=True, random_state=self.random_state)
+        if hasattr(self.cv, "split"):
+            folds = self.cv
+        else:
+            #folds = KFold(n_splits=self.cv, shuffle=True, random_state=self.random_state)
+            folds = KFold(n_splits=self.cv)
         for train_id, test_id in folds.split(X=X, y=y):
             sub = _CoopLasso(
                 n_alphas=self.n_alphas,
