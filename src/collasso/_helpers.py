@@ -18,7 +18,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import warnings
 import numpy as np
-from scipy.stats import rankdata
+import pandas as pd
+#from scipy.stats import rankdata
 from sklearn.exceptions import DataConversionWarning
 from sklearn.utils import check_array
 from sklearn.utils.validation import validate_data
@@ -172,7 +173,8 @@ def _spearmanr(x: np.ndarray) -> np.ndarray: # noqa: DOC105 # numpydoc ignore=RT
     if x.shape[1] == 1:
         cor = np.ones((1, 1))
     else:
-        cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0), rowvar=False))
+        #cor = np.atleast_2d(np.corrcoef(rankdata(x, axis=0), rowvar=False))
+        cor = pd.DataFrame(x).corr(method="spearman").to_numpy()
         cor = np.where(np.isnan(cor), np.eye(cor.shape[0]), cor)
         cor = np.atleast_2d(np.asarray(cor))
     return cor
@@ -235,7 +237,7 @@ def _validate_train_data( # noqa: DOC105 # numpydoc ignore=EX01
         if y.ndim == 1:
             y = y.reshape(-1, 1)
         check_array(array=X, allow_nd=True, dtype="numeric")
-        check_array(array=y, dtype="numeric")
+        check_array(array=y, dtype="numeric", ensure_all_finite="allow-nan")
     else:
         X, y = validate_data(
             self,

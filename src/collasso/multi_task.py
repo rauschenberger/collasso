@@ -279,12 +279,12 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
         if y.ndim == 1:
             y = y.reshape(-1, 1)
         check_array(array=X, allow_nd=True, dtype="numeric")
-        check_array(array=y, dtype="numeric")
+        check_array(array=y, dtype="numeric", ensure_all_finite="allow-nan")
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
         self.n_features_in_ = self.p_
         Z = _format_mask(self,Z=Z)
-        self.mu_y_ = np.mean(y, axis=0)
-        self.sd_y_ = np.std(y, axis=0)
+        self.mu_y_ = np.nanmean(y, axis=0)
+        self.sd_y_ = np.nanstd(y, axis=0)
         y = (y - self.mu_y_) / self.sd_y_
         # --- calculate correlation coefficients ---
         cor_y = _spearmanr(y)
@@ -306,10 +306,11 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
                 enet = ElasticNetCV(l1_ratio=self.l1_ratio)
             else:
                 enet = ElasticNet(alpha=self.alpha_init_[j], l1_ratio=self.l1_ratio)
+            not_nan = ~np.isnan(y[:, j])
             if X.ndim == 2:
-                enet.fit(X, y[:, j])
+                enet.fit(X[not_nan, :], y[not_nan, j])
             else:
-                enet.fit(X[:, :, j], y[:, j])
+                enet.fit(X[not_nan, :, j], y[not_nan, j])
             coef[:, j] = enet.coef_
             if self.alpha_init is None:
                 assert isinstance(enet, ElasticNetCV)
@@ -346,11 +347,12 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
             # This alternative does not need the non-negativity constraint:
             # weight = (w_abs + 1e-9)
             xx_scale = xx * weight
+            not_nan = ~np.isnan(y[:, i])
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=ConvergenceWarning)
                 model = lasso_path(
-                    X=xx_scale,
-                    y=y[:, i],
+                    X=xx_scale[not_nan, :],
+                    y=y[not_nan, i],
                     n_alphas=self.n_alphas,
                     alphas=None,
                     positive=True,
