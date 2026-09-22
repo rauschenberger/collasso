@@ -225,7 +225,7 @@ def _validate_train_data( # noqa: DOC105 # numpydoc ignore=EX01
             "Requires target matrix y."
             "(requires y to be passed, but the target y is None)"
         )
-    y = np.asarray(y)
+    y = np.asarray(y, dtype=float)
     if y.ndim == 2 and y.shape[1] == 1:
         warnings.warn(
             "A column-vector y was passed when a 1d array was expected.",
