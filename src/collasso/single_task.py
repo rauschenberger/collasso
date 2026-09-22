@@ -126,7 +126,7 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
         """
         X, y = _validate_train_data(self=self, X=X, y=y)
         check_array(array=X, allow_nd=True, dtype="numeric")
-        check_array(array=y, dtype="numeric")
+        check_array(array=y, dtype="numeric", ensure_all_finite="allow-nan")
         #if X.ndim == 2:
         #    X = np.broadcast_to(X[:, :, None], (X.shape[0], X.shape[1], y.shape[1]))
         self.n_, self.p_, self.q_ = _check_dims(X=X, y=y, Z=Z)
@@ -141,8 +141,9 @@ class IndepLassoCV(RegressorMixin, BaseEstimator): # noqa: DOC105
             if X.ndim == 3:
                 xx = X[:, :, i].copy()
             xx[:, self.z_[:, i] == 0] = 0
+            not_nan = ~np.isnan(y[:, i])
             model = LassoCV(alphas=self.alphas, cv=self.cv)
-            model.fit(xx, y[:, i])
+            model.fit(xx[not_nan], y[not_nan, i])
             self.model_.append(model)
             self.coef_[i, :] = model.coef_
         return self
