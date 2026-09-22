@@ -239,10 +239,11 @@ def _validate_train_data( # noqa: DOC105 # numpydoc ignore=EX01
         check_array(array=X, allow_nd=True, dtype="numeric")
         check_array(array=y, dtype="numeric", ensure_all_finite="allow-nan")
     else:
+        y_temp = np.where(np.isnan(y), 0.0, y)
         X, y = validate_data(
             self,
             X=X,
-            y=y,
+            y=y_temp,
             multi_output=True,
             y_numeric=True,
             dtype="numeric",
