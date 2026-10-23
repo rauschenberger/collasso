@@ -229,8 +229,8 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
         n_alphas: int = 100,
         l1_ratio: float = 0.5,
         alpha_init: np.ndarray|None = None,
-        exp_y: float = 1,
-        exp_x: float = 1
+        exp_y: float = 2,
+        exp_x: float = 2
     ):
         # pylint: disable=too-many-arguments
         self.n_alphas = n_alphas
