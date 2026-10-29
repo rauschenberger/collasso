@@ -67,9 +67,9 @@ for i, _ in enumerate(grid):
     # --- multi-task lasso regression (only if common X) ---
     if kappa == 1 and theta == 1:
         model_multi = MultiTaskLassoCV(alphas=100, cv=5)
-        x_train_scaled_temp = x_train_scaled
-        x_train_scaled_temp[:,z==0] = 0
-        model_multi.fit(X=x_train_scaled_temp, y=y_train)
+        #x_train_scaled_temp = x_train_scaled
+        #x_train_scaled_temp[:,z==0] = 0
+        model_multi.fit(X=x_train_scaled, y=y_train)
         coef_multi = model_multi.coef_
         pred_multi = model_multi.predict(X=x_test_scaled)
     else:
