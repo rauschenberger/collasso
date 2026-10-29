@@ -17,4 +17,4 @@ jobs:
       - name: check blacklist
         run: pip-licenses --ignore-packages collasso --fail-on="GPL;AGPL;UNKNOWN" --partial-match
       - name: check whitelist 
-        run: pip-licenses --ignore-packages collasso --allow-only="MIT License;Apache;BSD License;BSD-3-Clause;Python Software Foundation License" --partial-match
+        run: pip-licenses --ignore-packages collasso --allow-only="MIT License;MIT;Apache;BSD License;BSD-3-Clause;Python Software Foundation License" --partial-match
