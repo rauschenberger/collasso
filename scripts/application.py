@@ -5,13 +5,14 @@ This script compares the predictive performance between different methods in an 
 """
 
 import numpy as np
+import openml
+import pandas as pd
 from scipy.stats import rankdata
 from sklearn.linear_model import MultiTaskLassoCV
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
-import pandas as pd
-import openml
-from collasso import IndepLassoCV, CoopLassoCV
+
+from collasso import CoopLassoCV, IndepLassoCV
 
 # scm1d (https://www.openml.org/search?type=data&status=active&id=41485)
 dataset = openml.datasets.get_dataset(dataset_id=41485, version=2)

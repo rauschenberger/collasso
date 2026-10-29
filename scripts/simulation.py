@@ -6,12 +6,14 @@ and the predictive performance between different methods.
 """
 
 from itertools import product
+
 import numpy as np
 from scipy.stats import ttest_rel
 from sklearn.linear_model import MultiTaskLassoCV
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
-from collasso import simulate, IndepLassoCV, CoopLassoCV
+
+from collasso import CoopLassoCV, IndepLassoCV, simulate
 
 rho = [0, 0.90]
 prob_com = [0.00, 0.05]

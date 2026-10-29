@@ -16,7 +16,7 @@ Examples
 """
 
 import warnings
-from typing import Union
+
 import numpy as np
 from scipy.interpolate import interp1d  # switch to np.interp
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -25,12 +25,13 @@ from sklearn.linear_model import ElasticNet, ElasticNetCV, lasso_path
 from sklearn.model_selection import KFold
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
+
 from collasso._helpers import (
     _check_dims,
-    _spearmanr,
     _format_mask,
-    _validate_train_data,
+    _spearmanr,
     _validate_test_data,
+    _validate_train_data,
 )
 
 
@@ -301,7 +302,7 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
         else:
             self.alpha_init_ = self.alpha_init
         for j in range(self.q_):
-            enet: Union[ElasticNetCV, ElasticNet]
+            enet: ElasticNetCV | ElasticNet
             if self.alpha_init is None:
                 enet = ElasticNetCV(l1_ratio=self.l1_ratio)
             else:

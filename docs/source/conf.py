@@ -2,8 +2,8 @@
 
 # pylint: disable=invalid-name,redefined-builtin
 
-import sys
 import os
+import sys
 
 project = "collasso"
 copyright = "2026, Armin Rauschenberger"

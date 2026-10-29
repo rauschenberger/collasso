@@ -14,8 +14,8 @@ Examples
 """
 
 import numpy as np
-from scipy.stats import multivariate_normal
 from docrep import DocstringProcessor
+from scipy.stats import multivariate_normal
 
 docstrings = DocstringProcessor()
 # docstrings['parameters'] = """x"""

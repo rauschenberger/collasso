@@ -20,9 +20,12 @@ and (iii) privileged information.
 # and import the class `CoopLassoCV` to perform linear multi-task regression.
 
 # %%
+
+
 import numpy as np
 from sklearn.metrics import mean_squared_error, precision_score
-from collasso import simulate, CoopLassoCV
+
+from collasso import CoopLassoCV, simulate
 
 # %% [markdown]
 # ## (i) Multi-task regression with a common feature matrix

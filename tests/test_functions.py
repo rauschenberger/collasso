@@ -9,17 +9,18 @@ Tests:
 
 import numpy as np
 import pytest
+from scipy.stats import spearmanr
 from sklearn.linear_model import LassoCV
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils.estimator_checks import parametrize_with_checks
-from scipy.stats import spearmanr
+
 from collasso import (
     CoopLassoCV,
     IndepLassoCV,
-    simulate,
+    _calc_weights,
     _CoopLasso,
     _spearmanr,
-    _calc_weights,
+    simulate,
 )
 
 

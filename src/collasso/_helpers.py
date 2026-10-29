@@ -15,17 +15,20 @@ Examples
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 import warnings
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
+
 #from scipy.stats import rankdata
 from sklearn.exceptions import DataConversionWarning
 from sklearn.utils import check_array
 from sklearn.utils.validation import validate_data
 
 if TYPE_CHECKING:
-    from collasso import CoopLassoCV, _CoopLasso, IndepLassoCV
+    from collasso import CoopLassoCV, IndepLassoCV, _CoopLasso
 
 
 def _check_dims( # noqa: DOC105

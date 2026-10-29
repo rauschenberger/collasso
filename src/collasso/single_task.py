@@ -22,11 +22,12 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.linear_model import LassoCV
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
+
 from collasso._helpers import (
     _check_dims,
     _format_mask,
-    _validate_train_data,
     _validate_test_data,
+    _validate_train_data,
 )
 
 
