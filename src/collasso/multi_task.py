@@ -354,8 +354,7 @@ class _CoopLasso(RegressorMixin, BaseEstimator): # noqa: DOC105
                 model = lasso_path(
                     X=xx_scale[not_nan, :],
                     y=y[not_nan, i],
-                    n_alphas=self.n_alphas,
-                    alphas=None,
+                    alphas=self.n_alphas,
                     positive=True,
                 )
             # This alternative is computationally expensive:
